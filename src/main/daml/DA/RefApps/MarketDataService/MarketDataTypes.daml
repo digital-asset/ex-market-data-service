@@ -1,0 +1,124 @@
+--
+-- Copyright (c) 2019, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: Apache-2.0
+--
+
+daml 1.2
+module DA.RefApps.MarketDataService.MarketDataTypes where
+
+import DA.Next.Map (Map(), fromList, lookup, MapKey)
+import DA.Optional (fromOptional)
+import DA.List (last, sort)
+import DA.Date (date, Month(..))
+import DA.Time as T
+import Prelude hiding (lookup)
+
+-- E.g. a ticker
+newtype InstrumentId = InstrumentId Text
+  deriving (Show, Eq, MapKey)
+
+data ObservationReference =
+  ObservationReference
+    with
+      market: Text
+      instrumentId: InstrumentId
+      maturityDate: Date
+    deriving (Eq, Show)
+
+data ObservationValue =
+    DirtyPrice
+      with
+        dirty: Decimal
+  | CleanPrice
+      with
+        clean: Decimal
+  | EnrichedCleanDirtyPrice
+      with
+        clean: Decimal
+        dirty: Decimal
+        accrual: Decimal
+        couponDate: Optional Date
+        rate: Decimal
+
+  deriving (Eq, Show)
+
+data Observation = Observation
+  with
+    label: ObservationReference
+    time: Time
+    value: ObservationValue
+  deriving (Eq, Show)
+
+data Publisher = Publisher with party: Party deriving (Eq, Show)
+data Consumer = Consumer with party: Party deriving (Eq, Show)
+
+type PublicationKey = (Publisher, Consumer, ObservationReference)
+
+data BondInfo = BondInfo
+  with
+    rate : Decimal
+    couponDates : [Date]
+
+getBond : ObservationReference -> BondInfo
+getBond reference =
+    fromOptional defaultInfo $ lookup reference.instrumentId bonds
+
+bonds : Map InstrumentId BondInfo
+bonds = fromList
+        [ (bond1, bond1Info)
+        , (bond2, bond2Info)
+        ]
+
+bondMaturity : DA.Internal.Record.HasField "couponDates" r [a] => r -> a
+bondMaturity bondInfo = last bondInfo.couponDates
+
+bond1 : InstrumentId
+bond1 = InstrumentId "ISIN 288 2839"
+
+bond1Info : BondInfo
+bond1Info =
+  BondInfo with
+    rate = 0.02 : Decimal
+    couponDates = sort [date 2019 Feb 11, date 2020 Feb 11, date 2021 Feb 11]
+
+bond1Market : Text
+bond1Market = "US Bond Market"
+
+bond2 : InstrumentId
+bond2 = InstrumentId "ISIN 123 1244"
+
+bond2Info : BondInfo
+bond2Info =
+  BondInfo with
+    rate = 0.13 : Decimal
+    couponDates = sort [date 2019 Mar 20, date 2020 Mar 20, date 2021 Mar 20]
+
+bond2Market : Text
+bond2Market = "European Bond Market"
+
+bond3 : InstrumentId
+bond3 = InstrumentId "ISIN 789"
+
+bond3Info : BondInfo
+bond3Info =
+  BondInfo with
+    rate = 0.06 : Decimal
+    couponDates = sort [date 2019 Apr 25, date 2020 Apr 25, date 2021 Apr 25]
+
+bond3Market : Text
+bond3Market = "AU Bond Market"
+
+defaultInfo : BondInfo
+defaultInfo =
+  BondInfo with
+    rate = 0.01 : Decimal
+    couponDates = sort [date 2019 Mar 1, date 2020 Mar 20, date 2021 Mar 20]
+
+appStartDate : Date
+appStartDate = date 2019 Nov 12
+
+appStartTime : Time
+appStartTime = T.time appStartDate 12 30 0
+
+newtype SubscriptionFee = SubscriptionFee (Numeric 3) deriving (Eq, Show, Ord)
+

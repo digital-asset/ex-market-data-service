@@ -1,0 +1,171 @@
+--
+-- Copyright (c) 2019, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: Apache-2.0
+--
+
+{-# LANGUAGE ApplicativeDo #-}
+
+daml 1.2
+module DA.RefApps.MarketDataService.MarketSetupScript where
+
+import DA.Time as T
+import Daml.Script
+import Prelude hiding (submit, submitMustFail)
+import DA.Assert
+import DA.TimeService.TimeService
+import DA.Optional (fromSome)
+
+import DA.RefApps.MarketDataService.MarketDataTypes
+import DA.RefApps.MarketDataService.Roles
+
+data LedgerParties = LedgerParties with
+  operator                 : Party
+  marketDataProvider1Party : Party
+  marketDataProvider2Party : Party
+  marketDataVendorParty    : Party
+  analyticsVendorParty     : Party
+  endUserParty             : Party
+
+initialize : LedgerParties -> Script ()
+initialize parties = do
+  let starting = addRelTime appStartTime (hours 1)
+      ending = addRelTime appStartTime (days 10)
+      aSoonerEnding = addRelTime appStartTime (days 8)
+      staleHours = 3
+      modelPeriodTime = 2
+      reference1 = ObservationReference
+          with
+              market = bond1Market
+              instrumentId = bond1
+              maturityDate = bondMaturity bond1Info
+      reference2 = ObservationReference
+          with
+              market = bond2Market
+              instrumentId = bond2
+              maturityDate = bondMaturity bond2Info
+
+  debug "Creating current time"
+  currentTimeCid <- submit parties.operator do
+    createCmd CurrentTime with
+      operator = parties.operator
+      currentTime = appStartTime
+      observers = [parties.marketDataProvider1Party, parties.marketDataProvider2Party, parties.marketDataVendorParty, parties.analyticsVendorParty, parties.endUserParty]
+
+  debug "Creating time configuration"
+  timeConfigurationCid <- submit parties.operator do
+    createCmd TimeConfiguration with
+      operator = parties.operator
+      isRunning = False
+      modelPeriodTime = hours modelPeriodTime
+
+  debug "Creating time manager"
+  timeManagerCid <- submit parties.operator do
+    createCmd TimeManager with
+            operator = parties.operator
+
+  debug "Creating operator role"
+  operatorRole <- submit parties.operator $ createCmd (OperatorRole with operator = parties.operator)
+
+  debug "Loading CSV data sources"
+  providerRoleInvitation <- parties.operator `submit` exerciseCmd operatorRole
+    InviteMarketDataProvider with marketDataProvider = parties.marketDataProvider1Party
+  mdp1ProviderRole <- parties.marketDataProvider1Party `submit` exerciseCmd providerRoleInvitation MarketDataProviderInvitation_Accept
+  parties.marketDataProvider1Party `submit` exerciseCmd mdp1ProviderRole
+    LoadCsvDataFromPath with
+      reference = reference1
+      path = "default-1.csv"
+
+  providerRoleInvitation <- parties.operator `submit` exerciseCmd operatorRole
+    InviteMarketDataProvider with marketDataProvider = parties.marketDataProvider2Party
+  mdp2ProviderRole <- parties.marketDataProvider2Party `submit` exerciseCmd providerRoleInvitation MarketDataProviderInvitation_Accept
+  parties.marketDataProvider2Party `submit` exerciseCmd mdp2ProviderRole
+    LoadCsvDataFromPath with
+        reference = reference2
+        path = "default-1000.csv"
+
+  debug "Creating relationships"
+  mdp1MdvRelation <- createRelationship parties.operator operatorRole parties.marketDataProvider1Party parties.marketDataVendorParty
+  mdp2MdvRelation <- createRelationship parties.operator operatorRole parties.marketDataProvider2Party parties.marketDataVendorParty
+  mdvAnvRelation <- createRelationship parties.operator operatorRole parties.marketDataVendorParty parties.analyticsVendorParty
+  mdvConRelation <- createRelationship parties.operator operatorRole parties.marketDataVendorParty parties.endUserParty
+  anvConRelation <- createRelationship parties.operator operatorRole parties.analyticsVendorParty parties.endUserParty
+
+  debug "Creating data streams"
+  createDataStream parties.marketDataProvider1Party parties.marketDataVendorParty mdp1MdvRelation reference1 starting ending staleHours
+  createDataStream parties.marketDataProvider2Party parties.marketDataVendorParty mdp2MdvRelation reference2 starting ending staleHours
+  createDataStream parties.marketDataVendorParty parties.analyticsVendorParty mdvAnvRelation reference1 starting ending staleHours
+  createDataStream parties.marketDataVendorParty parties.endUserParty mdvConRelation reference1 starting aSoonerEnding staleHours
+  createDataStream parties.analyticsVendorParty parties.endUserParty anvConRelation reference1 starting ending staleHours
+  pure ()
+
+-- proper way of handling parties
+-- not appropriate for demo (partyIds are not human readable)
+setupMarket : Script ()
+setupMarket = do
+  operator                 <- allocateParty "Operator"
+  marketDataProvider1Party <- allocateParty "MarketDataProvider1"
+  marketDataProvider2Party <- allocateParty "MarketDataProvider2"
+  marketDataVendorParty    <- allocateParty "MarketDataVendor"
+  analyticsVendorParty     <- allocateParty "AnalyticsVendor"
+  endUserParty             <- allocateParty "EndUser"
+  let
+    parties = (LedgerParties
+      operator
+      marketDataProvider1Party
+      marketDataProvider2Party
+      marketDataVendorParty
+      analyticsVendorParty
+      endUserParty)
+  initialize parties
+
+  times <- query @CurrentTime operator
+  assertEq [operator] (map (\x -> (snd x).operator) times)
+  pure ()
+
+-- appropriate for demo (partyIds are human readable)
+-- no proper party allocation on the ledger
+setupMarketForSandbox : Script ()
+setupMarketForSandbox = do
+  let
+    operator                 = fromSome (partyFromText "Operator")
+    marketDataProvider1Party = fromSome (partyFromText "MarketDataProvider1")
+    marketDataProvider2Party = fromSome (partyFromText "MarketDataProvider2")
+    marketDataVendorParty    = fromSome (partyFromText "MarketDataVendor")
+    analyticsVendorParty     = fromSome (partyFromText "AnalyticsVendor")
+    endUserParty             = fromSome (partyFromText "EndUser")
+    parties = (LedgerParties
+      operator
+      marketDataProvider1Party
+      marketDataProvider2Party
+      marketDataVendorParty
+      analyticsVendorParty
+      endUserParty)
+  initialize parties
+  pure ()
+
+createRelationship : Party -> ContractId OperatorRole -> Party -> Party
+                  -> Script (ContractId PublisherConsumerRelationship, ContractId PublisherRole)
+createRelationship operator operatorRole publisher consumer = do
+  let p = Publisher with party = publisher
+      c = Consumer with party = consumer
+  debug ("Creating relationship: publisher=" <> (show publisher) <> ", consumer=" <> (show consumer))
+  (relationRequest, pubRoleInvitation) <- operator `submit` exerciseCmd operatorRole InvitePublisherConsumer with publisher = p, consumer = c
+  publisherAccept <- publisher `submit` exerciseCmd relationRequest PublisherInvitation_Accept
+  relationship <- consumer `submit` exerciseCmd publisherAccept ConsumerInvitation_Accept
+  debug "Created relationship."
+  publisherRole <- publisher `submit` exerciseCmd pubRoleInvitation PublisherRoleInvitation_Accept
+  pure (relationship, publisherRole)
+
+createDataStream : Party -> Party -> (ContractId PublisherConsumerRelationship, ContractId PublisherRole) ->
+                   ObservationReference -> Time -> Time -> Int ->
+                   Script SomeDataStream
+createDataStream publisher consumer (relationship, pubRole) reference starting ending staleHours = do
+  let price = SubscriptionFee 10.000
+  debug ("Creating data stream: publisher=" <> (show publisher) <> ", consumer=" <> (show consumer))
+  request <- consumer `submit` exerciseCmd relationship RequestStream
+    with reference, starting, ending, staleHours
+  proposal <- publisher `submit` exerciseCmd request DataStreamRequest_Propose with price
+  license <- consumer `submit` exerciseCmd proposal DataLicenseProposal_Accept
+  stream <- publisher `submit` exerciseCmd pubRole RegisterLicense with licenseId = license
+  debug "Created data stream."
+  pure stream

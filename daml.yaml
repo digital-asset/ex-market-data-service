@@ -1,0 +1,28 @@
+#
+# Copyright (c) 2019, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+sdk-version: 0.13.42
+name: market-data
+source: src/main/daml
+parties:
+  - MarketDataProvider1
+  - MarketDataProvider2
+  - AnalyticsVendor
+  - MarketDataVendor
+  - EndUser
+  - Operator
+version: 1.0.0
+exposed-module: []
+dependencies:
+  - daml-prim
+  - daml-stdlib
+  - daml-script
+  - daml-trigger
+build-options:
+  - '--target=1.7'
+  - '--ghc-option'
+  - '-Werror'
+  - '--ghc-option'
+  - '-Wunused-binds'

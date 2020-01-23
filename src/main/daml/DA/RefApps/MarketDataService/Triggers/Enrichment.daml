@@ -1,0 +1,116 @@
+--
+-- Copyright (c) 2019, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: Apache-2.0
+--
+
+daml 1.2
+
+module DA.RefApps.MarketDataService.Triggers.Enrichment where
+
+import Daml.Trigger
+import DA.Next.Map qualified as M
+import DA.Foldable
+import DA.Date
+import DA.List.Total
+import DA.Optional
+import DA.Action
+
+import DA.TimeService.TimeService
+
+import DA.RefApps.MarketDataService.Publication
+import DA.RefApps.MarketDataService.MarketDataTypes
+import DA.RefApps.MarketDataService.DataStream
+
+republishObservationTrigger : Trigger ()
+republishObservationTrigger =
+  createPublishingTrigger identity
+
+enrichCleanPriceWithAccrualTrigger : Trigger ()
+enrichCleanPriceWithAccrualTrigger =
+  createPublishingTrigger enrichCleanPriceWithAccrual
+
+createPublishingTrigger : (Observation -> Observation) -> Trigger ()
+createPublishingTrigger transformObservation = Trigger
+  { initialize = const ()
+  , updateState = \_ _ _ -> ()
+  , rule = publicationRule transformObservation
+  , registeredTemplates = RegisteredTemplates [
+      registeredTemplate @Publication
+    , registeredTemplate @EmptyDataStream
+    , registeredTemplate @DataStream
+    , registeredTemplate @CurrentTime
+    ]
+  }
+
+publicationRule : (Observation -> Observation) -> Party -> ACS -> Time -> M.Map CommandId [Command] -> () -> TriggerA ()
+publicationRule transformObservation party activeContracts _ _ () = do
+  -- Get publications where 'party' gets data, i.e. consumer
+  let publications = getContracts @Publication activeContracts
+      ownPublications = filter (\(_, p) -> p.consumer.party == party) publications
+  -- Get data streams where 'party' provides data to, i.e. publisher
+      dataStreams = getContracts @DataStream activeContracts
+      ownDataStreams = filter (\(_, s) -> s.publisher.party == party) dataStreams
+  -- Get empty streams to start them
+      emptyDataStreams = getContracts @EmptyDataStream activeContracts
+      ownEmptyDataStreams = filter (\(_, s) -> s.publisher.party == party) emptyDataStreams
+      mbCurrentTime = head $ getContracts @CurrentTime activeContracts
+
+  forA_ ownPublications (\(_, p) -> do
+    debug ("Triggered by publication: " <> (show p))
+
+    let newObservation = transformObservation p.observation
+    debug ("Enriched observation:" <> (show newObservation))
+
+    forA_
+      (filter (\(_, s) -> s.reference == p.observation.label) ownEmptyDataStreams)
+      (\(sCid, _) -> do
+        debug ("Starting stream: " <> (show sCid))
+        dedupExercise sCid StartDataStream with newObservation)
+
+    let (nonFreshStreams, freshStreams) =
+          partition (\(_, s) -> observationHasChanged s.observation newObservation) ownDataStreams
+    forA_ nonFreshStreams (\(sCid, _) -> do
+      debug ("Updating observation on stream: " <> (show sCid))
+      dedupExercise sCid UpdateObservation with time = newObservation.time, newValue = newObservation.value)
+    forA_ freshStreams (\(sCid, freshStream) ->
+      whenSome mbCurrentTime $ \(_, currentTime) ->
+        when (freshStream.lastUpdated /= currentTime.currentTime) $ do
+          debug ("Checking expiration of licenses on stream: " <> (show sCid))
+          dedupExercise sCid UpdateLicenses))
+
+observationHasChanged : Observation -> Observation -> Bool
+observationHasChanged old new = old.label == new.label && old.time < new.time
+
+nextCouponDateAfter : Date -> [Date] -> Optional Date
+nextCouponDateAfter valuationDate sortedCouponDates =
+  find (valuationDate <) sortedCouponDates
+
+accruedInterestBetween : Date -> Date -> Decimal -> Decimal
+accruedInterestBetween from to rate =
+  intToDecimal (subDate to from) / 365.0 * rate
+
+accruedInterest : Date -> BondInfo -> Decimal
+accruedInterest valuationDate bond =
+  case nextCoupon of
+    None -> 0.0
+    Some couponDate -> accruedInterestBetween (addDays couponDate (-365)) valuationDate bond.rate
+  where
+    nextCoupon = nextCouponDateAfter valuationDate bond.couponDates
+
+-- Enrichment logic
+enrichCleanPriceWithAccrual : Observation -> Observation
+enrichCleanPriceWithAccrual observation@Observation{ value = CleanPrice cleanPrice } =
+  observation with
+    value = EnrichedCleanDirtyPrice with
+              clean = cleanPrice
+              dirty = dirtyPrice
+              accrual = accrual
+              couponDate = nextCouponDate
+              rate = bond.rate
+  where
+    currentDate = toDateUTC observation.time
+    bond = getBond observation.label
+    nextCouponDate = nextCouponDateAfter currentDate bond.couponDates
+    accrual = accruedInterest currentDate bond
+    dirtyPrice = cleanPrice + accrual
+enrichCleanPriceWithAccrual someOtherObservation = someOtherObservation

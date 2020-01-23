@@ -1,0 +1,14 @@
+#
+# Copyright (c) 2019, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+#
+
+FROM openjdk:8-jre-alpine
+
+WORKDIR /home/sdk
+
+VOLUME /home/sdk/data
+
+COPY target/market-data-service-docker.jar market-data-service-docker.jar
+COPY target/lib/* /home/sdk/lib/
+
+ENTRYPOINT java -jar market-data-service-docker.jar -s ${SANDBOX_HOST} -p ${SANDBOX_PORT}

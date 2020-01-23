@@ -1,0 +1,70 @@
+--
+-- Copyright (c) 2019, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: Apache-2.0
+--
+
+daml 1.2
+module Test.DA.RefApps.MarketDataService.RolesTest where
+
+import DA.Date
+import DA.Time as T
+import DA.TimeService.TimeService
+
+import DA.RefApps.MarketDataService.DataStream
+import DA.RefApps.MarketDataService.MarketDataTypes
+import DA.RefApps.MarketDataService.Roles
+
+import Test.DA.RefApps.MarketDataService.Utils
+
+
+roleSetup :
+  Scenario (
+    ObservationReference, Observation, Party, Party,
+    (ContractId PublisherConsumerRelationship, ContractId PublisherRole),
+    Time, Time, ContractId CurrentTime, Party, ContractId EmptyDataStream, Int)
+roleSetup = scenario do
+  operator                <- getParty "Operator"
+  marketDataVendorParty   <- getParty "MarketDataVendor"
+  endUserParty           <- getParty "EndUser"
+
+  let today = date 2019 Nov 12
+      now = T.time today 14 57 0
+  currentTimeCid <- operator `submit`
+    create CurrentTime with
+      operator
+      currentTime = now
+      observers = [marketDataVendorParty, endUserParty]
+
+  operatorRole <- operator `submit` create OperatorRole with operator
+
+  mdvCon1Relation <- createRelationship operator operatorRole marketDataVendorParty endUserParty
+
+  now <- submit operator $ fetchTime operator
+  let
+    isin = InstrumentId "ISIN 123 XYZ"
+    reference = ObservationReference
+      with
+        market = "US Bond Market"
+        instrumentId = isin
+        maturityDate = fromGregorian (2019, Oct, 28)
+    starting = addRelTime now (hours 1)
+    ending = addRelTime now (days 1)
+    staleHours = 3
+    afterExpiry = addRelTime ending (days 1)
+    currentObservation =
+      Observation with
+        label = reference
+        time = now
+        value = CleanPrice with clean = 3.0
+
+  mdvStream <- (createDataStream
+    marketDataVendorParty endUserParty mdvCon1Relation
+    reference starting ending staleHours (SubscriptionFee 10.0))
+  mdvStreamId
+    <- case mdvStream of
+        EDS actualStreamId ->
+            pure actualStreamId
+        _ ->
+            error "There should have been an empty data stream."
+
+  pure (reference, currentObservation, operator, endUserParty, mdvCon1Relation, now, afterExpiry, currentTimeCid, marketDataVendorParty, mdvStreamId, staleHours)

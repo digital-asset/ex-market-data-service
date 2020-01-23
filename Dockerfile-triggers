@@ -1,0 +1,19 @@
+#
+# Copyright (c) 2019, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+#
+
+ARG sdk_vsn=0.13.42
+
+FROM digitalasset/daml-sdk:${sdk_vsn}
+
+WORKDIR /home/daml
+
+COPY target/market-data-service.dar /home/daml/
+COPY scripts/startTriggers.sh /home/daml/
+
+USER root
+RUN chown daml market-data-service.dar
+RUN chmod +rx /home/daml/startTriggers.sh
+USER daml
+
+CMD ~/startTriggers.sh "${SANDBOX_HOST}" "${SANDBOX_PORT}"

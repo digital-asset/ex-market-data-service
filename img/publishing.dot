@@ -1,0 +1,9 @@
+digraph {
+
+MarketDataProvider1 -> MarketDataVendor;
+MarketDataProvider2 -> MarketDataVendor;
+MarketDataVendor -> AnalyticsVendor;
+MarketDataVendor -> EndUser;
+AnalyticsVendor -> EndUser;
+
+}

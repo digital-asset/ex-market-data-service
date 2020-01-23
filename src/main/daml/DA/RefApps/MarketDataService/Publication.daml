@@ -1,0 +1,48 @@
+--
+-- Copyright (c) 2019, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: Apache-2.0
+--
+
+daml 1.2
+module DA.RefApps.MarketDataService.Publication where
+
+import DA.TimeService.TimeService
+
+import DA.RefApps.MarketDataService.MarketDataTypes
+
+-- A single publication to a single consumer
+template Publication
+  with
+    observation: Observation
+    publisher: Publisher
+    consumer: Consumer
+    published: Time
+    operator: Party
+  where
+    signatory publisher.party
+    observer consumer.party
+
+    key (publisher, consumer, observation.label): PublicationKey
+    maintainer key._1.party
+
+    controller publisher.party can
+      Republish: ContractId Publication
+        with newObservation: Observation
+        do
+          assert $ newObservation.label == observation.label -- this is redundant, but for clarity...
+          now <- fetchTime operator
+          create this
+            with
+              observation = newObservation
+              published = now
+
+      Close: ContractId ClosedPublication
+        do create ClosedPublication with publication = this
+
+template ClosedPublication
+  with
+    publication: Publication
+  where
+    signatory publication.publisher.party
+    observer publication.consumer.party
+

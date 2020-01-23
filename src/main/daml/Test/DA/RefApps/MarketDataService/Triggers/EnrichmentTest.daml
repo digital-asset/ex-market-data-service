@@ -1,0 +1,105 @@
+--
+-- Copyright (c) 2019, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: Apache-2.0
+--
+
+daml 1.2
+module Test.DA.RefApps.MarketDataService.Triggers.EnrichmentTest where
+
+import DA.Assert
+import DA.Date
+import DA.Time as T
+
+import DA.RefApps.MarketDataService.Triggers.Enrichment
+import DA.RefApps.MarketDataService.MarketDataTypes
+
+coupons : [Date]
+coupons = [date 2019 Feb 20, date 2020 Feb 20]
+
+testNextCouponDateAfter : Scenario ()
+testNextCouponDateAfter = scenario do
+  Some (date 2019 Feb 20) === nextCouponDateAfter (date 2019 Jan 20) coupons
+  Some (date 2020 Feb 20) === nextCouponDateAfter (date 2020 Jan 20) coupons
+  None === nextCouponDateAfter (date 2021 Jan 20) coupons
+
+testAccruedInterestBetween : Scenario ()
+testAccruedInterestBetween = scenario do
+  0.0 === accruedInterestBetween (date 2020 Feb 20) (date 2020 Feb 20) 1.0
+  1.0/365.0 === accruedInterestBetween (date 2020 Feb 19) (date 2020 Feb 20) 1.0
+  31.0/365.0 === accruedInterestBetween (date 2020 Jan 20) (date 2020 Feb 20) 1.0
+  364.0/365.0 === accruedInterestBetween (date 2019 Feb 21) (date 2020 Feb 20) 1.0
+  1.0 === accruedInterestBetween (date 2019 Feb 20) (date 2020 Feb 20) 1.0
+
+testAccruedInterest : Scenario ()
+testAccruedInterest = scenario do
+  let
+    bond = BondInfo
+      with
+        rate = 1.0
+        couponDates = coupons
+    accrued = accruedInterest (date 2020 Jan 20) bond
+    daysPassed = subDate (date 2020 Jan 20) (date 2019 Feb 20)
+  assertMsg "calculation cannot handle leap years" $ 365 == subDate (date 2020 Feb 20) (date 2019 Feb 20)
+  accrued === (intToDecimal daysPassed)/365.0
+
+testReference : ObservationReference
+testReference = ObservationReference with
+  market = "Test Market"
+  instrumentId = InstrumentId "Test Reference"
+  maturityDate = date 1997 Aug 29
+
+observationHasNotChangedWhenValuesAreEqual : Scenario ()
+observationHasNotChangedWhenValuesAreEqual = scenario do
+  let o = Observation with
+        label = testReference
+        time = T.time (date 1997 Aug 4) 12 23 45
+        value = CleanPrice with clean = 1.0
+  False === observationHasChanged o o
+
+observationHasNotChangedWhenTimeRemains : Scenario ()
+observationHasNotChangedWhenTimeRemains = scenario do
+  let o1 = Observation with
+        label = testReference
+        time = T.time (date 1997 Aug 4) 12 23 45
+        value = CleanPrice with clean = 1.0
+      o2 = Observation with
+        label = testReference
+        time = T.time (date 1997 Aug 4) 12 23 45
+        value = CleanPrice with clean = 2.0
+  False === observationHasChanged o1 o2
+
+observationHasNotChangedWhenTimeIsOlderAndValueChanged : Scenario ()
+observationHasNotChangedWhenTimeIsOlderAndValueChanged = scenario do
+  let o1 = Observation with
+        label = testReference
+        time = T.time (date 1997 Aug 4) 12 23 45
+        value = CleanPrice with clean = 1.0
+      o2 = Observation with
+        label = testReference
+        time = T.time (date 1997 Aug 1) 12 23 45
+        value = CleanPrice with clean = 2.0
+  False === observationHasChanged o1 o2
+
+observationHasChangedWhenTimeIsNewerAndValueRemains : Scenario ()
+observationHasChangedWhenTimeIsNewerAndValueRemains = scenario do
+  let o1 = Observation with
+        label = testReference
+        time = T.time (date 1997 Aug 4) 12 23 45
+        value = CleanPrice with clean = 1.0
+      o2 = Observation with
+        label = testReference
+        time = T.time (date 1997 Aug 24) 12 23 45
+        value = CleanPrice with clean = 1.0
+  True === observationHasChanged o1 o2
+
+observationHasChangedWhenTimeIsNewerAndValueChanged : Scenario ()
+observationHasChangedWhenTimeIsNewerAndValueChanged = scenario do
+  let o1 = Observation with
+        label = testReference
+        time = T.time (date 1997 Aug 4) 12 23 45
+        value = CleanPrice with clean = 1.0
+      o2 = Observation with
+        label = testReference
+        time = T.time (date 1997 Aug 24) 12 23 45
+        value = CleanPrice with clean = 2.0
+  True === observationHasChanged o1 o2

@@ -1,0 +1,117 @@
+--
+-- Copyright (c) 2019, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: Apache-2.0
+--
+
+daml 1.2
+module Test.DA.RefApps.MarketDataService.MarketSetupTest where
+
+import DA.Time as T
+import DA.TimeService.TimeService
+
+import DA.RefApps.MarketDataService.MarketDataTypes
+import DA.RefApps.MarketDataService.DataLicense
+import DA.RefApps.MarketDataService.Roles
+
+marketSetupScenario : Scenario ()
+marketSetupScenario = scenario do
+  operator <- getParty "Operator"
+  marketDataProvider1Party <- getParty "MarketDataProvider1"
+  marketDataProvider2Party <- getParty "MarketDataProvider2"
+  marketDataVendorParty <- getParty "MarketDataVendor"
+  analyticsVendorParty <- getParty "AnalyticsVendor"
+  endUserParty <- getParty "EndUser"
+  let starting = addRelTime appStartTime (hours 1)
+      ending = addRelTime appStartTime (days 10)
+      staleHours = 3
+      reference1 = ObservationReference
+          with
+              market = bond1Market
+              instrumentId = bond1
+              maturityDate = bondMaturity bond1Info
+      reference2 = ObservationReference
+          with
+              market = bond2Market
+              instrumentId = bond2
+              maturityDate = bondMaturity bond2Info
+
+  debug "Creating current time"
+  currentTimeCid <- submit operator do
+    create CurrentTime with
+      operator = operator
+      currentTime = appStartTime
+      observers = [marketDataProvider1Party, marketDataProvider2Party, marketDataVendorParty, analyticsVendorParty, endUserParty]
+
+  debug "Creating time configuration"
+  timeConfigurationCid <- submit operator do
+    create TimeConfiguration with
+      operator = operator
+      isRunning = False
+      modelPeriodTime = hours 2
+
+  debug "Creating time manager"
+  timeManagerCid <- submit operator do
+    create TimeManager with
+            operator = operator
+
+  debug "Creating operator role"
+  operatorRole <- submit operator $ create (OperatorRole with operator = operator)
+
+  debug "Loading CSV data sources"
+  providerRoleInvitation <- operator `submit` exercise operatorRole
+    InviteMarketDataProvider with marketDataProvider = marketDataProvider1Party
+  mdp1ProviderRole <- marketDataProvider1Party `submit` exercise providerRoleInvitation MarketDataProviderInvitation_Accept
+  marketDataProvider1Party `submit` exercise mdp1ProviderRole
+    LoadCsvDataFromPath with
+      reference = reference1
+      path = "default-1.csv"
+
+  providerRoleInvitation <- operator `submit` exercise operatorRole
+    InviteMarketDataProvider with marketDataProvider = marketDataProvider2Party
+  mdp2ProviderRole <- marketDataProvider2Party `submit` exercise providerRoleInvitation MarketDataProviderInvitation_Accept
+  marketDataProvider2Party `submit` exercise mdp2ProviderRole
+    LoadCsvDataFromPath with
+        reference = reference2
+        path = "default-1000.csv"
+
+  debug "Creating relationships"
+  mdp1MdvRelation <- createRelationship operator operatorRole marketDataProvider1Party marketDataVendorParty
+  mdp2MdvRelation <- createRelationship operator operatorRole marketDataProvider2Party marketDataVendorParty
+  mdvAnvRelation <- createRelationship operator operatorRole marketDataVendorParty analyticsVendorParty
+  mdvConRelation <- createRelationship operator operatorRole marketDataVendorParty endUserParty
+  anvConRelation <- createRelationship operator operatorRole analyticsVendorParty endUserParty
+
+  debug "Creating data streams"
+  createDataStream marketDataProvider1Party marketDataVendorParty mdp1MdvRelation reference1 starting ending staleHours
+  createDataStream marketDataProvider2Party marketDataVendorParty mdp2MdvRelation reference2 starting ending staleHours
+  createDataStream marketDataVendorParty analyticsVendorParty mdvAnvRelation reference1 starting ending staleHours
+  createDataStream marketDataVendorParty endUserParty mdvConRelation reference1 starting ending staleHours
+  createDataStream analyticsVendorParty endUserParty anvConRelation reference1 starting ending staleHours
+  pure ()
+
+createDataStream : Party -> Party -> (ContractId PublisherConsumerRelationship, ContractId PublisherRole) ->
+                   ObservationReference -> Time -> Time -> Int ->
+                   Scenario (ContractId DataLicense)
+createDataStream publisher consumer (relationship, pubRole) reference starting ending staleHours = do
+  let price = SubscriptionFee 10.000
+  debug ("Creating data stream: publisher=" <> (show publisher) <> ", consumer=" <> (show consumer))
+  request <- consumer `submit` exercise relationship RequestStream
+    with reference, starting, ending, staleHours
+  proposal <- publisher `submit` exercise request DataStreamRequest_Propose with price
+  license <- consumer `submit` exercise proposal DataLicenseProposal_Accept
+  stream <- publisher `submit` exercise pubRole RegisterLicense with licenseId = license
+  debug "Created data stream."
+  pure license
+
+createRelationship : Party -> ContractId OperatorRole -> Party -> Party
+                    -> Scenario (ContractId PublisherConsumerRelationship, ContractId PublisherRole)
+createRelationship operator operatorRole publisher consumer = do
+  let p = Publisher with party = publisher
+      c = Consumer with party = consumer
+  debug ("Creating relationship: publisher=" <> (show publisher) <> ", consumer=" <> (show consumer))
+  (relationRequest, roleRequest) <- operator `submit` exercise operatorRole InvitePublisherConsumer with publisher = p, consumer = c
+  publisherAccept <- publisher `submit` exercise relationRequest PublisherInvitation_Accept
+  publisherRole <- publisher `submit` exercise roleRequest PublisherRoleInvitation_Accept
+  relationship <- consumer `submit` exercise publisherAccept ConsumerInvitation_Accept
+  debug "Created relationship."
+  pure (relationship, publisherRole)
