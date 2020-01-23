@@ -101,7 +101,7 @@ const timeConfigurationView = createTab("Time Configuration", "TimeConfiguration
         createCol("operator", "Operator", 80, r => r.operator),
         createCol("modelPeriodTime", "ModelPeriodTime", 80, r => prettyMs(r.modelPeriodTime.microseconds)),
         createCol("isRunning", "Running", 80, r => {
-          return r.isRunning ? "Running" : "Stopped";
+            return r.isRunning ? "Running" : "Stopped";
         })
     ]
 );
@@ -187,6 +187,7 @@ function streamRequestsView(party) {
             createCol("reference", "Market", 80, r => r.reference.market),
             createCol("reference", "Instrument", 80, r => r.reference.instrumentId),
             createCol("reference", "Maturity date", 80, r => r.reference.maturityDate),
+            createCol("expiry", "Expiry", 100, r => prettyDate(r.ending)),
         ]
     );
 }
@@ -216,6 +217,7 @@ function licenseProposalView(party) {
             createCol("reference", "Instrument", 80, r => r.reference.instrumentId),
             createCol("reference", "Maturity date", 80, r => r.reference.maturityDate),
             createCol("price", "Price", 80, r => r.price),
+            createCol("expiry", "Expiry", 100, r => prettyDate(r.ending)),
         ]
     );
 }
@@ -238,6 +240,8 @@ function licenseView(party) {
             createCol("reference", "Instrument", 80, r => r.licenseData.reference.instrumentId),
             createCol("reference", "Maturity date", 60, r => r.licenseData.reference.maturityDate),
             createCol("price", "Price", 80, r => r.licenseData.price),
+            createCol("startDate", "Start date", 100, r => prettyDate(r.licenseData.starting)),
+            createCol("expiry", "Expiry", 100, r => prettyDate(r.licenseData.ending)),
             createCol("live", "Status", 80, r => {
                 if (r.began != null) {
                     return "Live"
@@ -253,7 +257,7 @@ function licenseView(party) {
 
 export const customViews = (userId, party, role) => {
     function partyIs(partyName) {
-      return party === partyName || userId === partyName;
+        return party === partyName || userId === partyName;
     }
     if (partyIs('Operator')) {
         return {
@@ -417,9 +421,9 @@ function createTab(name, templateId, columns, additionalFilter) {
  * unpack(12.34); // returns 12.34
  */
 function unpack(value) {
-  return (value && value.unpack)
-      ? value.unpack
-      : value;
+    return (value && value.unpack)
+        ? value.unpack
+        : value;
 }
 
 /**
@@ -490,4 +494,9 @@ function prettyMs(microSeconds) {
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
     return hours + " hours " + (minutes % 60) + " minutes";
+}
+
+function prettyDate(isoDateStr) {
+    const d = new Date(isoDateStr);
+    return `${d.getMonth() + 1}/${d.getDate()} ${d.getFullYear()} ${d.getHours()}:${d.getMinutes()}`;
 }
