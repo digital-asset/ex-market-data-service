@@ -47,38 +47,6 @@ daml trigger \
     --ledger-port ${SANDBOX_PORT} \
     --ledger-party AnalyticsVendor &
 
-daml trigger \
-    --wall-clock-time \
-    --dar "${DAR_FILE}" \
-    --trigger-name DA.RefApps.MarketDataService.Triggers.AutoRegisterLicense:automaticLicenseRegistrarTrigger \
-    --ledger-host ${SANDBOX_HOST} \
-    --ledger-port ${SANDBOX_PORT} \
-    --ledger-party MarketDataProvider1 &
-
-daml trigger \
-    --wall-clock-time \
-    --dar "${DAR_FILE}" \
-    --trigger-name DA.RefApps.MarketDataService.Triggers.AutoRegisterLicense:automaticLicenseRegistrarTrigger \
-    --ledger-host ${SANDBOX_HOST} \
-    --ledger-port ${SANDBOX_PORT} \
-    --ledger-party MarketDataProvider2 &
-
-daml trigger \
-    --wall-clock-time \
-    --dar "${DAR_FILE}" \
-    --trigger-name DA.RefApps.MarketDataService.Triggers.AutoRegisterLicense:automaticLicenseRegistrarTrigger \
-    --ledger-host ${SANDBOX_HOST} \
-    --ledger-port ${SANDBOX_PORT} \
-    --ledger-party MarketDataVendor &
-
-daml trigger \
-    --wall-clock-time \
-    --dar "${DAR_FILE}" \
-    --trigger-name DA.RefApps.MarketDataService.Triggers.AutoRegisterLicense:automaticLicenseRegistrarTrigger \
-    --ledger-host ${SANDBOX_HOST} \
-    --ledger-port ${SANDBOX_PORT} \
-    --ledger-party AnalyticsVendor &
-
 sleep 2
 pids=$(jobs -p)
 echo Waiting for $pids
