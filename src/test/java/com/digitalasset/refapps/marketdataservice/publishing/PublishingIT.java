@@ -76,7 +76,7 @@ public class PublishingIT {
     marketSetupAndTriggers =
         new ProcessBuilder()
             .command(
-                "scripts/startTriggers.sh",
+                "scripts/startTriggersNoRegister.sh",
                 "localhost",
                 Integer.toString(sandbox.getSandboxPort()),
                 RELATIVE_DAR_PATH.toString())
