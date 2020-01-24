@@ -23,7 +23,7 @@ SANDBOX_HOST="${1}"
 SANDBOX_PORT="${2}"
 DAR_FILE="${3:-/home/daml/market-data-service.dar}"
 
-set _JAVA_OPTIONS="-Xmx350m"
+export _JAVA_OPTIONS="-Xmx250m"
 
 daml script \
     --wall-clock-time \
