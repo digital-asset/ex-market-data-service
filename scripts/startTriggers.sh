@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-find
 source $(dirname "$0")/lib/startTriggers_common.sh
 
 daml trigger \
