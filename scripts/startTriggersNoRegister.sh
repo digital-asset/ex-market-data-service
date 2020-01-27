@@ -6,7 +6,7 @@
 
 export _JAVA_OPTIONS="-Xmx250m"
 
-source scripts/lib/startTriggers_common.sh
+source $(dirname "$0")/lib/startTriggers_common.sh
 
 sleep 2
 pids=$(jobs -p)
