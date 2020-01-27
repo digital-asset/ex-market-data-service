@@ -8,10 +8,8 @@ FROM digitalasset/daml-sdk:${sdk_vsn}
 
 WORKDIR /home/daml
 
-COPY target/market-data-service.dar /home/daml/
+COPY --chown=daml target/market-data-service.dar /home/daml/
 
-USER root
-RUN chown daml market-data-service.dar
 USER daml
 
 EXPOSE 6865

@@ -8,12 +8,9 @@ FROM digitalasset/daml-sdk:${sdk_vsn}
 
 WORKDIR /home/daml
 
-COPY target/market-data-service.dar /home/daml/
-COPY scripts/startTriggers.sh /home/daml/
+COPY --chown=daml target/market-data-service.dar /home/daml/
+COPY --chown=daml scripts/ /home/daml/scripts/
 
-USER root
-RUN chown daml market-data-service.dar
-RUN chmod +rx /home/daml/startTriggers.sh
 USER daml
 
-CMD ~/startTriggers.sh "${SANDBOX_HOST}" "${SANDBOX_PORT}"
+CMD ~/scripts/startTriggers.sh "${SANDBOX_HOST}" "${SANDBOX_PORT}"
