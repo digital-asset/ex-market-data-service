@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-source lib/startTriggers_common.sh
+source scripts/lib/startTriggers_common.sh
 
 daml trigger \
     --wall-clock-time \
