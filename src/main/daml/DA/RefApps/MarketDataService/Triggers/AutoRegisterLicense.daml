@@ -24,6 +24,7 @@ automaticLicenseRegistrarTrigger = Trigger
       registeredTemplate @DataLicense
     , registeredTemplate @PublisherRole
     ]
+  , heartbeat = None
   }
 
 autoLicenseRegistrar : Party -> ACS -> Time -> M.Map CommandId [Command] -> () -> TriggerA ()

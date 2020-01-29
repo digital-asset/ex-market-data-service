@@ -40,6 +40,7 @@ createPublishingTrigger transformObservation = Trigger
     , registeredTemplate @DataStream
     , registeredTemplate @CurrentTime
     ]
+  , heartbeat = None
   }
 
 publicationRule : (Observation -> Observation) -> Party -> ACS -> Time -> M.Map CommandId [Command] -> () -> TriggerA ()
