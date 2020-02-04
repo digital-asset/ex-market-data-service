@@ -47,13 +47,13 @@ public class JsonLedgerClient {
 
           @Override
           public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
-            System.out.printf("Received message: %s%n.", data);
+            System.out.printf("Received message: %s.%n", data);
             return Listener.super.onText(webSocket, data, last);
           }
 
           @Override
           public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
-            System.out.printf("Closed. Status %d, reason: %s%n.", statusCode, reason);
+            System.out.printf("Closed. Status %d, reason: %s.%n", statusCode, reason);
             countdown.countDown();
             return Listener.super.onClose(webSocket, statusCode, reason);
           }
