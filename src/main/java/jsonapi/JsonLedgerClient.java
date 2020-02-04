@@ -42,12 +42,17 @@ public class JsonLedgerClient {
           @Override
           public void onOpen(WebSocket webSocket) {
             System.out.println("Connected.");
+            webSocket.sendText(
+                "{\"templateIds\": [\"DA.TimeService.TimeService:CurrentTime\"]}", true);
             Listener.super.onOpen(webSocket);
           }
 
           @Override
           public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
             System.out.printf("Received message: %s.%n", data);
+            if (!data.toString().contains("heartbeat")) {
+              countdown.countDown();
+            }
             return Listener.super.onText(webSocket, data, last);
           }
 
