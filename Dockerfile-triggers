@@ -10,6 +10,7 @@ WORKDIR /home/daml
 
 COPY --chown=daml target/market-data-service.dar /home/daml/
 COPY --chown=daml scripts/ /home/daml/scripts/
+COPY --chown=daml parties.json /home/daml/
 
 USER daml
 

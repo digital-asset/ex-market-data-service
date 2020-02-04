@@ -1,0 +1,8 @@
+{
+  "operator": "Operator",
+  "marketDataVendorParty": "MarketDataVendor",
+  "analyticsVendorParty": "AnalyticsVendor",
+  "endUserParty": "EndUser",
+  "marketDataProvider1Party": "MarketDataProvider1",
+  "marketDataProvider2Party": "MarketDataProvider2"
+}

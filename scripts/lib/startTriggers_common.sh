@@ -28,9 +28,10 @@ DAR_FILE="${3:-/home/daml/market-data-service.dar}"
 daml script \
     --wall-clock-time \
     --dar "${DAR_FILE}" \
-    --script-name DA.RefApps.MarketDataService.MarketSetupScript:setupMarketForSandbox \
+    --script-name DA.RefApps.MarketDataService.MarketSetupScript:initialize \
     --ledger-host ${SANDBOX_HOST} \
-    --ledger-port ${SANDBOX_PORT}
+    --ledger-port ${SANDBOX_PORT} \
+    --input-file parties.json
 echo "DAML script executed"
 
 daml trigger \
