@@ -80,8 +80,8 @@ public class PublishingIT {
                 "localhost",
                 Integer.toString(sandbox.getSandboxPort()),
                 RELATIVE_DAR_PATH.toString())
-            .redirectOutput(log)
-            .redirectError(errLog)
+            .redirectError(ProcessBuilder.Redirect.appendTo(errLog))
+            .redirectOutput(ProcessBuilder.Redirect.appendTo(log))
             .start();
     ledgerAdapter = sandbox.getLedgerAdapter();
   }

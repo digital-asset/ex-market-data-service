@@ -68,7 +68,10 @@ public class Trigger {
 
     public Trigger build() {
       File logFile = new File(String.format("integration-test-%s.log", triggerName));
-      ProcessBuilder processBuilder = command().redirectError(logFile).redirectOutput(logFile);
+      ProcessBuilder processBuilder =
+          command()
+              .redirectError(ProcessBuilder.Redirect.appendTo(logFile))
+              .redirectOutput(ProcessBuilder.Redirect.appendTo(logFile));
       return new Trigger(processBuilder);
     }
 

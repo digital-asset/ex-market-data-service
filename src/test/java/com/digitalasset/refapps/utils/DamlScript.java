@@ -72,7 +72,10 @@ public class DamlScript {
 
     public DamlScript build() {
       File logFile = new File(String.format("integration-test-%s.log", scriptName));
-      ProcessBuilder processBuilder = command().redirectError(logFile).redirectOutput(logFile);
+      ProcessBuilder processBuilder =
+          command()
+              .redirectError(ProcessBuilder.Redirect.appendTo(logFile))
+              .redirectOutput(ProcessBuilder.Redirect.appendTo(logFile));
       return new DamlScript(processBuilder);
     }
 
