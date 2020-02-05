@@ -4,13 +4,20 @@
  */
 package jsonapi;
 
+import com.daml.ledger.javaapi.data.ExerciseCommand;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import java.io.IOException;
 import java.net.URI;
+import java.security.Key;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Function;
 import javax.websocket.ClientEndpointConfig;
-import javax.websocket.ClientEndpointConfig.Builder;
 import javax.websocket.CloseReason;
 import javax.websocket.DeploymentException;
 import javax.websocket.Endpoint;
@@ -23,40 +30,51 @@ import org.glassfish.tyrus.client.ClientManager;
 import org.glassfish.tyrus.container.jdk.client.JdkClientContainer;
 
 public class JsonLedgerClient {
-
-  private static final String JWT_TOKEN =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwczovL2RhbWwuY29tL2xlZGdlci1hcGkiOnsibGVkZ2VySWQiOiJTYW1wbGVMZWRnZXIiLCJhcHBsaWNhdGlvbklkIjoibWFya2V0LWRhdGEtc2VydmljZSIsImFjdEFzIjpbIk9wZXJhdG9yIl19fQ.zjSsXQVooI4Fe-hwYKiyZK3JnZp540Rtno5kh9iwJVA";
-
+  private final String JWT_TOKEN;
   private final Function<Object, String> objectToJsonMapper;
 
-  private URI contracts = URI.create("http://localhost:7575/contracts/search");
-  private URI exercise = URI.create("http://localhost:7575/command/exercise");
-  private Request exerciseCommand =
-      Request.Post(exercise)
-          .addHeader("Content-Type", "application/json")
-          .addHeader("Authorization", "Bearer " + JWT_TOKEN)
-          .connectTimeout(1_000);
-  private Request activeContracts =
-      Request.Get(contracts)
-          .addHeader("Content-Type", "application/json")
-          .addHeader("Authorization", "Bearer " + JWT_TOKEN)
-          .connectTimeout(1_000);
+  private Request exerciseCommand;
+  private Request activeContracts;
 
-  public JsonLedgerClient(Function<Object, String> objectToJsonMapper) {
+  public JsonLedgerClient(String ledgerId, Function<Object, String> objectToJsonMapper) {
     this.objectToJsonMapper = objectToJsonMapper;
+    Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    Map<String, Object> claim = new HashMap<>();
+    claim.put("ledgerId", ledgerId);
+    claim.put("applicationId", "market-data-service");
+    claim.put("actAs", Collections.singletonList("Operator"));
+    Map<String, Object> claims = Collections.singletonMap("https://daml.com/ledger-api", claim);
+    this.JWT_TOKEN = Jwts.builder().setClaims(claims).signWith(key).compact();
+    URI exercise = URI.create("http://localhost:7575/command/exercise");
+    exerciseCommand =
+        Request.Post(exercise)
+            .addHeader("Content-Type", "application/json")
+            .addHeader("Authorization", "Bearer " + JWT_TOKEN)
+            .connectTimeout(1_000);
+    URI contracts = URI.create("http://localhost:7575/contracts/search");
+    activeContracts =
+        Request.Get(contracts)
+            .addHeader("Content-Type", "application/json")
+            .addHeader("Authorization", "Bearer " + JWT_TOKEN)
+            .connectTimeout(1_000);
   }
 
   public String exerciseChoice(ExerciseChoiceData exerciseChoiceData) throws IOException {
     String body = objectToJsonMapper.apply(exerciseChoiceData);
-    return exerciseCommand
-        .bodyString(body, ContentType.APPLICATION_JSON)
-        .execute()
-        .returnContent()
-        .asString();
+    return executeRequest(exerciseCommand.bodyString(body, ContentType.APPLICATION_JSON));
+  }
+
+  public String exerciseChoice(ExerciseCommand command) throws IOException {
+    String body = objectToJsonMapper.apply(exerciseCommand);
+    return executeRequest(exerciseCommand.bodyString(body, ContentType.APPLICATION_JSON));
   }
 
   public String getActiveContracts() throws IOException {
-    return activeContracts.execute().returnContent().asString();
+    return executeRequest(activeContracts);
+  }
+
+  private String executeRequest(Request request) throws IOException {
+    return request.execute().returnContent().asString();
   }
 
   public void getActiveContractsViaWebSockets(CountDownLatch countdown)
@@ -97,7 +115,7 @@ public class JsonLedgerClient {
         };
 
     ClientEndpointConfig config =
-        Builder.create()
+        ClientEndpointConfig.Builder.create()
             .preferredSubprotocols(Arrays.asList("jwt.token." + JWT_TOKEN, "daml.ws.auth"))
             .build();
 

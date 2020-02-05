@@ -19,7 +19,7 @@ public class JsonLedgerClientTest {
   @Ignore
   @Test
   public void getActiveContracts() throws IOException {
-    JsonLedgerClient ledger = new JsonLedgerClient(null);
+    JsonLedgerClient ledger = new JsonLedgerClient(null, null);
     String result = ledger.getActiveContracts();
     assertThat(result, containsString("200"));
     assertThat(result, not(containsString("\"result\":[]")));
@@ -28,7 +28,7 @@ public class JsonLedgerClientTest {
   @Ignore
   @Test
   public void webSocket() throws InterruptedException, IOException, DeploymentException {
-    JsonLedgerClient ledger = new JsonLedgerClient(null);
+    JsonLedgerClient ledger = new JsonLedgerClient(null, null);
     CountDownLatch latch = new CountDownLatch(1);
     ledger.getActiveContractsViaWebSockets(latch);
     latch.await();
