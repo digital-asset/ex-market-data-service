@@ -22,64 +22,67 @@ public class JsonLedgerClient {
 
   private static final String JWT_TOKEN =
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwczovL2RhbWwuY29tL2xlZGdlci1hcGkiOnsibGVkZ2VySWQiOiJTYW1wbGVMZWRnZXIiLCJhcHBsaWNhdGlvbklkIjoibWFya2V0LWRhdGEtc2VydmljZSIsImFjdEFzIjpbIk9wZXJhdG9yIl19fQ.zjSsXQVooI4Fe-hwYKiyZK3JnZp540Rtno5kh9iwJVA";
-  
+
   private final Function<Object, String> objectToJsonMapper;
-  
-    private HttpClient http = HttpClient.newHttpClient();
-    private URI contracts = URI.create("http://localhost:7575/contracts/search");
-    private URI exercise = URI.create("/command/exercise");
-    private Builder requestBuilder =
-            HttpRequest.newBuilder()
-                    .header("Content-Type", "application/json")
-                    .header("Authorization", "Bearer " + JWT_TOKEN)
-                    .timeout(Duration.ofSeconds(1));
 
-    public JsonLedgerClient(Function<Object, String> objectToJsonMapper) {
-        this.objectToJsonMapper = objectToJsonMapper;
-    }
+  private HttpClient http = HttpClient.newHttpClient();
+  private URI contracts = URI.create("http://localhost:7575/contracts/search");
+  private URI exercise = URI.create("/command/exercise");
+  private Builder requestBuilder =
+      HttpRequest.newBuilder()
+          .header("Content-Type", "application/json")
+          .header("Authorization", "Bearer " + JWT_TOKEN)
+          .timeout(Duration.ofSeconds(1));
 
-    public Future<HttpResponse<String>> exerciseChoice(ExerciseChoiceData exerciseChoiceData) {
-        HttpRequest.BodyPublisher body = HttpRequest.BodyPublishers.ofString(objectToJsonMapper.apply(exerciseChoiceData));
-        var request = requestBuilder.uri(contracts).POST(body).build();
-        return http.sendAsync(request, BodyHandlers.ofString());
-    }
+  public JsonLedgerClient(Function<Object, String> objectToJsonMapper) {
+    this.objectToJsonMapper = objectToJsonMapper;
+  }
 
-    public Future<HttpResponse<String>> getActiveContracts() {
-        var request = requestBuilder.uri(contracts).GET().build();
-        return http.sendAsync(request, BodyHandlers.ofString());
-    }
+  public Future<HttpResponse<String>> exerciseChoice(ExerciseChoiceData exerciseChoiceData) {
+    HttpRequest.BodyPublisher body =
+        HttpRequest.BodyPublishers.ofString(objectToJsonMapper.apply(exerciseChoiceData));
+    var request = requestBuilder.uri(exercise).POST(body).build();
+    return http.sendAsync(request, BodyHandlers.ofString());
+  }
 
-    public WebSocket getActiveContractsViaWebSockets(CountDownLatch countdown) {
-        var activeContracts = URI.create("ws://localhost:7575/contracts/searchForever");
+  public Future<HttpResponse<String>> getActiveContracts() {
+    var request = requestBuilder.uri(contracts).GET().build();
+    return http.sendAsync(request, BodyHandlers.ofString());
+  }
 
-        Listener listener =
-                new Listener() {
-                    @Override
-                    public void onOpen(WebSocket webSocket) {
-                        System.out.println("Connected.");
-                        webSocket.sendText(
-                "{\"templateIds\": [\"DA.TimeService.TimeService:CurrentTime\"]}", true);Listener.super.onOpen(webSocket);
-                    }
+  public WebSocket getActiveContractsViaWebSockets(CountDownLatch countdown) {
+    var activeContracts = URI.create("ws://localhost:7575/contracts/searchForever");
 
-                    @Override
-                    public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
-                        System.out.printf("Received message: %s.%n", data);
-                        if (!data.toString().contains("heartbeat")) {
+    Listener listener =
+        new Listener() {
+          @Override
+          public void onOpen(WebSocket webSocket) {
+            System.out.println("Connected.");
+            webSocket.sendText(
+                "{\"templateIds\": [\"DA.TimeService.TimeService:CurrentTime\"]}", true);
+            Listener.super.onOpen(webSocket);
+          }
+
+          @Override
+          public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
+            System.out.printf("Received message: %s.%n", data);
+            if (!data.toString().contains("heartbeat")) {
               countdown.countDown();
-            }return Listener.super.onText(webSocket, data, last);
-                    }
+            }
+            return Listener.super.onText(webSocket, data, last);
+          }
 
-                    @Override
-                    public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
-                        System.out.printf("Closed. Status %d, reason: %s.%n", statusCode, reason);
-                        countdown.countDown();
-                        return Listener.super.onClose(webSocket, statusCode, reason);
-                    }
-                };
+          @Override
+          public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
+            System.out.printf("Closed. Status %d, reason: %s.%n", statusCode, reason);
+            countdown.countDown();
+            return Listener.super.onClose(webSocket, statusCode, reason);
+          }
+        };
 
-        return http.newWebSocketBuilder()
-                .subprotocols("jwt.token." + JWT_TOKEN, "daml.ws.auth")
-                .buildAsync(activeContracts, listener)
-                .join();
-    }
+    return http.newWebSocketBuilder()
+        .subprotocols("jwt.token." + JWT_TOKEN, "daml.ws.auth")
+        .buildAsync(activeContracts, listener)
+        .join();
+  }
 }
