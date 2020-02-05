@@ -65,7 +65,7 @@ public class JsonLedgerClient {
   }
 
   public String exerciseChoice(ExerciseCommand command) throws IOException {
-    String body = objectToJsonMapper.apply(exerciseCommand);
+    String body = objectToJsonMapper.apply(command);
     return executeRequest(exerciseCommand.bodyString(body, ContentType.APPLICATION_JSON));
   }
 
