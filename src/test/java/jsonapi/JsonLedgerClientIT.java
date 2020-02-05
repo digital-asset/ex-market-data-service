@@ -89,7 +89,7 @@ public class JsonLedgerClientIT {
             OPERATOR.getValue(), Instant.parse("2020-02-04T22:57:29Z"), Collections.emptyList());
     ledger.createContract(OPERATOR, CurrentTime.TEMPLATE_ID, currentTime.toValue());
 
-    var jsonLedgerClient = new JsonLedgerClient(null, null);
+    var jsonLedgerClient = new JsonLedgerClient(sandbox.getClient().getLedgerId(), null);
     var result = jsonLedgerClient.getActiveContracts().get();
 
     assertThat(result.statusCode(), is(200));
@@ -157,7 +157,7 @@ public class JsonLedgerClientIT {
         new CurrentTime(
             OPERATOR.getValue(), Instant.parse("2020-02-04T22:57:29Z"), Collections.emptyList());
     ledger.createContract(OPERATOR, CurrentTime.TEMPLATE_ID, currentTime.toValue());
-    var ledger = new JsonLedgerClient(null, null);
+    var ledger = new JsonLedgerClient(sandbox.getClient().getLedgerId(), null);
     String post =
         "{\"templateId\": \"DA.TimeService.TimeService:CurrentTime\", \"key\": \"Operator\" }";
 
