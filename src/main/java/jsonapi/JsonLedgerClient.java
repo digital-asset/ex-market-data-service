@@ -16,52 +16,67 @@ import java.time.Duration;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
+import java.util.function.Function;
 
 public class JsonLedgerClient {
 
-  private static final String JWT_TOKEN =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsZWRnZXJJZCI6IlNhbXBsZUxlZGdlciIsImFwcGxpY2F0aW9uSWQiOiJtYXJrZXQtZGF0YS1zZXJ2aWNlIiwicGFydHkiOiJPcGVyYXRvciJ9.hhRLtiyZ4kUkuEGkJZw9cjAoVkKB4MbYg85VJkoo4yo";
-  private HttpClient http = HttpClient.newHttpClient();
-  private URI contracts = URI.create("http://localhost:7575/contracts/search");
-  private Builder requestBuilder =
-      HttpRequest.newBuilder()
-          .header("Content-Type", "application/json")
-          .header("Authorization", "Bearer " + JWT_TOKEN)
-          .timeout(Duration.ofSeconds(1));
+    private static final String JWT_TOKEN =
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsZWRnZXJJZCI6IlNhbXBsZUxlZGdlciIsImFwcGxpY2F0aW9uSWQiOiJtYXJrZXQtZGF0YS1zZXJ2aWNlIiwicGFydHkiOiJPcGVyYXRvciJ9.hhRLtiyZ4kUkuEGkJZw9cjAoVkKB4MbYg85VJkoo4yo";
 
-  public Future<HttpResponse<String>> getActiveContracts() {
-    var request = requestBuilder.uri(contracts).GET().build();
-    return http.sendAsync(request, BodyHandlers.ofString());
-  }
+    private final Function<Object, String> objectToJsonMapper;
 
-  public WebSocket getActiveContractsViaWebSockets(CountDownLatch countdown) {
-    var activeContracts = URI.create("ws://localhost:7575/contracts/searchForever");
+    private HttpClient http = HttpClient.newHttpClient();
+    private URI contracts = URI.create("http://localhost:7575/contracts/search");
+    private URI exercise = URI.create("/command/exercise");
+    private Builder requestBuilder =
+            HttpRequest.newBuilder()
+                    .header("Content-Type", "application/json")
+                    .header("Authorization", "Bearer " + JWT_TOKEN)
+                    .timeout(Duration.ofSeconds(1));
 
-    Listener listener =
-        new Listener() {
-          @Override
-          public void onOpen(WebSocket webSocket) {
-            System.out.println("Connected.");
-            Listener.super.onOpen(webSocket);
-          }
+    public JsonLedgerClient(Function<Object, String> objectToJsonMapper) {
+        this.objectToJsonMapper = objectToJsonMapper;
+    }
 
-          @Override
-          public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
-            System.out.printf("Received message: %s%n.", data);
-            return Listener.super.onText(webSocket, data, last);
-          }
+    public Future<HttpResponse<String>> exerciseChoice(ExerciseChoiceData exerciseChoiceData) {
+        HttpRequest.BodyPublisher body = HttpRequest.BodyPublishers.ofString(objectToJsonMapper.apply(exerciseChoiceData));
+        var request = requestBuilder.uri(contracts).POST(body).build();
+        return http.sendAsync(request, BodyHandlers.ofString());
+    }
 
-          @Override
-          public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
-            System.out.printf("Closed. Status %d, reason: %s%n.", statusCode, reason);
-            countdown.countDown();
-            return Listener.super.onClose(webSocket, statusCode, reason);
-          }
-        };
+    public Future<HttpResponse<String>> getActiveContracts() {
+        var request = requestBuilder.uri(contracts).GET().build();
+        return http.sendAsync(request, BodyHandlers.ofString());
+    }
 
-    return http.newWebSocketBuilder()
-        .subprotocols("jwt.token." + JWT_TOKEN, "daml.ws.auth")
-        .buildAsync(activeContracts, listener)
-        .join();
-  }
+    public WebSocket getActiveContractsViaWebSockets(CountDownLatch countdown) {
+        var activeContracts = URI.create("ws://localhost:7575/contracts/searchForever");
+
+        Listener listener =
+                new Listener() {
+                    @Override
+                    public void onOpen(WebSocket webSocket) {
+                        System.out.println("Connected.");
+                        Listener.super.onOpen(webSocket);
+                    }
+
+                    @Override
+                    public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
+                        System.out.printf("Received message: %s%n.", data);
+                        return Listener.super.onText(webSocket, data, last);
+                    }
+
+                    @Override
+                    public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
+                        System.out.printf("Closed. Status %d, reason: %s%n.", statusCode, reason);
+                        countdown.countDown();
+                        return Listener.super.onClose(webSocket, statusCode, reason);
+                    }
+                };
+
+        return http.newWebSocketBuilder()
+                .subprotocols("jwt.token." + JWT_TOKEN, "daml.ws.auth")
+                .buildAsync(activeContracts, listener)
+                .join();
+    }
 }
