@@ -4,19 +4,23 @@
  */
 package jsonapi;
 
+import java.io.IOException;
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpRequest.Builder;
-import java.net.http.HttpResponse;
-import java.net.http.HttpResponse.BodyHandlers;
-import java.net.http.WebSocket;
-import java.net.http.WebSocket.Listener;
-import java.time.Duration;
-import java.util.concurrent.CompletionStage;
+import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Future;
 import java.util.function.Function;
+import javax.websocket.ClientEndpointConfig;
+import javax.websocket.ClientEndpointConfig.Builder;
+import javax.websocket.CloseReason;
+import javax.websocket.DeploymentException;
+import javax.websocket.Endpoint;
+import javax.websocket.EndpointConfig;
+import javax.websocket.MessageHandler.Whole;
+import javax.websocket.Session;
+import org.apache.http.client.fluent.Request;
+import org.apache.http.entity.ContentType;
+import org.glassfish.tyrus.client.ClientManager;
+import org.glassfish.tyrus.container.jdk.client.JdkClientContainer;
 
 public class JsonLedgerClient {
 
@@ -25,64 +29,78 @@ public class JsonLedgerClient {
 
   private final Function<Object, String> objectToJsonMapper;
 
-  private HttpClient http = HttpClient.newHttpClient();
   private URI contracts = URI.create("http://localhost:7575/contracts/search");
-  private URI exercise = URI.create("/command/exercise");
-  private Builder requestBuilder =
-      HttpRequest.newBuilder()
-          .header("Content-Type", "application/json")
-          .header("Authorization", "Bearer " + JWT_TOKEN)
-          .timeout(Duration.ofSeconds(1));
+  private URI exercise = URI.create("http://localhost:7575/command/exercise");
+  private Request exerciseCommand =
+      Request.Post(exercise)
+          .addHeader("Content-Type", "application/json")
+          .addHeader("Authorization", "Bearer " + JWT_TOKEN)
+          .connectTimeout(1_000);
+  private Request activeContracts =
+      Request.Get(contracts)
+          .addHeader("Content-Type", "application/json")
+          .addHeader("Authorization", "Bearer " + JWT_TOKEN)
+          .connectTimeout(1_000);
 
   public JsonLedgerClient(Function<Object, String> objectToJsonMapper) {
     this.objectToJsonMapper = objectToJsonMapper;
   }
 
-  public Future<HttpResponse<String>> exerciseChoice(ExerciseChoiceData exerciseChoiceData) {
-    HttpRequest.BodyPublisher body =
-        HttpRequest.BodyPublishers.ofString(objectToJsonMapper.apply(exerciseChoiceData));
-    var request = requestBuilder.uri(exercise).POST(body).build();
-    return http.sendAsync(request, BodyHandlers.ofString());
+  public String exerciseChoice(ExerciseChoiceData exerciseChoiceData) throws IOException {
+    String body = objectToJsonMapper.apply(exerciseChoiceData);
+    return exerciseCommand
+        .bodyString(body, ContentType.APPLICATION_JSON)
+        .execute()
+        .returnContent()
+        .asString();
   }
 
-  public Future<HttpResponse<String>> getActiveContracts() {
-    var request = requestBuilder.uri(contracts).GET().build();
-    return http.sendAsync(request, BodyHandlers.ofString());
+  public String getActiveContracts() throws IOException {
+    return activeContracts.execute().returnContent().asString();
   }
 
-  public WebSocket getActiveContractsViaWebSockets(CountDownLatch countdown) {
-    var activeContracts = URI.create("ws://localhost:7575/contracts/searchForever");
+  public void getActiveContractsViaWebSockets(CountDownLatch countdown)
+      throws IOException, DeploymentException {
+    URI wsActiveContracts = URI.create("ws://localhost:7575/contracts/searchForever");
 
-    Listener listener =
-        new Listener() {
+    ClientManager client = ClientManager.createClient(JdkClientContainer.class.getName());
+    Endpoint endpoint =
+        new Endpoint() {
           @Override
-          public void onOpen(WebSocket webSocket) {
+          public void onOpen(Session session, EndpointConfig endpointConfig) {
             System.out.println("Connected.");
-            webSocket.sendText(
-                "{\"templateIds\": [\"DA.TimeService.TimeService:CurrentTime\"]}", true);
-            Listener.super.onOpen(webSocket);
-          }
-
-          @Override
-          public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
-            System.out.printf("Received message: %s.%n", data);
-            if (!data.toString().contains("heartbeat")) {
-              countdown.countDown();
+            try {
+              session.addMessageHandler(
+                  new Whole<String>() {
+                    @Override
+                    public void onMessage(String data) {
+                      System.out.printf("Received message: %s.%n", data);
+                      if (!data.contains("heartbeat")) {
+                        countdown.countDown();
+                      }
+                    }
+                  });
+              session
+                  .getBasicRemote()
+                  .sendText(
+                      "{\"templateIds\": [\"DA.TimeService.TimeService:CurrentTime\"]}", true);
+            } catch (IOException e) {
+              e.printStackTrace();
             }
-            return Listener.super.onText(webSocket, data, last);
           }
 
           @Override
-          public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
-            System.out.printf("Closed. Status %d, reason: %s.%n", statusCode, reason);
+          public void onClose(Session session, CloseReason closeReason) {
+            System.out.println("Closed.");
             countdown.countDown();
-            return Listener.super.onClose(webSocket, statusCode, reason);
           }
         };
 
-    return http.newWebSocketBuilder()
-        .subprotocols("jwt.token." + JWT_TOKEN, "daml.ws.auth")
-        .buildAsync(activeContracts, listener)
-        .join();
+    ClientEndpointConfig config =
+        Builder.create()
+            .preferredSubprotocols(Arrays.asList("jwt.token." + JWT_TOKEN, "daml.ws.auth"))
+            .build();
+
+    client.connectToServer(endpoint, config, wsActiveContracts);
   }
 }

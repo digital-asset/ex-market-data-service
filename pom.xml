@@ -59,6 +59,16 @@
             <artifactId>mockito-core</artifactId>
             <version>3.0.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>fluent-hc</artifactId>
+            <version>4.3.6</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.tyrus.bundles</groupId>
+            <artifactId>tyrus-standalone-client-jdk</artifactId>
+            <version>1.12</version>
+        </dependency>
     </dependencies>
 
     <build>

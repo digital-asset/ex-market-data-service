@@ -4,13 +4,12 @@
  */
 package jsonapi;
 
-import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertThat;
 
 import com.daml.ledger.javaapi.data.Party;
 import com.digitalasset.testing.junit4.Sandbox;
 import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
-import com.google.protobuf.InvalidProtocolBufferException;
 import da.timeservice.timeservice.CurrentTime;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -18,7 +17,6 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Scanner;
-import java.util.concurrent.ExecutionException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -77,20 +75,19 @@ public class JsonLedgerClientIT {
   }
 
   @Test
-  public void getActiveContracts()
-      throws InterruptedException, ExecutionException, InvalidProtocolBufferException {
-    var currentTime =
+  public void getActiveContracts() throws IOException {
+    CurrentTime currentTime =
         new CurrentTime(
             OPERATOR.getValue(), Instant.parse("2020-02-04T22:57:29Z"), Collections.emptyList());
     ledger.createContract(OPERATOR, CurrentTime.TEMPLATE_ID, currentTime.toValue());
 
-    var ledger = new JsonLedgerClient(null);
-    var result = ledger.getActiveContracts().get();
+    JsonLedgerClient ledger = new JsonLedgerClient(null);
+    String result = ledger.getActiveContracts();
 
-    assertThat(result.statusCode(), is(200));
+    assertThat(result, containsString("200"));
     assertThat(
-        result.body(),
-        is(
+        result,
+        containsString(
             "{\"result\":[{\"observers\":[],\"agreementText\":\"\",\"payload\":{\"operator\":\"Operator\",\"currentTime\":\"2020-02-04T22:57:29Z\",\"observers\":[]},\"signatories\":[\"Operator\"],\"key\":\"Operator\",\"contractId\":\"#0:0\",\"templateId\":\"6f14cd82bbdbf637ae067f60af1d8da0b941de2e44f4b97b12e9fe7b5f13147a:DA.TimeService.TimeService:CurrentTime\"}],\"status\":200}"));
   }
 }
