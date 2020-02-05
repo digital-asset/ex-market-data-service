@@ -9,6 +9,7 @@ public class ExerciseChoiceData {
   private final String templateId;
   private final String contractId;
   private final String choice;
+
   private final Object argument;
 
   public ExerciseChoiceData(String templateId, String contractId, String choice, Object argument) {
@@ -32,5 +33,22 @@ public class ExerciseChoiceData {
 
   public Object getArgument() {
     return argument;
+  }
+
+  @Override
+  public String toString() {
+    return "ExerciseChoiceData{"
+        + "templateId='"
+        + templateId
+        + '\''
+        + ", contractId='"
+        + contractId
+        + '\''
+        + ", choice='"
+        + choice
+        + '\''
+        + ", argument="
+        + argument
+        + '}';
   }
 }
