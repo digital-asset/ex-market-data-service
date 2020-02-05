@@ -20,11 +20,11 @@ import java.util.function.Function;
 
 public class JsonLedgerClient {
 
-    private static final String JWT_TOKEN =
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsZWRnZXJJZCI6IlNhbXBsZUxlZGdlciIsImFwcGxpY2F0aW9uSWQiOiJtYXJrZXQtZGF0YS1zZXJ2aWNlIiwicGFydHkiOiJPcGVyYXRvciJ9.hhRLtiyZ4kUkuEGkJZw9cjAoVkKB4MbYg85VJkoo4yo";
-
-    private final Function<Object, String> objectToJsonMapper;
-
+  private static final String JWT_TOKEN =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwczovL2RhbWwuY29tL2xlZGdlci1hcGkiOnsibGVkZ2VySWQiOiJTYW1wbGVMZWRnZXIiLCJhcHBsaWNhdGlvbklkIjoibWFya2V0LWRhdGEtc2VydmljZSIsImFjdEFzIjpbIk9wZXJhdG9yIl19fQ.zjSsXQVooI4Fe-hwYKiyZK3JnZp540Rtno5kh9iwJVA";
+  
+  private final Function<Object, String> objectToJsonMapper;
+  
     private HttpClient http = HttpClient.newHttpClient();
     private URI contracts = URI.create("http://localhost:7575/contracts/search");
     private URI exercise = URI.create("/command/exercise");
@@ -57,18 +57,21 @@ public class JsonLedgerClient {
                     @Override
                     public void onOpen(WebSocket webSocket) {
                         System.out.println("Connected.");
-                        Listener.super.onOpen(webSocket);
+                        webSocket.sendText(
+                "{\"templateIds\": [\"DA.TimeService.TimeService:CurrentTime\"]}", true);Listener.super.onOpen(webSocket);
                     }
 
                     @Override
                     public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
-                        System.out.printf("Received message: %s%n.", data);
-                        return Listener.super.onText(webSocket, data, last);
+                        System.out.printf("Received message: %s.%n", data);
+                        if (!data.toString().contains("heartbeat")) {
+              countdown.countDown();
+            }return Listener.super.onText(webSocket, data, last);
                     }
 
                     @Override
                     public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
-                        System.out.printf("Closed. Status %d, reason: %s%n.", statusCode, reason);
+                        System.out.printf("Closed. Status %d, reason: %s.%n", statusCode, reason);
                         countdown.countDown();
                         return Listener.super.onClose(webSocket, statusCode, reason);
                     }
