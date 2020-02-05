@@ -26,6 +26,7 @@ public class JsonLedgerClient {
   private final Function<Object, String> objectToJsonMapper;
 
   private HttpClient http = HttpClient.newHttpClient();
+  private URI contractByKey = URI.create("http://localhost:7575/contracts/lookup");
   private URI contracts = URI.create("http://localhost:7575/contracts/search");
   private URI exercise = URI.create("/command/exercise");
   private Builder requestBuilder =
@@ -42,6 +43,11 @@ public class JsonLedgerClient {
     HttpRequest.BodyPublisher body =
         HttpRequest.BodyPublishers.ofString(objectToJsonMapper.apply(exerciseChoiceData));
     var request = requestBuilder.uri(exercise).POST(body).build();
+    return http.sendAsync(request, BodyHandlers.ofString());
+  }
+
+  public Future<HttpResponse<String>> getContractByKey(HttpRequest.BodyPublisher post) {
+    var request = requestBuilder.uri(contractByKey).POST(post).build();
     return http.sendAsync(request, BodyHandlers.ofString());
   }
 

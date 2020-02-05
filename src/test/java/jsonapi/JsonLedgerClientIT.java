@@ -12,7 +12,9 @@ import com.digitalasset.testing.junit4.Sandbox;
 import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
 import com.google.protobuf.InvalidProtocolBufferException;
 import da.timeservice.timeservice.CurrentTime;
+import java.io.File;
 import java.io.IOException;
+import java.net.http.HttpRequest;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
@@ -92,5 +94,41 @@ public class JsonLedgerClientIT {
         result.body(),
         is(
             "{\"result\":[{\"observers\":[],\"agreementText\":\"\",\"payload\":{\"operator\":\"Operator\",\"currentTime\":\"2020-02-04T22:57:29Z\",\"observers\":[]},\"signatories\":[\"Operator\"],\"key\":\"Operator\",\"contractId\":\"#0:0\",\"templateId\":\"6f14cd82bbdbf637ae067f60af1d8da0b941de2e44f4b97b12e9fe7b5f13147a:DA.TimeService.TimeService:CurrentTime\"}],\"status\":200}"));
+  }
+
+  @Test
+  public void getContractByKey()
+      throws InterruptedException, ExecutionException, InvalidProtocolBufferException {
+    var currentTime =
+        new CurrentTime(
+            OPERATOR.getValue(), Instant.parse("2020-02-04T22:57:29Z"), Collections.emptyList());
+    ledger.createContract(OPERATOR, CurrentTime.TEMPLATE_ID, currentTime.toValue());
+
+    var ledger = new JsonLedgerClient(null);
+    String post = "{\"templateId\": \"DA.TimeService.TimeService:CurrentTime\", \"key\": \"Operator\" }";
+
+    /* To avoid:
+java.util.concurrent.ExecutionException: java.net.http.HttpTimeoutException: request timed out
+
+	at java.base/java.util.concurrent.CompletableFuture.reportGet(CompletableFuture.java:395)
+	at java.base/java.util.concurrent.CompletableFuture.get(CompletableFuture.java:1999)
+	at jsonapi.JsonLedgerClientIT.getContractByKey(JsonLedgerClientIT.java:112)
+Caused by: java.net.http.HttpTimeoutException: request timed out
+	at java.net.http/jdk.internal.net.http.ResponseTimerEvent.handle(ResponseTimerEvent.java:63)
+	at java.net.http/jdk.internal.net.http.HttpClientImpl.purgeTimeoutsAndReturnNextDeadline(HttpClientImpl.java:1248)
+	at java.net.http/jdk.internal.net.http.HttpClientImpl$SelectorManager.run(HttpClientImpl.java:877)
+
+     */
+    Thread.sleep(1_000);
+
+    System.out.println(post);
+    var result = ledger.getContractByKey(HttpRequest.BodyPublishers.ofString(post)).get();
+
+    assertThat(result.statusCode(), is(200));
+    assertThat(
+        result.body(),
+        is(
+                "{\"status\":200,\"result\":{\"observers\":[],\"agreementText\":\"\",\"payload\":{\"operator\":\"Operator\",\"currentTime\":\"2020-02-04T22:57:29Z\",\"observers\":[]},\"signatories\":[\"Operator\"],\"key\":\"Operator\",\"contractId\":\"#0:0\",\"templateId\":\"6f14cd82bbdbf637ae067f60af1d8da0b941de2e44f4b97b12e9fe7b5f13147a:DA.TimeService.TimeService:CurrentTime\"}}"
+        ));
   }
 }
