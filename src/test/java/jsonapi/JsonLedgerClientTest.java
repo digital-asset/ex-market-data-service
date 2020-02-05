@@ -4,14 +4,13 @@
  */
 package jsonapi;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.assertThat;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
-
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertThat;
+import org.junit.Ignore;
+import org.junit.Test;
 
 public class JsonLedgerClientTest {
 

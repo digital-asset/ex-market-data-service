@@ -4,6 +4,7 @@
  */
 package jsonapi;
 
+@SuppressWarnings("PMD")
 public class ExerciseChoiceData {
   private final String templateId;
   private final String contractId;
