@@ -12,7 +12,6 @@ import com.digitalasset.testing.junit4.Sandbox;
 import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
 import com.google.protobuf.InvalidProtocolBufferException;
 import da.timeservice.timeservice.CurrentTime;
-import java.io.File;
 import java.io.IOException;
 import java.net.http.HttpRequest;
 import java.nio.file.Path;
