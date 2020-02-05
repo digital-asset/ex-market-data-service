@@ -37,11 +37,18 @@ public class ExerciseChoiceData {
 
   @Override
   public String toString() {
-    return "ExerciseChoiceData{" +
-            "templateId='" + templateId + '\'' +
-            ", contractId='" + contractId + '\'' +
-            ", choice='" + choice + '\'' +
-            ", argument=" + argument +
-            '}';
+    return "ExerciseChoiceData{"
+        + "templateId='"
+        + templateId
+        + '\''
+        + ", contractId='"
+        + contractId
+        + '\''
+        + ", choice='"
+        + choice
+        + '\''
+        + ", argument="
+        + argument
+        + '}';
   }
 }

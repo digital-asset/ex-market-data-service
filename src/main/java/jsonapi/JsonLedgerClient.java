@@ -8,7 +8,6 @@ import com.daml.ledger.javaapi.data.ExerciseCommand;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -31,7 +30,6 @@ import java.util.function.Function;
 public class JsonLedgerClient {
   //
   // "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwczovL2RhbWwuY29tL2xlZGdlci1hcGkiOnsibGVkZ2VySWQiOiJTYW1wbGVMZWRnZXIiLCJhcHBsaWNhdGlvbklkIjoibWFya2V0LWRhdGEtc2VydmljZSIsImFjdEFzIjpbIk9wZXJhdG9yIl19fQ.zjSsXQVooI4Fe-hwYKiyZK3JnZp540Rtno5kh9iwJVA";
-  private final String ledgerId;
   private final String JWT_TOKEN;
   private final Function<Object, String> objectToJsonMapper;
 
@@ -42,7 +40,6 @@ public class JsonLedgerClient {
 
   public JsonLedgerClient(String ledgerId, Function<Object, String> objectToJsonMapper)
       throws UnsupportedEncodingException {
-    this.ledgerId = ledgerId;
     this.objectToJsonMapper = objectToJsonMapper;
     Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
     Map<String, Object> claims =
@@ -56,9 +53,6 @@ public class JsonLedgerClient {
                 "actAs",
                 Arrays.asList("Operator")));
     this.JWT_TOKEN = Jwts.builder().setClaims(claims).signWith(key).compact();
-    //                      "{ 'ledgerId': '" + ledgerId + "', " +
-    //                              " 'applicationId': 'market-data-service', " +
-    //                              " 'actAs': ['Operator'] }")
     System.out.println(JWT_TOKEN);
     this.requestBuilder =
         HttpRequest.newBuilder()
