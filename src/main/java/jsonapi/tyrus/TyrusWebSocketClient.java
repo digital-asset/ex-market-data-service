@@ -50,7 +50,7 @@ public class TyrusWebSocketClient implements WebSocketClient {
         Flowable.create(
             emitter -> {
               String query = toJson.apply(body);
-              Endpoint endpoint = new WebSocketEndpoint(emitter, query);
+              Endpoint endpoint = new EmittingWebSocketEndpoint(emitter, query);
               client.connectToServer(endpoint, config, resource);
             },
             BackpressureStrategy.LATEST);
@@ -66,13 +66,13 @@ public class TyrusWebSocketClient implements WebSocketClient {
     return fromJson.apply(json);
   }
 
-  private static class WebSocketEndpoint extends javax.websocket.Endpoint {
+  private static class EmittingWebSocketEndpoint extends javax.websocket.Endpoint {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final Emitter<String> emitter;
     private final String query;
 
-    public WebSocketEndpoint(Emitter<String> emitter, String query) {
+    public EmittingWebSocketEndpoint(Emitter<String> emitter, String query) {
       this.emitter = emitter;
       this.query = query;
     }
