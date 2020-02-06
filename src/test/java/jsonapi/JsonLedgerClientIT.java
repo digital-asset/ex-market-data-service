@@ -4,7 +4,7 @@
  */
 package jsonapi;
 
-import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 import com.daml.ledger.javaapi.data.ExerciseCommand;
@@ -83,12 +83,10 @@ public class JsonLedgerClientIT {
             sandbox.getClient().getLedgerId(), this::toJson, this::fromJson, this::fromJsonWs);
     String result = ledger.getActiveContracts();
 
-    assertThat(result, containsString("200"));
-    //    assertThat(
-    //        result,
-    //        containsString(
-    //
-    // "{\"result\":[{\"observers\":[],\"agreementText\":\"\",\"payload\":{\"operator\":\"Operator\",\"currentTime\":\"2020-02-04T22:57:29Z\",\"observers\":[]},\"signatories\":[\"Operator\"],\"key\":\"Operator\",\"contractId\":\"#0:0\",\"templateId\":\"6f14cd82bbdbf637ae067f60af1d8da0b941de2e44f4b97b12e9fe7b5f13147a:DA.TimeService.TimeService:CurrentTime\"}],\"status\":200}"));
+    assertThat(
+        result,
+        is(
+            "{\"status\":200,\"result\":[{\"observers\":[],\"agreementText\":\"\",\"payload\":{\"operator\":\"Operator\",\"currentTime\":\"2020-02-04T22:57:29Z\",\"observers\":[]},\"signatories\":[\"Operator\"],\"key\":\"Operator\",\"contractId\":\"#10:0\",\"templateId\":\"b4eb9b86bb78db2acde90edf0a03d96e5d65cc7a7cc422f23b6d98a286e07c09:DA.TimeService.TimeService:CurrentTime\"}]}"));
   }
 
   @Test
@@ -107,7 +105,10 @@ public class JsonLedgerClientIT {
         ledger.exerciseChoice(
             currentTimeWithId.contractId.exerciseCurrentTime_AddObserver(OPERATOR.getValue()));
 
-    assertThat(result, containsString("200"));
+    assertThat(
+        result,
+        is(
+            "{\"status\":200,\"result\":{\"exerciseResult\":\"#12:1\",\"contracts\":[{\"archived\":{\"contractId\":\"#10:0\",\"templateId\":\"b4eb9b86bb78db2acde90edf0a03d96e5d65cc7a7cc422f23b6d98a286e07c09:DA.TimeService.TimeService:CurrentTime\"}},{\"created\":{\"observers\":[],\"agreementText\":\"\",\"payload\":{\"operator\":\"Operator\",\"currentTime\":\"2020-02-04T22:57:29Z\",\"observers\":[\"Operator\"]},\"signatories\":[\"Operator\"],\"key\":\"Operator\",\"contractId\":\"#12:1\",\"templateId\":\"b4eb9b86bb78db2acde90edf0a03d96e5d65cc7a7cc422f23b6d98a286e07c09:DA.TimeService.TimeService:CurrentTime\"}}]}}"));
   }
 
   private String toJson(Object o) {
