@@ -4,6 +4,7 @@
  */
 package jsonapi.http;
 
+@SuppressWarnings("PMD.DataClass")
 public class HttpResponse {
 
   private final int status;
