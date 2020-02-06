@@ -87,7 +87,7 @@ public class JsonLedgerClientIT {
             OPERATOR.getValue(), Instant.parse("2020-02-04T22:57:29Z"), Collections.emptyList());
     ledger.createContract(OPERATOR, CurrentTime.TEMPLATE_ID, currentTime.toValue());
 
-    JsonLedgerClient ledger = new JsonLedgerClient(null, null);
+    JsonLedgerClient ledger = new JsonLedgerClient(sandbox.getClient().getLedgerId(), null);
     String result = ledger.getActiveContracts();
 
     assertThat(result, containsString("200"));
