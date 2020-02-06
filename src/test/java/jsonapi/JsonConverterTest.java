@@ -4,16 +4,16 @@
  */
 package jsonapi;
 
+import static org.junit.Assert.assertEquals;
+
 import com.google.gson.*;
 import da.timeservice.timeservice.CurrentTime;
-import org.junit.Test;
 import java.lang.reflect.Type;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
-import static org.junit.Assert.assertEquals;
-
+import org.junit.Test;
 
 // TODO migrate to interface we agreed on
 class CurrentTimeJsonConverter {
@@ -22,7 +22,8 @@ class CurrentTimeJsonConverter {
 
   public CurrentTimeJsonConverter() {
     GsonBuilder gsonBuilder = new GsonBuilder();
-    gsonBuilder.registerTypeAdapter(Instant.class, new CurrentTimeJsonConverter.InstantJsonConverter());
+    gsonBuilder.registerTypeAdapter(
+        Instant.class, new CurrentTimeJsonConverter.InstantJsonConverter());
     gson = gsonBuilder.create();
   }
 
@@ -36,18 +37,18 @@ class CurrentTimeJsonConverter {
     return gson.toJson(currentTime);
   }
 
-  private static class InstantJsonConverter implements JsonSerializer<Instant>, JsonDeserializer<Instant> {
+  private static class InstantJsonConverter
+      implements JsonSerializer<Instant>, JsonDeserializer<Instant> {
     public JsonElement serialize(
-            Instant instant, Type typeOfSrc, JsonSerializationContext context) {
+        Instant instant, Type typeOfSrc, JsonSerializationContext context) {
       return new JsonPrimitive(instant.toString());
     }
 
     public Instant deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
-            throws JsonParseException {
+        throws JsonParseException {
       return Instant.parse(json.getAsJsonPrimitive().getAsString());
     }
   }
-
 }
 
 public class JsonConverterTest {
@@ -55,10 +56,15 @@ public class JsonConverterTest {
   @Test
   public void jsonParseFromSingletonList() {
     String responseWithSingletonList =
-            "{\"result\":[{\"observers\":[],\"agreementText\":\"\",\"payload\":{\"operator\":\"Operator\",\"currentTime\":\"2020-02-04T22:57:29Z\",\"observers\":[]},\"signatories\":[\"Operator\"],\"key\":\"Operator\",\"contractId\":\"#0:0\",\"templateId\":\"6f14cd82bbdbf637ae067f60af1d8da0b941de2e44f4b97b12e9fe7b5f13147a:DA.TimeService.TimeService:CurrentTime\"}],\"status\":200}";
+        "{\"result\":[{\"observers\":[],\"agreementText\":\"\",\"payload\":{\"operator\":\"Operator\",\"currentTime\":\"2020-02-04T22:57:29Z\",\"observers\":[]},\"signatories\":[\"Operator\"],\"key\":\"Operator\",\"contractId\":\"#0:0\",\"templateId\":\"6f14cd82bbdbf637ae067f60af1d8da0b941de2e44f4b97b12e9fe7b5f13147a:DA.TimeService.TimeService:CurrentTime\"}],\"status\":200}";
     CurrentTimeJsonConverter jsonConverter = new CurrentTimeJsonConverter();
-    CurrentTime currentTime = jsonConverter.fromResponseWithSingletonList(responseWithSingletonList);
-    assertEquals(currentTime, new CurrentTime("Operator", Instant.parse("2020-02-04T22:57:29Z"), Collections.EMPTY_LIST));
-    assertEquals(jsonConverter.to(currentTime), "{\"operator\":\"Operator\",\"currentTime\":\"2020-02-04T22:57:29Z\",\"observers\":[]}");
+    CurrentTime currentTime =
+        jsonConverter.fromResponseWithSingletonList(responseWithSingletonList);
+    assertEquals(
+        currentTime,
+        new CurrentTime("Operator", Instant.parse("2020-02-04T22:57:29Z"), Collections.EMPTY_LIST));
+    assertEquals(
+        jsonConverter.to(currentTime),
+        "{\"operator\":\"Operator\",\"currentTime\":\"2020-02-04T22:57:29Z\",\"observers\":[]}");
   }
 }
