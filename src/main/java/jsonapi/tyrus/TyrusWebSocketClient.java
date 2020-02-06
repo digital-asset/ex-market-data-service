@@ -5,28 +5,21 @@
 package jsonapi.tyrus;
 
 import io.reactivex.BackpressureStrategy;
-import io.reactivex.Emitter;
 import io.reactivex.Flowable;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import javax.websocket.ClientEndpointConfig;
-import javax.websocket.CloseReason;
 import javax.websocket.Endpoint;
-import javax.websocket.EndpointConfig;
-import javax.websocket.MessageHandler.Whole;
-import javax.websocket.Session;
+import jsonapi.http.EmittingWebSocketEndpoint;
 import jsonapi.http.WebSocketClient;
 import jsonapi.http.WebSocketResponse;
 import jsonapi.json.JsonDeserializer;
 import jsonapi.json.JsonSerializer;
 import org.glassfish.tyrus.client.ClientManager;
 import org.glassfish.tyrus.container.jdk.client.JdkClientContainer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class TyrusWebSocketClient implements WebSocketClient {
 
@@ -64,49 +57,5 @@ public class TyrusWebSocketClient implements WebSocketClient {
   private WebSocketResponse toWebSocketResponse(String message) {
     InputStream json = new ByteArrayInputStream(message.getBytes());
     return fromJson.apply(json);
-  }
-
-  private static class EmittingWebSocketEndpoint extends javax.websocket.Endpoint {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
-    private final Emitter<String> emitter;
-    private final String query;
-
-    public EmittingWebSocketEndpoint(Emitter<String> emitter, String query) {
-      this.emitter = emitter;
-      this.query = query;
-    }
-
-    @Override
-    public void onOpen(Session session, EndpointConfig endpointConfig) {
-      log.debug("Connected.");
-      try {
-        Whole<String> messageHandler = new MessageHandler();
-        session.addMessageHandler(messageHandler);
-        session.getBasicRemote().sendText(query, true);
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-    }
-
-    @Override
-    public void onError(Session session, Throwable error) {
-      emitter.onError(error);
-    }
-
-    @Override
-    public void onClose(Session session, CloseReason closeReason) {
-      log.debug("Closed.");
-      emitter.onComplete();
-    }
-
-    private class MessageHandler implements Whole<String> {
-
-      @Override
-      public void onMessage(String message) {
-        log.trace("Received message: {}.", message);
-        emitter.onNext(message);
-      }
-    }
   }
 }
