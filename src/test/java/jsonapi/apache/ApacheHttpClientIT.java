@@ -6,7 +6,6 @@ package jsonapi.apache;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 
 import com.daml.ledger.javaapi.data.ExerciseCommand;
 import com.daml.ledger.javaapi.data.Identifier;
@@ -27,34 +26,30 @@ import da.timeservice.timeservice.CurrentTime.ContractId;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.Key;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import jsonapi.JsonApi;
 import jsonapi.gson.ExerciseCommandSerializer;
 import jsonapi.gson.RecordSerializer;
 import jsonapi.http.Api;
 import jsonapi.http.HttpClient;
 import jsonapi.http.HttpResponse;
-import org.apache.http.client.fluent.Request;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExternalResource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.junit.rules.RuleChain;
+import org.junit.rules.TestRule;
 
 public class ApacheHttpClientIT {
 
@@ -65,9 +60,6 @@ public class ApacheHttpClientIT {
       Sandbox.builder().dar(RELATIVE_DAR_PATH).useWallclockTime().build();
 
   @ClassRule public static ExternalResource startSandbox = sandbox.getClassRule();
-  @Rule public final ExternalResource restartSandbox = sandbox.getRule();
-
-  private final Logger log = LoggerFactory.getLogger(getClass());
   private final Gson json =
       new GsonBuilder()
           .registerTypeAdapter(Identifier.class, new IdentifierSerializer())
@@ -76,58 +68,19 @@ public class ApacheHttpClientIT {
           .registerTypeAdapter(ExerciseCommand.class, new ExerciseCommandSerializer())
           .create();
   private final Api api = new Api("localhost", 7575);
+
+  @Rule
+  public TestRule processes =
+      RuleChain.outerRule(sandbox.getRule()).around(new JsonApi(sandbox::getSandboxPort));
+
   private DefaultLedgerAdapter ledger;
   private String jwt;
-  private Process jsonApi;
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() {
     ledger = sandbox.getLedgerAdapter();
     String ledgerId = sandbox.getClient().getLedgerId();
     jwt = createJwt(ledgerId, Collections.singletonList(OPERATOR));
-    jsonApi =
-        new ProcessBuilder(
-                "daml",
-                "json-api",
-                "--ledger-host",
-                "localhost",
-                "--ledger-port",
-                Integer.toString(sandbox.getSandboxPort()),
-                "--http-port",
-                "7575",
-                "--max-inbound-message-size",
-                "4194304",
-                "--package-reload-interval",
-                "5s",
-                "--application-id",
-                "HTTP-JSON-API-Gateway")
-            .redirectOutput(new File("json-api.log"))
-            .redirectError(new File("json-api.err.log"))
-            .start();
-    waitForJsonApi();
-  }
-
-  private void waitForJsonApi() throws InterruptedException {
-    Instant started = Instant.now();
-    boolean isRunning = false;
-    while (!isRunning && (Duration.between(started, Instant.now()).toMillis() < 30_000)) {
-      log.info("Waiting for JSON API...");
-      try {
-        Request.Options("http://localhost:7575").execute().returnResponse();
-        isRunning = true;
-      } catch (IOException ignored) {
-      }
-      Thread.sleep(1000);
-    }
-    if (!isRunning) {
-      fail("Failed to start JSON API");
-    }
-  }
-
-  @After
-  public void tearDown() throws Exception {
-    jsonApi.destroy();
-    jsonApi.waitFor();
   }
 
   @Test

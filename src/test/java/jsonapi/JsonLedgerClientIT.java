@@ -18,12 +18,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Collections;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExternalResource;
+import org.junit.rules.RuleChain;
+import org.junit.rules.TestRule;
 
 public class JsonLedgerClientIT {
 
@@ -38,46 +39,16 @@ public class JsonLedgerClientIT {
           .build();
 
   @ClassRule public static ExternalResource startSandbox = sandbox.getClassRule();
-  @Rule public ExternalResource restartSandbox = sandbox.getRule();
+
+  @Rule
+  public TestRule processes =
+      RuleChain.outerRule(sandbox.getRule()).around(new JsonApi(sandbox::getSandboxPort));
+
   private DefaultLedgerAdapter ledger;
-  private Process jsonApi;
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() {
     ledger = sandbox.getLedgerAdapter();
-    jsonApi =
-        new ProcessBuilder(
-                "daml",
-                "json-api",
-                "--ledger-host",
-                "localhost",
-                "--ledger-port",
-                Integer.toString(sandbox.getSandboxPort()),
-                "--http-port",
-                "7575",
-                "--max-inbound-message-size",
-                "4194304",
-                "--package-reload-interval",
-                "5s",
-                "--application-id",
-                "HTTP-JSON-API-Gateway")
-            .start();
-    waitForJsonApi();
-  }
-
-  private void waitForJsonApi() throws InterruptedException {
-    //    try (Scanner scanner = new Scanner(jsonApi.getInputStream())) {
-    //      while (scanner.hasNextLine() && !scanner.nextLine().contains("Connected to Ledger")) {
-    //        Thread.sleep(100);
-    //      }
-    //    }
-    Thread.sleep(5000);
-  }
-
-  @After
-  public void tearDown() throws Exception {
-    jsonApi.destroy();
-    jsonApi.waitFor();
   }
 
   @Test
