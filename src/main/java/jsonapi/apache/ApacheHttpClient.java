@@ -1,11 +1,11 @@
 package jsonapi.apache;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
-import java.util.function.Function;
 import jsonapi.http.HttpClient;
 import jsonapi.http.HttpResponse;
+import jsonapi.json.JsonDeserializer;
+import jsonapi.json.JsonSerializer;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
@@ -15,12 +15,12 @@ public class ApacheHttpClient implements HttpClient {
 
   private static final BasicHeader JSON_CONTENT =
       new BasicHeader("Content-Type", ContentType.APPLICATION_JSON.getMimeType());
-  private final Function<InputStream, HttpResponse> fromJson;
-  private final Function<Object, String> toJson;
+  private final JsonDeserializer<HttpResponse> fromJson;
+  private final JsonSerializer toJson;
   private final BasicHeader authorization;
 
   public ApacheHttpClient(
-      Function<InputStream, HttpResponse> fromJson, Function<Object, String> toJson, String jwt) {
+      JsonDeserializer<HttpResponse> fromJson, JsonSerializer toJson, String jwt) {
     this.fromJson = fromJson;
     this.toJson = toJson;
     authorization = new BasicHeader("Authorization", "Bearer " + jwt);
