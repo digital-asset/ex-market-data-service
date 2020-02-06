@@ -16,10 +16,6 @@ import com.digitalasset.testing.junit4.Sandbox;
 import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonPrimitive;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 import com.google.protobuf.InvalidProtocolBufferException;
 import da.timeservice.timeservice.CurrentTime;
 import da.timeservice.timeservice.CurrentTime.ContractId;
@@ -28,7 +24,6 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.Key;
@@ -39,6 +34,8 @@ import java.util.List;
 import java.util.Map;
 import jsonapi.JsonApi;
 import jsonapi.gson.ExerciseCommandSerializer;
+import jsonapi.gson.IdentifierSerializer;
+import jsonapi.gson.InstantSerializer;
 import jsonapi.gson.RecordSerializer;
 import jsonapi.http.Api;
 import jsonapi.http.HttpClient;
@@ -143,29 +140,6 @@ public class ApacheHttpClientIT {
 
     public Template getPayload() {
       return payload;
-    }
-  }
-
-  private static class IdentifierSerializer implements JsonSerializer<Identifier> {
-
-    @Override
-    public JsonElement serialize(
-        Identifier identifier, Type type, JsonSerializationContext jsonSerializationContext) {
-      return new JsonPrimitive(toTemplateId(identifier));
-    }
-
-    private String toTemplateId(Identifier identifier) {
-      return String.format(
-          "%s:%s:%s",
-          identifier.getPackageId(), identifier.getModuleName(), identifier.getEntityName());
-    }
-  }
-
-  private static class InstantSerializer implements JsonSerializer<Instant> {
-    @Override
-    public JsonElement serialize(
-        Instant instant, Type type, JsonSerializationContext jsonSerializationContext) {
-      return new JsonPrimitive(instant.toString());
     }
   }
 }
