@@ -54,8 +54,7 @@ public class TyrusWebSocketClient implements WebSocketClient {
 
     private final URI resource;
     private final Object body;
-    // TODO: How to keep session alive?
-    private Session session;
+    private FlowableEmitter<WebSocketResponse> emitter;
 
     public WebSocketSource(URI resource, Object body) {
       this.resource = resource;
@@ -65,46 +64,33 @@ public class TyrusWebSocketClient implements WebSocketClient {
     @Override
     public void subscribe(FlowableEmitter<WebSocketResponse> emitter) throws Exception {
       ClientManager client = ClientManager.createClient(JdkClientContainer.class.getName());
-      session = client.connectToServer(new Endpoint(emitter), config, resource);
-    }
-
-    private class EmittingHandler implements Whole<String> {
-
-      private final FlowableEmitter<WebSocketResponse> emitter;
-
-      public EmittingHandler(FlowableEmitter<WebSocketResponse> emitter) {
-        this.emitter = emitter;
-      }
-
-      @Override
-      public void onMessage(String data) {
-        log.debug("Received message.");
-        log.trace("Message: {}", data);
-
-        // TODO: Implement properly
-        if (data.contains("heartbeat")) {
-          log.trace("Heartbeat received.");
-        } else {
-          InputStream json = new ByteArrayInputStream(data.getBytes());
-          WebSocketResponse response = fromJson.apply(json);
-          emitter.onNext(response);
-        }
-      }
+      client.connectToServer(new Endpoint(), config, resource);
+      this.emitter = emitter;
     }
 
     private class Endpoint extends javax.websocket.Endpoint {
-
-      private final FlowableEmitter<WebSocketResponse> emitter;
-
-      public Endpoint(FlowableEmitter<WebSocketResponse> emitter) {
-        this.emitter = emitter;
-      }
 
       @Override
       public void onOpen(Session session, EndpointConfig endpointConfig) {
         log.debug("Connected.");
         try {
-          session.addMessageHandler(new EmittingHandler(emitter));
+          session.addMessageHandler(
+              new Whole<String>() {
+                @Override
+                public void onMessage(String data) {
+                  log.debug("Received message.");
+                  log.trace("Message: {}", data);
+
+                  // TODO: Implement properly
+                  if (data.contains("heartbeat")) {
+                    log.trace("Heartbeat received.");
+                  } else {
+                    InputStream json = new ByteArrayInputStream(data.getBytes());
+                    WebSocketResponse response = fromJson.apply(json);
+                    emitter.onNext(response);
+                  }
+                }
+              });
           String query = toJson.apply(body);
           session.getBasicRemote().sendText(query, true);
         } catch (IOException e) {
@@ -120,6 +106,7 @@ public class TyrusWebSocketClient implements WebSocketClient {
       @Override
       public void onClose(Session session, CloseReason closeReason) {
         log.debug("Closed.");
+        emitter.onComplete();
       }
     }
   }

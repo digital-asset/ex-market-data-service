@@ -4,6 +4,8 @@
  */
 package jsonapi.tyrus;
 
+import static org.junit.Assert.assertFalse;
+
 import com.daml.ledger.javaapi.data.Identifier;
 import com.daml.ledger.javaapi.data.Party;
 import com.digitalasset.testing.junit4.Sandbox;
@@ -23,6 +25,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import io.reactivex.Flowable;
+import io.reactivex.processors.PublishProcessor;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
@@ -78,7 +81,7 @@ public class TyrusWebSocketClientIT {
   }
 
   @Test
-  public void getActiveContracts() throws InvalidProtocolBufferException, InterruptedException {
+  public void getActiveContracts() throws InvalidProtocolBufferException {
     CurrentTime currentTime = new CurrentTime("Operator", Instant.now(), Collections.emptyList());
     Party party = new Party(OPERATOR);
     ledger.createContract(party, CurrentTime.TEMPLATE_ID, currentTime.toValue());
@@ -86,11 +89,12 @@ public class TyrusWebSocketClientIT {
     ContractQuery query = new ContractQuery(Collections.singletonList(CurrentTime.TEMPLATE_ID));
 
     WebSocketClient client = new TyrusWebSocketClient(this::fromJson, this::toJson, jwt);
-    Flowable<WebSocketResponse> response = client.post(api.searchContractsForever(), query);
+    Flowable<WebSocketResponse> response =
+        client.post(api.searchContractsForever(), query).subscribeWith(PublishProcessor.create());
 
-    response.forEach(x -> System.out.printf("Events: %s%n.", x.getEvents()));
-    Thread.sleep(10_000);
-    response.test().assertValue(xs -> !xs.getEvents().isEmpty());
+    WebSocketResponse webSocketResponse = response.blockingFirst();
+    // TODO: Implement proper assertion
+    assertFalse(webSocketResponse.getEvents().isEmpty());
   }
 
   private String createJwt(String ledgerId, List<String> parties) {
