@@ -5,9 +5,8 @@
 package jsonapi.tyrus;
 
 import io.reactivex.BackpressureStrategy;
+import io.reactivex.Emitter;
 import io.reactivex.Flowable;
-import io.reactivex.FlowableEmitter;
-import io.reactivex.FlowableOnSubscribe;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,6 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 import javax.websocket.ClientEndpointConfig;
 import javax.websocket.CloseReason;
+import javax.websocket.Endpoint;
 import javax.websocket.EndpointConfig;
 import javax.websocket.MessageHandler.Whole;
 import javax.websocket.Session;
@@ -30,11 +30,10 @@ import org.slf4j.LoggerFactory;
 
 public class TyrusWebSocketClient implements WebSocketClient {
 
-  private final Logger log = LoggerFactory.getLogger(getClass());
-
   private final JsonDeserializer<WebSocketResponse> fromJson;
   private final JsonSerializer toJson;
-  private ClientEndpointConfig config;
+  private final ClientEndpointConfig config;
+  private final ClientManager client;
 
   public TyrusWebSocketClient(
       JsonDeserializer<WebSocketResponse> fromJson, JsonSerializer toJson, String jwt) {
@@ -42,71 +41,71 @@ public class TyrusWebSocketClient implements WebSocketClient {
     this.toJson = toJson;
     List<String> subProtocols = Arrays.asList("jwt.token." + jwt, "daml.ws.auth");
     this.config = ClientEndpointConfig.Builder.create().preferredSubprotocols(subProtocols).build();
+    this.client = ClientManager.createClient(JdkClientContainer.class.getName());
   }
 
   @Override
   public Flowable<WebSocketResponse> post(URI resource, Object body) {
-    WebSocketSource source = new WebSocketSource(resource, body);
-    return Flowable.create(source, BackpressureStrategy.LATEST);
+    Flowable<String> source =
+        Flowable.create(
+            emitter -> {
+              String query = toJson.apply(body);
+              Endpoint endpoint = new WebSocketEndpoint(emitter, query);
+              client.connectToServer(endpoint, config, resource);
+            },
+            BackpressureStrategy.LATEST);
+    return source.filter(this::nonHeartbeat).map(this::toWebSocketResponse);
   }
 
-  private class WebSocketSource implements FlowableOnSubscribe<WebSocketResponse> {
+  private boolean nonHeartbeat(String message) {
+    return !message.contains("heartbeat");
+  }
 
-    private final URI resource;
-    private final Object body;
-    private FlowableEmitter<WebSocketResponse> emitter;
+  private WebSocketResponse toWebSocketResponse(String message) {
+    InputStream json = new ByteArrayInputStream(message.getBytes());
+    return fromJson.apply(json);
+  }
 
-    public WebSocketSource(URI resource, Object body) {
-      this.resource = resource;
-      this.body = body;
+  private static class WebSocketEndpoint extends javax.websocket.Endpoint {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
+    private final Emitter<String> emitter;
+    private final String query;
+
+    public WebSocketEndpoint(Emitter<String> emitter, String query) {
+      this.emitter = emitter;
+      this.query = query;
     }
 
     @Override
-    public void subscribe(FlowableEmitter<WebSocketResponse> emitter) throws Exception {
-      ClientManager client = ClientManager.createClient(JdkClientContainer.class.getName());
-      client.connectToServer(new Endpoint(), config, resource);
-      this.emitter = emitter;
+    public void onOpen(Session session, EndpointConfig endpointConfig) {
+      log.debug("Connected.");
+      try {
+        Whole<String> messageHandler = new MessageHandler();
+        session.addMessageHandler(messageHandler);
+        session.getBasicRemote().sendText(query, true);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
 
-    private class Endpoint extends javax.websocket.Endpoint {
+    @Override
+    public void onError(Session session, Throwable error) {
+      emitter.onError(error);
+    }
+
+    @Override
+    public void onClose(Session session, CloseReason closeReason) {
+      log.debug("Closed.");
+      emitter.onComplete();
+    }
+
+    private class MessageHandler implements Whole<String> {
 
       @Override
-      public void onOpen(Session session, EndpointConfig endpointConfig) {
-        log.debug("Connected.");
-        try {
-          session.addMessageHandler(
-              new Whole<String>() {
-                @Override
-                public void onMessage(String data) {
-                  log.debug("Received message.");
-                  log.trace("Message: {}", data);
-
-                  // TODO: Implement properly
-                  if (data.contains("heartbeat")) {
-                    log.trace("Heartbeat received.");
-                  } else {
-                    InputStream json = new ByteArrayInputStream(data.getBytes());
-                    WebSocketResponse response = fromJson.apply(json);
-                    emitter.onNext(response);
-                  }
-                }
-              });
-          String query = toJson.apply(body);
-          session.getBasicRemote().sendText(query, true);
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
-      }
-
-      @Override
-      public void onError(Session session, Throwable error) {
-        emitter.onError(error);
-      }
-
-      @Override
-      public void onClose(Session session, CloseReason closeReason) {
-        log.debug("Closed.");
-        emitter.onComplete();
+      public void onMessage(String message) {
+        log.trace("Received message: {}.", message);
+        emitter.onNext(message);
       }
     }
   }
