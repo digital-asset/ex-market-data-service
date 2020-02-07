@@ -6,6 +6,7 @@ package jsonapi.tyrus;
 
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
+import io.reactivex.processors.PublishProcessor;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URI;
@@ -47,7 +48,10 @@ public class TyrusWebSocketClient implements WebSocketClient {
               client.connectToServer(endpoint, config, resource);
             },
             BackpressureStrategy.LATEST);
-    return source.filter(this::nonHeartbeat).map(this::toWebSocketResponse);
+    return source
+        .filter(this::nonHeartbeat)
+        .map(this::toWebSocketResponse)
+        .subscribeWith(PublishProcessor.create());
   }
 
   private boolean nonHeartbeat(String message) {

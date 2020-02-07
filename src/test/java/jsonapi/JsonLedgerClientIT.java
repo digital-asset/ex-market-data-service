@@ -8,16 +8,39 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertThat;
 
 import com.daml.ledger.javaapi.data.ExerciseCommand;
+import com.daml.ledger.javaapi.data.Identifier;
 import com.daml.ledger.javaapi.data.Party;
+import com.daml.ledger.javaapi.data.Record;
 import com.digitalasset.testing.junit4.Sandbox;
 import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
 import com.digitalasset.testing.utils.ContractWithId;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import da.timeservice.timeservice.CurrentTime;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.Key;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import jsonapi.apache.ApacheHttpClient;
+import jsonapi.gson.ExerciseCommandSerializer;
+import jsonapi.gson.IdentifierSerializer;
+import jsonapi.gson.InstantSerializer;
+import jsonapi.gson.RecordSerializer;
+import jsonapi.http.Api;
+import jsonapi.http.HttpClient;
+import jsonapi.http.HttpResponse;
+import jsonapi.http.WebSocketClient;
+import jsonapi.http.WebSocketResponse;
+import jsonapi.tyrus.TyrusWebSocketClient;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -41,14 +64,35 @@ public class JsonLedgerClientIT {
   @ClassRule public static ExternalResource startSandbox = sandbox.getClassRule();
 
   @Rule
-  public TestRule processes =
+  public final TestRule processes =
       RuleChain.outerRule(sandbox.getRule()).around(new JsonApi(sandbox::getSandboxPort));
 
+  private final Gson json =
+      new GsonBuilder()
+          .registerTypeAdapter(Identifier.class, new IdentifierSerializer())
+          .registerTypeAdapter(Instant.class, new InstantSerializer())
+          .registerTypeAdapter(Record.class, new RecordSerializer())
+          .registerTypeAdapter(ExerciseCommand.class, new ExerciseCommandSerializer())
+          .create();
+
   private DefaultLedgerAdapter ledger;
+  private HttpClient httpClient;
+  private WebSocketClient webSocketClient;
+  private Api api;
 
   @Before
   public void setUp() {
     ledger = sandbox.getLedgerAdapter();
+    Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    Map<String, Object> claim = new HashMap<>();
+    claim.put("ledgerId", sandbox.getClient().getLedgerId());
+    claim.put("applicationId", "market-data-service");
+    claim.put("actAs", Collections.singletonList("Operator"));
+    Map<String, Object> claims = Collections.singletonMap("https://daml.com/ledger-api", claim);
+    String jwt = Jwts.builder().setClaims(claims).signWith(key).compact();
+    httpClient = new ApacheHttpClient(this::fromJson, this::toJson, jwt);
+    webSocketClient = new TyrusWebSocketClient(this::fromJsonWs, this::toJson, jwt);
+    api = new Api("localhost", 7575);
   }
 
   @Test
@@ -58,15 +102,18 @@ public class JsonLedgerClientIT {
             OPERATOR.getValue(), Instant.parse("2020-02-04T22:57:29Z"), Collections.emptyList());
     ledger.createContract(OPERATOR, CurrentTime.TEMPLATE_ID, currentTime.toValue());
 
-    JsonLedgerClient ledger = new JsonLedgerClient(sandbox.getClient().getLedgerId(), null);
+    JsonLedgerClient ledger = new JsonLedgerClient(httpClient, webSocketClient, this::toJson, api);
     String result = ledger.getActiveContracts();
 
-    assertThat(result, containsString("200"));
-    //    assertThat(
-    //        result,
-    //        containsString(
-    //
-    // "{\"result\":[{\"observers\":[],\"agreementText\":\"\",\"payload\":{\"operator\":\"Operator\",\"currentTime\":\"2020-02-04T22:57:29Z\",\"observers\":[]},\"signatories\":[\"Operator\"],\"key\":\"Operator\",\"contractId\":\"#0:0\",\"templateId\":\"6f14cd82bbdbf637ae067f60af1d8da0b941de2e44f4b97b12e9fe7b5f13147a:DA.TimeService.TimeService:CurrentTime\"}],\"status\":200}"));
+    assertThat(result, containsString("\"status\":200"));
+    assertThat(
+        result,
+        containsString(
+            "\"payload\":{\"operator\":\"Operator\",\"currentTime\":\"2020-02-04T22:57:29Z\",\"observers\":[]}"));
+    assertThat(
+        result,
+        containsString(
+            "\"templateId\":\"b4eb9b86bb78db2acde90edf0a03d96e5d65cc7a7cc422f23b6d98a286e07c09:DA.TimeService.TimeService:CurrentTime\""));
   }
 
   @Test
@@ -78,39 +125,27 @@ public class JsonLedgerClientIT {
     ContractWithId<CurrentTime.ContractId> currentTimeWithId =
         ledger.getMatchedContract(OPERATOR, CurrentTime.TEMPLATE_ID, CurrentTime.ContractId::new);
 
-    JsonLedgerClient jsonLedgerClient =
-        new JsonLedgerClient(sandbox.getClient().getLedgerId(), this::objectToJsonMapper);
+    JsonLedgerClient ledger = new JsonLedgerClient(httpClient, webSocketClient, this::toJson, api);
     String result =
-        jsonLedgerClient.exerciseChoice(
+        ledger.exerciseChoice(
             currentTimeWithId.contractId.exerciseCurrentTime_AddObserver(OPERATOR.getValue()));
 
-    assertThat(result, containsString("200"));
+    assertThat(result, containsString("\"status\":200"));
+    assertThat(
+        result,
+        containsString(
+            "\"payload\":{\"operator\":\"Operator\",\"currentTime\":\"2020-02-04T22:57:29Z\",\"observers\":[\"Operator\"]}"));
   }
 
-  private String objectToJsonMapper(Object o) {
-    if (o instanceof ExerciseCommand) {
-      String newObserver =
-          ((ExerciseCommand) o)
-              .getChoiceArgument()
-              .asRecord()
-              .get()
-              .getFieldsMap()
-              .get("newObserver")
-              .asParty()
-              .get()
-              .getValue();
-      String templateId =
-          String.format(
-              "%s:%s",
-              ((ExerciseCommand) o).getTemplateId().getModuleName(),
-              ((ExerciseCommand) o).getTemplateId().getEntityName());
-      return String.format(
-          "{ \"templateId\": \"%s\", \"contractId\": \"%s\", \"choice\": \"%s\", \"argument\": { \"newObserver\": \"%s\" } }",
-          templateId,
-          ((ExerciseCommand) o).getContractId(),
-          ((ExerciseCommand) o).getChoice(),
-          newObserver);
-    }
-    throw new RuntimeException("Unhandled case: " + o.toString());
+  private String toJson(Object o) {
+    return json.toJson(o);
+  }
+
+  private HttpResponse fromJson(InputStream is) {
+    return json.fromJson(new InputStreamReader(is), HttpResponse.class);
+  }
+
+  private WebSocketResponse fromJsonWs(InputStream is) {
+    return json.fromJson(new InputStreamReader(is), WebSocketResponse.class);
   }
 }
