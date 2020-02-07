@@ -21,6 +21,18 @@ public class CreatedEvent implements Event {
     this.payload = payload;
   }
 
+  public Identifier getTemplateId() {
+    return templateId;
+  }
+
+  public String getContractId() {
+    return contractId;
+  }
+
+  public Template getPayload() {
+    return payload;
+  }
+
   @Override
   public void addOrRemove(Set<ActiveContract> activeContracts) {
     activeContracts.add(new ActiveContract(templateId, contractId, payload));
