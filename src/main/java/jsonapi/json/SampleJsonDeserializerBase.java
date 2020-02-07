@@ -6,15 +6,11 @@ package jsonapi.json;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import jsonapi.gson.*;
-
 import java.time.Instant;
+import jsonapi.gson.*;
 
 public abstract class SampleJsonDeserializerBase implements JsonDeserializer {
 
   protected final Gson json =
-      new GsonBuilder()
-          .registerTypeAdapter(Instant.class, new InstantDeserializer())
-          .create();
-
+      new GsonBuilder().registerTypeAdapter(Instant.class, new InstantDeserializer()).create();
 }

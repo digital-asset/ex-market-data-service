@@ -5,7 +5,6 @@
 package jsonapi.json;
 
 import da.timeservice.timeservice.CurrentTime;
-
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
