@@ -6,7 +6,6 @@ package jsonapi.json;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import da.timeservice.timeservice.CurrentTime;
 import jsonapi.gson.*;
 
 import java.time.Instant;
