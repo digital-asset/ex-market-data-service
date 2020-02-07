@@ -8,11 +8,10 @@ import com.daml.ledger.javaapi.data.ExerciseCommand;
 import com.daml.ledger.javaapi.data.Party;
 import da.timeservice.timeservice.CurrentTime;
 import da.timeservice.timeservice.TimeManager;
-import jsonapi.json.SampleJsonSerializer;
-import org.junit.*;
-
 import java.time.Instant;
 import java.util.Collections;
+import jsonapi.json.SampleJsonSerializer;
+import org.junit.*;
 
 public class SampleJsonSerializerTest {
 
@@ -35,9 +34,10 @@ public class SampleJsonSerializerTest {
   @Test
   public void serializeCurrentTime() {
     CurrentTime currentTime =
-            new CurrentTime(
-                    OPERATOR.getValue(), Instant.parse("2020-02-04T22:57:29Z"), Collections.emptyList());
-    Assert.assertEquals("{\"operator\":\"Operator\",\"currentTime\":\"2020-02-04T22:57:29Z\",\"observers\":[]}", sampleJsonSerializer.apply(currentTime));
+        new CurrentTime(
+            OPERATOR.getValue(), Instant.parse("2020-02-04T22:57:29Z"), Collections.emptyList());
+    Assert.assertEquals(
+        "{\"operator\":\"Operator\",\"currentTime\":\"2020-02-04T22:57:29Z\",\"observers\":[]}",
+        sampleJsonSerializer.apply(currentTime));
   }
-
 }
