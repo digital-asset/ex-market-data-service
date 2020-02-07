@@ -5,16 +5,22 @@
 package jsonapi;
 
 import com.daml.ledger.javaapi.data.ExerciseCommand;
+import com.daml.ledger.javaapi.data.Party;
+import da.timeservice.timeservice.CurrentTime;
 import da.timeservice.timeservice.TimeManager;
 import jsonapi.json.SampleJsonSerializer;
 import org.junit.*;
 
+import java.time.Instant;
+import java.util.Collections;
+
 public class SampleJsonSerializerTest {
 
-  SampleJsonSerializer sampleJsonSerializer = new SampleJsonSerializer();
+  private static final Party OPERATOR = new Party("Operator");
+  private final SampleJsonSerializer sampleJsonSerializer = new SampleJsonSerializer();
 
   @Test
-  public void SerializeExerciseAdvanceCurrentTime() {
+  public void serializeExerciseAdvanceCurrentTime() {
     TimeManager.ContractId contractId = new TimeManager.ContractId("cid1");
     ExerciseCommand exerciseCommand = contractId.exerciseAdvanceCurrentTime();
     String expected =
@@ -25,4 +31,13 @@ public class SampleJsonSerializerTest {
             TimeManager.TEMPLATE_ID.getEntityName());
     Assert.assertEquals(expected, sampleJsonSerializer.apply(exerciseCommand));
   }
+
+  @Test
+  public void serializeCurrentTime() {
+    CurrentTime currentTime =
+            new CurrentTime(
+                    OPERATOR.getValue(), Instant.parse("2020-02-04T22:57:29Z"), Collections.emptyList());
+    Assert.assertEquals("{\"operator\":\"Operator\",\"currentTime\":\"2020-02-04T22:57:29Z\",\"observers\":[]}", sampleJsonSerializer.apply(currentTime));
+  }
+
 }
