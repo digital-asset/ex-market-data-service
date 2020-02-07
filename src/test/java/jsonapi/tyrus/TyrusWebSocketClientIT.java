@@ -16,9 +16,6 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
-import com.google.gson.JsonPrimitive;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 import com.google.protobuf.InvalidProtocolBufferException;
 import da.timeservice.timeservice.CurrentTime;
 import io.jsonwebtoken.Jwts;
@@ -38,6 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import jsonapi.JsonApi;
+import jsonapi.gson.IdentifierSerializer;
 import jsonapi.http.Api;
 import jsonapi.http.WebSocketClient;
 import jsonapi.http.WebSocketResponse;
@@ -135,21 +133,6 @@ public class TyrusWebSocketClientIT {
         throws JsonParseException {
       List<Object> events = jsonDeserializationContext.deserialize(jsonElement, List.class);
       return new WebSocketResponse(events);
-    }
-  }
-
-  private static class IdentifierSerializer implements JsonSerializer<Identifier> {
-
-    @Override
-    public JsonElement serialize(
-        Identifier identifier, Type type, JsonSerializationContext jsonSerializationContext) {
-      return new JsonPrimitive(toTemplateId(identifier));
-    }
-
-    private String toTemplateId(Identifier identifier) {
-      return String.format(
-          "%s:%s:%s",
-          identifier.getPackageId(), identifier.getModuleName(), identifier.getEntityName());
     }
   }
 }
