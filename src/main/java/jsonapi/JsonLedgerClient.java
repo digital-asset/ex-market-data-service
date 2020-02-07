@@ -42,6 +42,12 @@ public class JsonLedgerClient {
     return toJson.apply(httpResponse);
   }
 
+  // TODO:
+  /*
+   CustomSet
+     remove(ContractID)
+     add(ActiveContract)
+  */
   public Flowable<Set<ActiveContract>> getActiveContracts(TransactionFilter transactionFilter) {
     Flowable<WebSocketResponse> response = webSocketClient.post(api.searchContractsForever(), null);
     // TODO: Convert to events (created, archive, error)
@@ -49,6 +55,7 @@ public class JsonLedgerClient {
     return response.map(this::toTemplates);
   }
 
+  @SuppressWarnings("PMD.UnusedFormalParameter")
   private Set<ActiveContract> toTemplates(WebSocketResponse x) {
     throw new UnsupportedOperationException("Not yet implemented.");
   }

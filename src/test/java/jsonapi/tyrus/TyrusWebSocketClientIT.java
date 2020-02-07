@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import jsonapi.JsonApi;
 import jsonapi.gson.IdentifierSerializer;
+import jsonapi.events.Event;
 import jsonapi.http.Api;
 import jsonapi.http.WebSocketClient;
 import jsonapi.http.WebSocketResponse;
@@ -131,7 +132,7 @@ public class TyrusWebSocketClientIT {
     public WebSocketResponse deserialize(
         JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext)
         throws JsonParseException {
-      List<Object> events = jsonDeserializationContext.deserialize(jsonElement, List.class);
+      List<Event> events = jsonDeserializationContext.deserialize(jsonElement, List.class);
       return new WebSocketResponse(events);
     }
   }

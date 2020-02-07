@@ -5,17 +5,18 @@
 package jsonapi.http;
 
 import java.util.Collection;
+import jsonapi.events.Event;
 
 @SuppressWarnings("PMD.DataClass")
 public class WebSocketResponse {
 
-  private final Collection<Object> events;
+  private final Collection<Event> events;
 
-  public WebSocketResponse(Collection<Object> events) {
+  public WebSocketResponse(Collection<Event> events) {
     this.events = events;
   }
 
-  public Collection<Object> getEvents() {
+  public Collection<Event> getEvents() {
     return events;
   }
 }
