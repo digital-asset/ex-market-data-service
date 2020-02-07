@@ -76,8 +76,8 @@ public class JsonSerializeExerciseIT {
     claim.put("actAs", Collections.singletonList("Operator"));
     Map<String, Object> claims = Collections.singletonMap("https://daml.com/ledger-api", claim);
     String jwt = Jwts.builder().setClaims(claims).signWith(key).compact();
-    httpClient = new ApacheHttpClient(this::fromJson, this::toJson, jwt);
-    webSocketClient = new TyrusWebSocketClient(this::fromJsonWs, this::toJson, jwt);
+    httpClient = new ApacheHttpClient(this::fromJson, new SampleJsonSerializer(), jwt);
+    webSocketClient = new TyrusWebSocketClient(this::fromJsonWs, new SampleJsonSerializer(), jwt);
     api = new Api("localhost", 7575);
   }
 
@@ -89,7 +89,7 @@ public class JsonSerializeExerciseIT {
     ContractWithId<TimeManager.ContractId> timeManagerWithId =
         ledger.getMatchedContract(OPERATOR, TimeManager.TEMPLATE_ID, TimeManager.ContractId::new);
     JsonLedgerClient jsonLedgerClient =
-        new JsonLedgerClient(httpClient, webSocketClient, this::toJson, api);
+        new JsonLedgerClient(httpClient, webSocketClient, new SampleJsonSerializer(), api);
     jsonLedgerClient.exerciseChoice(timeManagerWithId.contractId.exerciseAdvanceCurrentTime());
     getNextCurrentTime();
     CurrentTime currentTime = getNextCurrentTime();
@@ -112,10 +112,6 @@ public class JsonSerializeExerciseIT {
     ledger.createContract(OPERATOR, TimeConfiguration.TEMPLATE_ID, timeConfiguration.toValue());
     TimeManager timeManager = new TimeManager(OPERATOR.getValue());
     ledger.createContract(OPERATOR, TimeManager.TEMPLATE_ID, timeManager.toValue());
-  }
-
-  private String toJson(Object o) {
-    return new SampleJsonSerializer().apply(o);
   }
 
   private HttpResponse fromJson(InputStream is) {

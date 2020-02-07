@@ -91,8 +91,8 @@ public class JsonLedgerClientIT {
     claim.put("actAs", Collections.singletonList("Operator"));
     Map<String, Object> claims = Collections.singletonMap("https://daml.com/ledger-api", claim);
     String jwt = Jwts.builder().setClaims(claims).signWith(key).compact();
-    httpClient = new ApacheHttpClient(this::fromJson, this::toJson, jwt);
-    webSocketClient = new TyrusWebSocketClient(this::fromJsonWs, this::toJson, jwt);
+    httpClient = new ApacheHttpClient(this::fromJson, new SampleJsonSerializer(), jwt);
+    webSocketClient = new TyrusWebSocketClient(this::fromJsonWs, new SampleJsonSerializer(), jwt);
     api = new Api("localhost", 7575);
   }
 
@@ -103,7 +103,7 @@ public class JsonLedgerClientIT {
             OPERATOR.getValue(), Instant.parse("2020-02-04T22:57:29Z"), Collections.emptyList());
     ledger.createContract(OPERATOR, CurrentTime.TEMPLATE_ID, currentTime.toValue());
 
-    JsonLedgerClient ledger = new JsonLedgerClient(httpClient, webSocketClient, this::toJson, api);
+    JsonLedgerClient ledger = new JsonLedgerClient(httpClient, webSocketClient, new SampleJsonSerializer(), api);
     String result = ledger.getActiveContracts();
 
     assertThat(result, containsString("\"status\":200"));
@@ -126,7 +126,7 @@ public class JsonLedgerClientIT {
     ContractWithId<CurrentTime.ContractId> currentTimeWithId =
         ledger.getMatchedContract(OPERATOR, CurrentTime.TEMPLATE_ID, CurrentTime.ContractId::new);
 
-    JsonLedgerClient ledger = new JsonLedgerClient(httpClient, webSocketClient, this::toJson, api);
+    JsonLedgerClient ledger = new JsonLedgerClient(httpClient, webSocketClient, new SampleJsonSerializer(), api);
     String result =
         ledger.exerciseChoice(
             currentTimeWithId.contractId.exerciseCurrentTime_AddObserver(OPERATOR.getValue()));
@@ -136,10 +136,6 @@ public class JsonLedgerClientIT {
         result,
         containsString(
             "\"payload\":{\"operator\":\"Operator\",\"currentTime\":\"2020-02-04T22:57:29Z\",\"observers\":[\"Operator\"]}"));
-  }
-
-  private String toJson(Object o) {
-    return new SampleJsonSerializer().apply(o);
   }
 
   private HttpResponse fromJson(InputStream is) {
