@@ -20,6 +20,7 @@
     </encoder>
   </appender>
   <logger name="com.digitalasset.refapps" level="debug" />
+  <logger name="jsonapi" level="debug" />
   <root level="info">
     <appender-ref ref="FILE" />
     <appender-ref ref="STDOUT" />
