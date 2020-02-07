@@ -25,7 +25,6 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import io.reactivex.Flowable;
-import io.reactivex.processors.PublishProcessor;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
@@ -89,8 +88,7 @@ public class TyrusWebSocketClientIT {
     ContractQuery query = new ContractQuery(Collections.singletonList(CurrentTime.TEMPLATE_ID));
 
     WebSocketClient client = new TyrusWebSocketClient(this::fromJson, this::toJson, jwt);
-    Flowable<WebSocketResponse> response =
-        client.post(api.searchContractsForever(), query).subscribeWith(PublishProcessor.create());
+    Flowable<WebSocketResponse> response = client.post(api.searchContractsForever(), query);
 
     WebSocketResponse webSocketResponse = response.blockingFirst();
     // TODO: Implement proper assertion
