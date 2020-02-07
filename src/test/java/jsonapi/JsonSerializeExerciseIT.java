@@ -4,17 +4,12 @@
  */
 package jsonapi;
 
-import com.daml.ledger.javaapi.data.ExerciseCommand;
-import com.daml.ledger.javaapi.data.Identifier;
 import com.daml.ledger.javaapi.data.Party;
-import com.daml.ledger.javaapi.data.Record;
 import com.digitalasset.refapps.marketdataservice.extensions.RelTime;
 import com.digitalasset.testing.junit4.Sandbox;
 import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
 import com.digitalasset.testing.utils.ContractWithId;
-import com.fasterxml.jackson.databind.JsonSerializer;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.protobuf.InvalidProtocolBufferException;
 import da.timeservice.timeservice.CurrentTime;
 import da.timeservice.timeservice.TimeConfiguration;
@@ -34,15 +29,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import jsonapi.apache.ApacheHttpClient;
-import jsonapi.gson.ExerciseCommandSerializer;
-import jsonapi.gson.IdentifierSerializer;
-import jsonapi.gson.InstantSerializer;
-import jsonapi.gson.RecordSerializer;
 import jsonapi.http.Api;
 import jsonapi.http.HttpClient;
 import jsonapi.http.HttpResponse;
 import jsonapi.http.WebSocketClient;
 import jsonapi.http.WebSocketResponse;
+import jsonapi.json.SampleJsonSerializer;
 import jsonapi.tyrus.TyrusWebSocketClient;
 import org.junit.*;
 import org.junit.rules.ExternalResource;
@@ -67,13 +59,7 @@ public class JsonSerializeExerciseIT {
   public final TestRule processes =
       RuleChain.outerRule(sandbox.getRule()).around(new JsonApi(sandbox::getSandboxPort));
 
-  private final Gson json =
-      new GsonBuilder()
-          .registerTypeAdapter(Identifier.class, new IdentifierSerializer())
-          .registerTypeAdapter(Instant.class, new InstantSerializer())
-          .registerTypeAdapter(Record.class, new RecordSerializer())
-          .registerTypeAdapter(ExerciseCommand.class, new ExerciseCommandSerializer())
-          .create();
+  private final Gson json = new Gson();
 
   private DefaultLedgerAdapter ledger;
   private HttpClient httpClient;
@@ -129,7 +115,7 @@ public class JsonSerializeExerciseIT {
   }
 
   private String toJson(Object o) {
-    return json.toJson(o);
+    return new SampleJsonSerializer().apply(o);
   }
 
   private HttpResponse fromJson(InputStream is) {
