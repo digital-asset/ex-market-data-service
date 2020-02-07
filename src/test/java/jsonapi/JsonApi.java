@@ -46,8 +46,8 @@ public class JsonApi extends ExternalResource {
                 "5s",
                 "--application-id",
                 "HTTP-JSON-API-Gateway")
-            .redirectOutput(new File("json-api.log"))
-            .redirectError(new File("json-api.err.log"))
+            .redirectOutput(ProcessBuilder.Redirect.appendTo(new File("json-api.log")))
+            .redirectError(ProcessBuilder.Redirect.appendTo(new File("json-api.err.log")))
             .start();
     waitForJsonApi();
   }
