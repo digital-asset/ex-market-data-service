@@ -4,8 +4,6 @@
  */
 package com.digitalasset.refapps.marketdataservice.publishing;
 
-import static com.digitalasset.refapps.marketdataservice.utils.BotUtil.filterTemplates;
-
 import com.daml.ledger.javaapi.data.*;
 import com.daml.ledger.rxjava.components.LedgerViewFlowable;
 import com.daml.ledger.rxjava.components.helpers.CommandsAndPendingSet;
@@ -22,8 +20,11 @@ import da.refapps.marketdataservice.marketdatatypes.ObservationReference;
 import da.refapps.marketdataservice.marketdatatypes.ObservationValue;
 import da.timeservice.timeservice.CurrentTime;
 import io.reactivex.Flowable;
+
 import java.time.Instant;
 import java.util.*;
+
+import static com.digitalasset.refapps.marketdataservice.utils.BotUtil.filterTemplates;
 
 /** An automation bot that publishes values on streams given by a data provider. */
 public class DataProviderBot {

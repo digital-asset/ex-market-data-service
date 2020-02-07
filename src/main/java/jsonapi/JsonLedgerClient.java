@@ -5,13 +5,9 @@
 package jsonapi;
 
 import com.daml.ledger.javaapi.data.ExerciseCommand;
+import com.daml.ledger.javaapi.data.TransactionFilter;
 import io.reactivex.Flowable;
-import java.util.concurrent.CountDownLatch;
-import jsonapi.http.Api;
-import jsonapi.http.HttpClient;
-import jsonapi.http.HttpResponse;
-import jsonapi.http.WebSocketClient;
-import jsonapi.http.WebSocketResponse;
+import jsonapi.http.*;
 import jsonapi.json.JsonSerializer;
 
 public class JsonLedgerClient {
@@ -41,9 +37,7 @@ public class JsonLedgerClient {
     return toJson.apply(httpResponse);
   }
 
-  public void getActiveContractsViaWebSockets(CountDownLatch countdown) {
-    Flowable<WebSocketResponse> webSocketResponse =
-        webSocketClient.post(api.searchContractsForever(), null);
-    webSocketResponse.subscribe(x -> countdown.countDown());
+  public Flowable<WebSocketResponse> getActiveContractsViaWebSockets(TransactionFilter transactionFilter) {
+    return webSocketClient.post(api.searchContractsForever(), null);
   }
 }
