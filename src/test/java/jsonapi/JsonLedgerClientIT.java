@@ -40,6 +40,7 @@ import jsonapi.http.HttpClient;
 import jsonapi.http.HttpResponse;
 import jsonapi.http.WebSocketClient;
 import jsonapi.http.WebSocketResponse;
+import jsonapi.json.SampleJsonSerializer;
 import jsonapi.tyrus.TyrusWebSocketClient;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -138,7 +139,7 @@ public class JsonLedgerClientIT {
   }
 
   private String toJson(Object o) {
-    return json.toJson(o);
+    return new SampleJsonSerializer().apply(o);
   }
 
   private HttpResponse fromJson(InputStream is) {
