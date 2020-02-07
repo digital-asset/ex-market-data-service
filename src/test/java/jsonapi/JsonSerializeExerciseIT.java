@@ -4,19 +4,16 @@
  */
 package jsonapi;
 
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.Assert.assertThat;
-
-import com.daml.ledger.javaapi.data.ExerciseCommand;
-import com.daml.ledger.javaapi.data.Identifier;
 import com.daml.ledger.javaapi.data.Party;
-import com.daml.ledger.javaapi.data.Record;
+import com.digitalasset.refapps.marketdataservice.extensions.RelTime;
 import com.digitalasset.testing.junit4.Sandbox;
 import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
 import com.digitalasset.testing.utils.ContractWithId;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.protobuf.InvalidProtocolBufferException;
 import da.timeservice.timeservice.CurrentTime;
+import da.timeservice.timeservice.TimeConfiguration;
+import da.timeservice.timeservice.TimeManager;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -26,15 +23,12 @@ import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.Key;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import jsonapi.apache.ApacheHttpClient;
-import jsonapi.gson.ExerciseCommandSerializer;
-import jsonapi.gson.IdentifierSerializer;
-import jsonapi.gson.InstantSerializer;
-import jsonapi.gson.RecordSerializer;
 import jsonapi.http.Api;
 import jsonapi.http.HttpClient;
 import jsonapi.http.HttpResponse;
@@ -42,15 +36,12 @@ import jsonapi.http.WebSocketClient;
 import jsonapi.http.WebSocketResponse;
 import jsonapi.json.SampleJsonSerializer;
 import jsonapi.tyrus.TyrusWebSocketClient;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.ExternalResource;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 
-public class JsonLedgerClientIT {
+public class JsonSerializeExerciseIT {
 
   private static final Path RELATIVE_DAR_PATH = Paths.get("target/market-data-service.dar");
   private static final Party OPERATOR = new Party("Operator");
@@ -68,13 +59,7 @@ public class JsonLedgerClientIT {
   public final TestRule processes =
       RuleChain.outerRule(sandbox.getRule()).around(new JsonApi(sandbox::getSandboxPort));
 
-  private final Gson json =
-      new GsonBuilder()
-          .registerTypeAdapter(Identifier.class, new IdentifierSerializer())
-          .registerTypeAdapter(Instant.class, new InstantSerializer())
-          .registerTypeAdapter(Record.class, new RecordSerializer())
-          .registerTypeAdapter(ExerciseCommand.class, new ExerciseCommandSerializer())
-          .create();
+  private final Gson json = new Gson();
 
   private DefaultLedgerAdapter ledger;
   private HttpClient httpClient;
@@ -97,47 +82,36 @@ public class JsonLedgerClientIT {
   }
 
   @Test
-  public void getActiveContracts() throws IOException {
-    CurrentTime currentTime =
-        new CurrentTime(
-            OPERATOR.getValue(), Instant.parse("2020-02-04T22:57:29Z"), Collections.emptyList());
-    ledger.createContract(OPERATOR, CurrentTime.TEMPLATE_ID, currentTime.toValue());
-
-    JsonLedgerClient ledger =
+  public void AdvanceCurrentTimeIsCompletedByTheLedger() throws IOException {
+    Instant startTime = Instant.parse("2020-02-04T22:57:29Z");
+    Duration modelPeriodTime = Duration.ofHours(1);
+    setupTimeContracts(startTime, modelPeriodTime);
+    ContractWithId<TimeManager.ContractId> timeManagerWithId =
+        ledger.getMatchedContract(OPERATOR, TimeManager.TEMPLATE_ID, TimeManager.ContractId::new);
+    JsonLedgerClient jsonLedgerClient =
         new JsonLedgerClient(httpClient, webSocketClient, new SampleJsonSerializer(), api);
-    String result = ledger.getActiveContracts();
-
-    assertThat(result, containsString("\"status\":200"));
-    assertThat(
-        result,
-        containsString(
-            "\"payload\":{\"operator\":\"Operator\",\"currentTime\":\"2020-02-04T22:57:29Z\",\"observers\":[]}"));
-    assertThat(
-        result,
-        containsString(
-            "\"templateId\":\"b4eb9b86bb78db2acde90edf0a03d96e5d65cc7a7cc422f23b6d98a286e07c09:DA.TimeService.TimeService:CurrentTime\""));
+    jsonLedgerClient.exerciseChoice(timeManagerWithId.contractId.exerciseAdvanceCurrentTime());
+    getNextCurrentTime();
+    CurrentTime currentTime = getNextCurrentTime();
+    Assert.assertEquals(startTime.plus(modelPeriodTime), currentTime.currentTime);
   }
 
-  @Test
-  public void exerciseChoice() throws IOException {
-    CurrentTime currentTime =
-        new CurrentTime(
-            OPERATOR.getValue(), Instant.parse("2020-02-04T22:57:29Z"), Collections.emptyList());
-    ledger.createContract(OPERATOR, CurrentTime.TEMPLATE_ID, currentTime.toValue());
+  private CurrentTime getNextCurrentTime() {
     ContractWithId<CurrentTime.ContractId> currentTimeWithId =
         ledger.getMatchedContract(OPERATOR, CurrentTime.TEMPLATE_ID, CurrentTime.ContractId::new);
+    return CurrentTime.fromValue(currentTimeWithId.record);
+  }
 
-    JsonLedgerClient ledger =
-        new JsonLedgerClient(httpClient, webSocketClient, new SampleJsonSerializer(), api);
-    String result =
-        ledger.exerciseChoice(
-            currentTimeWithId.contractId.exerciseCurrentTime_AddObserver(OPERATOR.getValue()));
-
-    assertThat(result, containsString("\"status\":200"));
-    assertThat(
-        result,
-        containsString(
-            "\"payload\":{\"operator\":\"Operator\",\"currentTime\":\"2020-02-04T22:57:29Z\",\"observers\":[\"Operator\"]}"));
+  private void setupTimeContracts(Instant startTime, Duration modelPeriodTime)
+      throws InvalidProtocolBufferException {
+    CurrentTime currentTime =
+        new CurrentTime(OPERATOR.getValue(), startTime, Collections.emptyList());
+    ledger.createContract(OPERATOR, CurrentTime.TEMPLATE_ID, currentTime.toValue());
+    TimeConfiguration timeConfiguration =
+        new TimeConfiguration(OPERATOR.getValue(), true, RelTime.fromDuration(modelPeriodTime));
+    ledger.createContract(OPERATOR, TimeConfiguration.TEMPLATE_ID, timeConfiguration.toValue());
+    TimeManager timeManager = new TimeManager(OPERATOR.getValue());
+    ledger.createContract(OPERATOR, TimeManager.TEMPLATE_ID, timeManager.toValue());
   }
 
   private HttpResponse fromJson(InputStream is) {
