@@ -5,6 +5,10 @@
 package jsonapi;
 
 import com.daml.ledger.javaapi.data.ExerciseCommand;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -28,8 +32,11 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
 import org.glassfish.tyrus.client.ClientManager;
 import org.glassfish.tyrus.container.jdk.client.JdkClientContainer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JsonLedgerClient {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
   private final String JWT_TOKEN;
   private final Function<Object, String> objectToJsonMapper;
 
@@ -66,6 +73,7 @@ public class JsonLedgerClient {
 
   public String exerciseChoice(ExerciseCommand command) throws IOException {
     String body = objectToJsonMapper.apply(command);
+    logger.debug("Exercise: {}", body);
     return executeRequest(exerciseCommand.bodyString(body, ContentType.APPLICATION_JSON));
   }
 
@@ -75,6 +83,12 @@ public class JsonLedgerClient {
 
   private String executeRequest(Request request) throws IOException {
     return request.execute().returnContent().asString();
+  }
+
+  private String jsonPrettyFormat(String json) {
+    Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    JsonElement el = new JsonParser().parse(json);
+    return gson.toJson(el);
   }
 
   public void getActiveContractsViaWebSockets(CountDownLatch countdown)
