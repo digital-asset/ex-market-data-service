@@ -4,8 +4,14 @@
  */
 package com.digitalasset.refapps.marketdataservice;
 
+import com.daml.ledger.javaapi.data.Identifier;
+import com.daml.ledger.javaapi.data.Template;
+import com.daml.ledger.javaapi.data.TransactionFilter;
 import com.daml.ledger.rxjava.DamlLedgerClient;
 import com.daml.ledger.rxjava.components.Bot;
+import com.daml.ledger.rxjava.components.LedgerViewFlowable;
+import com.daml.ledger.rxjava.components.helpers.CommandsAndPendingSet;
+import com.daml.ledger.rxjava.components.helpers.CreatedContract;
 import com.digitalasset.refapps.marketdataservice.publishing.CachingCsvDataProvider;
 import com.digitalasset.refapps.marketdataservice.publishing.DataProviderBot;
 import com.digitalasset.refapps.marketdataservice.publishing.PublishingDataProvider;
@@ -22,6 +28,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
+import jsonapi.JsonLedgerClient;
+import jsonapi.http.WebSocketResponse;
+import org.pcollections.HashTreePMap;
+import org.pcollections.PMap;
+import org.pcollections.PSet;
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,10 +42,10 @@ public class Main {
 
   // application id used for sending commands
   private static final String APPLICATION_ID = "MarketDataService";
-  private static ScheduledExecutorService scheduler;
-  private static TimeUpdaterBotExecutor timeUpdaterBotExecutor;
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
   private static final Duration SYSTEM_PERIOD_TIME = Duration.ofSeconds(5);
+  private static ScheduledExecutorService scheduler;
+  private static TimeUpdaterBotExecutor timeUpdaterBotExecutor;
 
   public static void main(String[] args) throws InterruptedException {
 
@@ -143,5 +156,50 @@ public class Main {
         }
       }
     }
+  }
+
+  public static BiConsumer<JsonLedgerClient, ManagedChannel> runBotsWithJsonApi(
+      AppParties parties, Duration systemPeriodTime) {
+    return (JsonLedgerClient client, ManagedChannel channel) -> {
+      Duration mrt = Duration.ofSeconds(10);
+      CommandsAndPendingSetBuilder.Factory commandBuilderFactory =
+          CommandsAndPendingSetBuilder.factory(APPLICATION_ID, Clock::systemUTC, mrt);
+
+      if (parties.hasMarketDataProvider1()) {
+        logger.info("Starting automation for MarketDataProvider1.");
+        PublishingDataProvider dataProvider = new CachingCsvDataProvider();
+        DataProviderBot dataProviderBot =
+            new DataProviderBot(
+                commandBuilderFactory, parties.getMarketDataProvider1(), dataProvider);
+        wire(
+            client,
+            dataProviderBot.getTransactionFilter(),
+            dataProviderBot::calculateCommands,
+            dataProviderBot::getContractInfo);
+      }
+    };
+  }
+
+  public static <R> void wire(
+      JsonLedgerClient ledgerClient,
+      TransactionFilter transactionFilter,
+      Function<LedgerViewFlowable.LedgerView<Template>, Publisher<CommandsAndPendingSet>> bot,
+      Function<CreatedContract, R> transform) {
+
+    ledgerClient
+        .getActiveContractsViaWebSockets(transactionFilter)
+        .map(x -> Main.toLedgerView(x, transform))
+        .flatMap(bot::apply);
+  }
+
+  static <R> LedgerViewFlowable.LedgerView<Template> toLedgerView(
+      WebSocketResponse response, Function<CreatedContract, R> transform) {
+    PMap<String, PMap<Identifier, PSet<String>>> stringPMapHashPMap = HashTreePMap.empty();
+    PMap<Identifier, PMap<String, PSet<String>>> identifierPMapHashPMap = HashTreePMap.empty();
+    PMap<Identifier, PMap<String, Template>> emptyIdMap = HashTreePMap.empty();
+    LedgerViewFlowable.LedgerTestView<Template> emptyLedgerView =
+        new LedgerViewFlowable.LedgerTestView<Template>(
+            stringPMapHashPMap, identifierPMapHashPMap, emptyIdMap, emptyIdMap);
+    return emptyLedgerView;
   }
 }
