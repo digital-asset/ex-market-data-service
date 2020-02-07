@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package jsonapi.gson;
 
 import com.daml.ledger.javaapi.data.Identifier;
@@ -12,6 +16,12 @@ public class IdentifierSerializer implements JsonSerializer<Identifier> {
   @Override
   public JsonElement serialize(
       Identifier identifier, Type type, JsonSerializationContext jsonSerializationContext) {
-    return new JsonPrimitive(identifier.getModuleName() + ":" + identifier.getEntityName());
+    return new JsonPrimitive(toTemplateId(identifier));
+  }
+
+  private String toTemplateId(Identifier identifier) {
+    return String.format(
+        "%s:%s:%s",
+        identifier.getPackageId(), identifier.getModuleName(), identifier.getEntityName());
   }
 }

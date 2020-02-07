@@ -2,44 +2,45 @@
  * Copyright (c) 2019, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-package jsonapi.apache;
+package jsonapi.tyrus;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertFalse;
 
-import com.daml.ledger.javaapi.data.ExerciseCommand;
 import com.daml.ledger.javaapi.data.Identifier;
 import com.daml.ledger.javaapi.data.Party;
-import com.daml.ledger.javaapi.data.Record;
-import com.daml.ledger.javaapi.data.Template;
 import com.digitalasset.testing.junit4.Sandbox;
 import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import com.google.protobuf.InvalidProtocolBufferException;
 import da.timeservice.timeservice.CurrentTime;
-import da.timeservice.timeservice.CurrentTime.ContractId;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import io.reactivex.Flowable;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.Key;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import jsonapi.JsonApi;
-import jsonapi.gson.ExerciseCommandSerializer;
-import jsonapi.gson.IdentifierSerializer;
-import jsonapi.gson.InstantSerializer;
-import jsonapi.gson.RecordSerializer;
 import jsonapi.http.Api;
-import jsonapi.http.HttpClient;
-import jsonapi.http.HttpResponse;
+import jsonapi.http.WebSocketClient;
+import jsonapi.http.WebSocketResponse;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -48,7 +49,7 @@ import org.junit.rules.ExternalResource;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 
-public class ApacheHttpClientIT {
+public class TyrusWebSocketClientIT {
 
   private static final Path RELATIVE_DAR_PATH = Paths.get("target/market-data-service.dar");
   private static final String OPERATOR = "Operator";
@@ -60,9 +61,7 @@ public class ApacheHttpClientIT {
   private final Gson json =
       new GsonBuilder()
           .registerTypeAdapter(Identifier.class, new IdentifierSerializer())
-          .registerTypeAdapter(Instant.class, new InstantSerializer())
-          .registerTypeAdapter(Record.class, new RecordSerializer())
-          .registerTypeAdapter(ExerciseCommand.class, new ExerciseCommandSerializer())
+          .registerTypeAdapter(WebSocketResponse.class, new WebSocketResponseDeserializer())
           .create();
   private final Api api = new Api("localhost", 7575);
 
@@ -81,29 +80,19 @@ public class ApacheHttpClientIT {
   }
 
   @Test
-  public void createContract() {
-    CurrentTime currentTime = new CurrentTime("Operator", Instant.now(), Collections.emptyList());
-    CreateCommand command = new CreateCommand(CurrentTime.TEMPLATE_ID, currentTime);
-
-    HttpClient client = new ApacheHttpClient(this::fromJson, this::toJson, jwt);
-    HttpResponse response = client.post(api.createContract(), command);
-
-    assertThat(response.getStatus(), is(200));
-  }
-
-  @Test
-  public void exerciseChoice() throws InvalidProtocolBufferException {
+  public void getActiveContracts() throws InvalidProtocolBufferException {
     CurrentTime currentTime = new CurrentTime("Operator", Instant.now(), Collections.emptyList());
     Party party = new Party(OPERATOR);
     ledger.createContract(party, CurrentTime.TEMPLATE_ID, currentTime.toValue());
-    CurrentTime.ContractId contractId =
-        ledger.getCreatedContractId(party, CurrentTime.TEMPLATE_ID, ContractId::new);
-    ExerciseCommand command = contractId.exerciseCurrentTime_AddObserver("MarketDataVendor");
 
-    HttpClient client = new ApacheHttpClient(this::fromJson, this::toJson, jwt);
-    HttpResponse response = client.post(api.exercise(), command);
+    ContractQuery query = new ContractQuery(Collections.singletonList(CurrentTime.TEMPLATE_ID));
 
-    assertThat(response.getStatus(), is(200));
+    WebSocketClient client = new TyrusWebSocketClient(this::fromJson, this::toJson, jwt);
+    Flowable<WebSocketResponse> response = client.post(api.searchContractsForever(), query);
+
+    WebSocketResponse webSocketResponse = response.blockingFirst();
+    // TODO: Implement proper assertion
+    assertFalse(webSocketResponse.getEvents().isEmpty());
   }
 
   private String createJwt(String ledgerId, List<String> parties) {
@@ -116,30 +105,51 @@ public class ApacheHttpClientIT {
     return Jwts.builder().setClaims(claims).signWith(key).compact();
   }
 
-  private HttpResponse fromJson(InputStream inputStream) {
-    return json.fromJson(new InputStreamReader(inputStream), HttpResponse.class);
+  private WebSocketResponse fromJson(InputStream inputStream) {
+    return json.fromJson(new InputStreamReader(inputStream), WebSocketResponse.class);
   }
 
   private String toJson(Object o) {
     return json.toJson(o);
   }
 
-  private static class CreateCommand {
+  private static class ContractQuery {
 
-    private final Identifier templateId;
-    private final Template payload;
+    private final Collection<Identifier> templateIds;
 
-    public CreateCommand(Identifier identifier, Template contract) {
-      this.templateId = identifier;
-      this.payload = contract;
+    public ContractQuery(Collection<Identifier> identifiers) {
+      templateIds = identifiers;
     }
 
-    public Identifier getTemplateId() {
-      return templateId;
+    public Collection<Identifier> getTemplateIds() {
+      return templateIds;
+    }
+  }
+
+  private static class WebSocketResponseDeserializer
+      implements JsonDeserializer<WebSocketResponse> {
+
+    @Override
+    public WebSocketResponse deserialize(
+        JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext)
+        throws JsonParseException {
+      List<Object> events = jsonDeserializationContext.deserialize(jsonElement, List.class);
+      return new WebSocketResponse(events);
+    }
+  }
+
+  private static class IdentifierSerializer implements JsonSerializer<Identifier> {
+
+    @Override
+    public JsonElement serialize(
+        Identifier identifier, Type type, JsonSerializationContext jsonSerializationContext) {
+      return new JsonPrimitive(toTemplateId(identifier));
     }
 
-    public Template getPayload() {
-      return payload;
+    private String toTemplateId(Identifier identifier) {
+      return String.format(
+          "%s:%s:%s",
+          identifier.getPackageId(), identifier.getModuleName(), identifier.getEntityName());
     }
   }
 }
