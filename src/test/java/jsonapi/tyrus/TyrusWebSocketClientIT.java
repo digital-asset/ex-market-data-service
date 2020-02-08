@@ -39,6 +39,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import jsonapi.ContractQuery;
 import jsonapi.JsonApi;
 import jsonapi.events.ArchivedEvent;
 import jsonapi.events.CreatedEvent;
@@ -124,19 +125,6 @@ public class TyrusWebSocketClientIT {
 
   private String toJson(Object o) {
     return json.toJson(o);
-  }
-
-  private static class ContractQuery {
-
-    private final Collection<Identifier> templateIds;
-
-    public ContractQuery(Collection<Identifier> identifiers) {
-      templateIds = identifiers;
-    }
-
-    public Collection<Identifier> getTemplateIds() {
-      return templateIds;
-    }
   }
 
   private static class WebSocketResponseDeserializer
