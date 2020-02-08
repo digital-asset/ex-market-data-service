@@ -45,6 +45,6 @@ public class ActiveContractSetTest {
                 Collections.singletonMap(
                     "#2:0",
                     new ActiveContract(
-                        OperatorRole.TEMPLATE_ID, "#2:0", new OperatorRole("Operator")))));
+                        OperatorRole.TEMPLATE_ID, "#2:0", new OperatorRole("Operator2")))));
   }
 }

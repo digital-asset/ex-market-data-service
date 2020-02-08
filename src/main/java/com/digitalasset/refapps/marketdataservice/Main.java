@@ -23,13 +23,13 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import java.time.Clock;
 import java.time.Duration;
-import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import jsonapi.ActiveContract;
+import jsonapi.ActiveContractSet;
 import jsonapi.JsonLedgerClient;
 import org.pcollections.HashTreePMap;
 import org.reactivestreams.Publisher;
@@ -190,18 +190,20 @@ public class Main {
             });
   }
 
-  static LedgerView<Template> toLedgerView(Set<ActiveContract> events) {
+  static LedgerView<Template> toLedgerView(ActiveContractSet activeContractSet) {
     LedgerTestView<Template> emptyLedgerView = createEmptyLedgerView();
-    for (ActiveContract event : events) {
-      emptyLedgerView = addActiveContract(emptyLedgerView, event);
+    for (ActiveContract activeContract : activeContractSet.getActiveContracts()) {
+      emptyLedgerView = addActiveContract(emptyLedgerView, activeContract);
     }
     return emptyLedgerView;
   }
 
   private static LedgerTestView<Template> addActiveContract(
-      LedgerTestView<Template> emptyLedgerView, ActiveContract event) {
+      LedgerTestView<Template> emptyLedgerView, ActiveContract activeContract) {
     return emptyLedgerView.addActiveContract(
-        event.getIdentifier(), event.getContractId(), event.getTemplate());
+        activeContract.getIdentifier(),
+        activeContract.getContractId(),
+        activeContract.getTemplate());
   }
 
   private static LedgerTestView<Template> createEmptyLedgerView() {

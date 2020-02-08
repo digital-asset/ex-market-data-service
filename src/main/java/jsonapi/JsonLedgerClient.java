@@ -7,7 +7,6 @@ package jsonapi;
 import com.daml.ledger.javaapi.data.ExerciseCommand;
 import com.daml.ledger.javaapi.data.TransactionFilter;
 import io.reactivex.Flowable;
-import java.util.Set;
 import jsonapi.http.Api;
 import jsonapi.http.HttpClient;
 import jsonapi.http.HttpResponse;
@@ -42,21 +41,11 @@ public class JsonLedgerClient {
     return toJson.apply(httpResponse);
   }
 
-  // TODO:
-  /*
-   CustomSet
-     remove(ContractID)
-     add(ActiveContract)
-  */
-  public Flowable<Set<ActiveContract>> getActiveContracts(TransactionFilter transactionFilter) {
+  public Flowable<ActiveContractSet> getActiveContracts(TransactionFilter transactionFilter) {
     Flowable<WebSocketResponse> response = webSocketClient.post(api.searchContractsForever(), null);
     // TODO: Convert to events (created, archive, error)
-    // TODO: Calculate the actual ACS (may include contracts received in earlier responses)
-    return response.map(this::toTemplates);
-  }
-
-  @SuppressWarnings("PMD.UnusedFormalParameter")
-  private Set<ActiveContract> toTemplates(WebSocketResponse x) {
-    throw new UnsupportedOperationException("Not yet implemented.");
+    return response
+        .map(WebSocketResponse::getEvents)
+        .scan(ActiveContractSet.empty(), ActiveContractSet::update);
   }
 }

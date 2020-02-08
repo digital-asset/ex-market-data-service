@@ -6,6 +6,7 @@ package jsonapi;
 
 import com.daml.ledger.javaapi.data.Identifier;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -16,12 +17,20 @@ public class ActiveContractSet {
 
   private final Map<String, ActiveContract> activeContracts;
 
-  public ActiveContractSet() {
+  ActiveContractSet() {
     this(new HashMap<>());
   }
 
   ActiveContractSet(Map<String, ActiveContract> activeContracts) {
     this.activeContracts = activeContracts;
+  }
+
+  public static ActiveContractSet empty() {
+    return new ActiveContractSet(new HashMap<>());
+  }
+
+  public Iterable<ActiveContract> getActiveContracts() {
+    return Collections.unmodifiableCollection(activeContracts.values());
   }
 
   public <T> Stream<Contract<T>> getContracts(Identifier identifier, Class<T> type) {
