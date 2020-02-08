@@ -22,23 +22,17 @@ import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
 import com.google.protobuf.InvalidProtocolBufferException;
 import da.timeservice.timeservice.CurrentTime;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
 import io.reactivex.Flowable;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.Key;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import jsonapi.ContractQuery;
 import jsonapi.JsonApi;
 import jsonapi.events.ArchivedEvent;
@@ -47,6 +41,7 @@ import jsonapi.events.Event;
 import jsonapi.gson.IdentifierSerializer;
 import jsonapi.gson.InstantSerializer;
 import jsonapi.http.Api;
+import jsonapi.http.Jwt;
 import jsonapi.http.WebSocketClient;
 import jsonapi.http.WebSocketResponse;
 import org.junit.Before;
@@ -87,12 +82,12 @@ public class TyrusWebSocketClientIT {
   public void setUp() {
     ledger = sandbox.getLedgerAdapter();
     String ledgerId = sandbox.getClient().getLedgerId();
-    jwt = createJwt(ledgerId, Collections.singletonList(OPERATOR));
+    jwt = Jwt.createToken(ledgerId, "market-data-service", Collections.singletonList(OPERATOR));
   }
 
   @Test
   public void getActiveContracts() throws InvalidProtocolBufferException {
-    CurrentTime currentTime = new CurrentTime("Operator", Instant.now(), Collections.emptyList());
+    CurrentTime currentTime = new CurrentTime(OPERATOR, Instant.now(), Collections.emptyList());
     Party party = new Party(OPERATOR);
     ledger.createContract(party, CurrentTime.TEMPLATE_ID, currentTime.toValue());
 
@@ -107,16 +102,6 @@ public class TyrusWebSocketClientIT {
     CreatedEvent createdEvent = (CreatedEvent) events.get(0);
     assertThat(createdEvent.getTemplateId(), is(CurrentTime.TEMPLATE_ID));
     assertThat(createdEvent.getPayload(), is(currentTime));
-  }
-
-  private String createJwt(String ledgerId, List<String> parties) {
-    Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-    Map<String, Object> claim = new HashMap<>();
-    claim.put("ledgerId", ledgerId);
-    claim.put("applicationId", "market-data-service");
-    claim.put("actAs", parties);
-    Map<String, Object> claims = Collections.singletonMap("https://daml.com/ledger-api", claim);
-    return Jwts.builder().setClaims(claims).signWith(key).compact();
   }
 
   private WebSocketResponse fromJson(InputStream inputStream) {

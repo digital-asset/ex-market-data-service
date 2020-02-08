@@ -22,20 +22,14 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import da.timeservice.timeservice.CurrentTime;
 import io.grpc.ManagedChannel;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.Key;
 import java.time.Instant;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import jsonapi.apache.ApacheHttpClient;
 import jsonapi.gson.ExerciseCommandSerializer;
 import jsonapi.gson.IdentifierSerializer;
@@ -44,6 +38,7 @@ import jsonapi.gson.RecordSerializer;
 import jsonapi.http.Api;
 import jsonapi.http.HttpClient;
 import jsonapi.http.HttpResponse;
+import jsonapi.http.Jwt;
 import jsonapi.http.WebSocketClient;
 import jsonapi.http.WebSocketResponse;
 import jsonapi.json.SampleJsonSerializer;
@@ -81,25 +76,23 @@ public class JsonLedgerClientIT {
           .registerTypeAdapter(Record.class, new RecordSerializer())
           .registerTypeAdapter(ExerciseCommand.class, new ExerciseCommandSerializer())
           .create();
+  private final String applicationId = "market-data-service";
 
   private DefaultLedgerAdapter ledger;
   private HttpClient httpClient;
   private WebSocketClient webSocketClient;
   private Api api;
+  private String ledgerId;
 
   @Before
   public void setUp() {
     ledger = sandbox.getLedgerAdapter();
-    Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-    Map<String, Object> claim = new HashMap<>();
-    claim.put("ledgerId", sandbox.getClient().getLedgerId());
-    claim.put("applicationId", "market-data-service");
-    claim.put("actAs", ALL_PARTIES);
-    Map<String, Object> claims = Collections.singletonMap("https://daml.com/ledger-api", claim);
-    String jwt = Jwts.builder().setClaims(claims).signWith(key).compact();
+    String jwt =
+        Jwt.createToken(ledgerId, applicationId, Collections.singletonList(OPERATOR.getValue()));
     httpClient = new ApacheHttpClient(this::fromJson, new SampleJsonSerializer(), jwt);
     webSocketClient = new TyrusWebSocketClient(this::fromJsonWs, new SampleJsonSerializer(), jwt);
     api = new Api("localhost", 7575);
+    ledgerId = sandbox.getClient().getLedgerId();
   }
 
   @Test
@@ -149,6 +142,13 @@ public class JsonLedgerClientIT {
   @Test
   public void usingDataProviderBot()
       throws NoSuchFieldException, IllegalAccessException, InterruptedException {
+    String marketDataProvider1 = new AppParties(ALL_PARTIES).getMarketDataProvider1();
+    String jwt =
+        Jwt.createToken(ledgerId, applicationId, Collections.singletonList(marketDataProvider1));
+    httpClient = new ApacheHttpClient(this::fromJson, new SampleJsonSerializer(), jwt);
+    webSocketClient = new TyrusWebSocketClient(this::fromJsonWs, new SampleJsonSerializer(), jwt);
+    api = new Api("localhost", 7575);
+
     JsonLedgerClient ledger =
         new JsonLedgerClient(httpClient, webSocketClient, new SampleJsonSerializer(), api);
     Main.runBotsWithJsonApi(new AppParties(ALL_PARTIES), null)
