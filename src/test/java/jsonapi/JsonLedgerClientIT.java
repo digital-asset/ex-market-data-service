@@ -4,6 +4,7 @@
  */
 package jsonapi;
 
+import static com.digitalasset.refapps.marketdataservice.utils.AppParties.ALL_PARTIES;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertThat;
 
@@ -11,18 +12,23 @@ import com.daml.ledger.javaapi.data.ExerciseCommand;
 import com.daml.ledger.javaapi.data.Identifier;
 import com.daml.ledger.javaapi.data.Party;
 import com.daml.ledger.javaapi.data.Record;
+import com.daml.ledger.rxjava.DamlLedgerClient;
+import com.digitalasset.refapps.marketdataservice.Main;
+import com.digitalasset.refapps.marketdataservice.utils.AppParties;
 import com.digitalasset.testing.junit4.Sandbox;
 import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
 import com.digitalasset.testing.utils.ContractWithId;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import da.timeservice.timeservice.CurrentTime;
+import io.grpc.ManagedChannel;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.Key;
@@ -88,7 +94,7 @@ public class JsonLedgerClientIT {
     Map<String, Object> claim = new HashMap<>();
     claim.put("ledgerId", sandbox.getClient().getLedgerId());
     claim.put("applicationId", "market-data-service");
-    claim.put("actAs", Collections.singletonList("Operator"));
+    claim.put("actAs", ALL_PARTIES);
     Map<String, Object> claims = Collections.singletonMap("https://daml.com/ledger-api", claim);
     String jwt = Jwts.builder().setClaims(claims).signWith(key).compact();
     httpClient = new ApacheHttpClient(this::fromJson, new SampleJsonSerializer(), jwt);
@@ -138,6 +144,23 @@ public class JsonLedgerClientIT {
         result,
         containsString(
             "\"payload\":{\"operator\":\"Operator\",\"currentTime\":\"2020-02-04T22:57:29Z\",\"observers\":[\"Operator\"]}"));
+  }
+
+  @Test
+  public void usingDataProviderBot()
+      throws NoSuchFieldException, IllegalAccessException, InterruptedException {
+    JsonLedgerClient ledger =
+        new JsonLedgerClient(httpClient, webSocketClient, new SampleJsonSerializer(), api);
+    Main.runBotsWithJsonApi(new AppParties(ALL_PARTIES), null)
+        .accept(ledger, getManagedChannel(sandbox.getClient()));
+    Thread.currentThread().join();
+  }
+
+  private ManagedChannel getManagedChannel(DamlLedgerClient client)
+      throws NoSuchFieldException, IllegalAccessException {
+    Field channel = client.getClass().getDeclaredField("channel");
+    channel.setAccessible(true);
+    return (ManagedChannel) channel.get(client);
   }
 
   private HttpResponse fromJson(InputStream is) {
