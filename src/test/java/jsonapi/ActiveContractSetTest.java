@@ -19,22 +19,32 @@ public class ActiveContractSetTest {
   public void scan() {
     Flowable<WebSocketResponse> response =
         Flowable.just(
-            new WebSocketResponse(Collections.emptyList()),
             new WebSocketResponse(
                 Collections.singletonList(
                     new CreatedEvent(
-                        OperatorRole.TEMPLATE_ID, "#1:0", new OperatorRole("Operator")))),
+                        OperatorRole.TEMPLATE_ID, "#1:0", new OperatorRole("Operator1")))),
             new WebSocketResponse(
                 Arrays.asList(
                     new CreatedEvent(
-                        OperatorRole.TEMPLATE_ID, "#2:0", new OperatorRole("Operator")),
+                        OperatorRole.TEMPLATE_ID, "#2:0", new OperatorRole("Operator2")),
                     new ArchivedEvent("#1:0"))));
 
-    response.scan(
-        Collections.<ActiveContract>emptySet(),
-        (acs, ws) -> {
-          ws.getEvents().forEach(event -> event.addOrRemove(acs));
-          return acs;
-        });
+    Flowable<ActiveContractSet> activeContractSet =
+        response.scan(new ActiveContractSet(), (acs, ws) -> acs.update(ws.getEvents()));
+
+    activeContractSet
+        .test()
+        .assertValues(
+            new ActiveContractSet(Collections.emptyMap()),
+            new ActiveContractSet(
+                Collections.singletonMap(
+                    "#1:0",
+                    new ActiveContract(
+                        OperatorRole.TEMPLATE_ID, "#1:0", new OperatorRole("Operator1")))),
+            new ActiveContractSet(
+                Collections.singletonMap(
+                    "#2:0",
+                    new ActiveContract(
+                        OperatorRole.TEMPLATE_ID, "#2:0", new OperatorRole("Operator")))));
   }
 }

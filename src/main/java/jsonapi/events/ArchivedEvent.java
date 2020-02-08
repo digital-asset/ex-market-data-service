@@ -4,8 +4,7 @@
  */
 package jsonapi.events;
 
-import java.util.Set;
-import jsonapi.ActiveContract;
+import jsonapi.ActiveContractSet;
 
 public class ArchivedEvent implements Event {
 
@@ -15,8 +14,12 @@ public class ArchivedEvent implements Event {
     this.archived = archived;
   }
 
+  public String getContractId() {
+    return archived;
+  }
+
   @Override
-  public void addOrRemove(Set<ActiveContract> activeContracts) {
-    activeContracts.remove(new ActiveContract(null, archived, null));
+  public ActiveContractSet update(ActiveContractSet activeContractSet) {
+    return activeContractSet.remove(getContractId());
   }
 }

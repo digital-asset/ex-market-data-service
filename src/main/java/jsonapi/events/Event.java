@@ -4,10 +4,9 @@
  */
 package jsonapi.events;
 
-import java.util.Set;
-import jsonapi.ActiveContract;
+import jsonapi.ActiveContractSet;
 
 public interface Event {
 
-  void addOrRemove(Set<ActiveContract> activeContracts);
+  ActiveContractSet update(ActiveContractSet activeContractSet);
 }

@@ -6,8 +6,8 @@ package jsonapi.events;
 
 import com.daml.ledger.javaapi.data.Identifier;
 import com.daml.ledger.javaapi.data.Template;
-import java.util.Set;
 import jsonapi.ActiveContract;
+import jsonapi.ActiveContractSet;
 
 public class CreatedEvent implements Event {
 
@@ -34,7 +34,12 @@ public class CreatedEvent implements Event {
   }
 
   @Override
-  public void addOrRemove(Set<ActiveContract> activeContracts) {
-    activeContracts.add(new ActiveContract(templateId, contractId, payload));
+  public ActiveContractSet update(ActiveContractSet activeContractSet) {
+    ActiveContract activeContract = toActiveContract();
+    return activeContractSet.add(activeContract);
+  }
+
+  private ActiveContract toActiveContract() {
+    return new ActiveContract(getTemplateId(), getContractId(), getPayload());
   }
 }
