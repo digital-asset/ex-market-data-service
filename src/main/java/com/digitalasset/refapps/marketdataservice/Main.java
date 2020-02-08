@@ -5,7 +5,6 @@
 package com.digitalasset.refapps.marketdataservice;
 
 import com.daml.ledger.javaapi.data.Template;
-import com.daml.ledger.javaapi.data.TransactionFilter;
 import com.daml.ledger.rxjava.DamlLedgerClient;
 import com.daml.ledger.rxjava.components.Bot;
 import com.daml.ledger.rxjava.components.LedgerViewFlowable.LedgerTestView;
@@ -30,6 +29,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import jsonapi.ActiveContract;
 import jsonapi.ActiveContractSet;
+import jsonapi.ContractQuery;
 import jsonapi.JsonLedgerClient;
 import org.pcollections.HashTreePMap;
 import org.reactivestreams.Publisher;
@@ -169,18 +169,18 @@ public class Main {
         DataProviderBot dataProviderBot =
             new DataProviderBot(
                 commandBuilderFactory, parties.getMarketDataProvider1(), dataProvider);
-        wire(client, dataProviderBot.getTransactionFilter(), dataProviderBot::calculateCommands);
+        wire(client, dataProviderBot.getContractQuery(), dataProviderBot::calculateCommands);
       }
     };
   }
 
   public static void wire(
       JsonLedgerClient ledgerClient,
-      TransactionFilter transactionFilter,
+      ContractQuery contractQuery,
       Function<LedgerView<Template>, Publisher<CommandsAndPendingSet>> bot) {
 
     ledgerClient
-        .getActiveContracts(transactionFilter)
+        .getActiveContracts(contractQuery)
         .map(Main::toLedgerView)
         .flatMap(bot::apply)
         .forEach(

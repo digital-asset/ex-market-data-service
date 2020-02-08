@@ -5,7 +5,6 @@
 package jsonapi;
 
 import com.daml.ledger.javaapi.data.ExerciseCommand;
-import com.daml.ledger.javaapi.data.TransactionFilter;
 import io.reactivex.Flowable;
 import jsonapi.http.Api;
 import jsonapi.http.HttpClient;
@@ -41,8 +40,9 @@ public class JsonLedgerClient {
     return toJson.apply(httpResponse);
   }
 
-  public Flowable<ActiveContractSet> getActiveContracts(TransactionFilter transactionFilter) {
-    Flowable<WebSocketResponse> response = webSocketClient.post(api.searchContractsForever(), null);
+  public Flowable<ActiveContractSet> getActiveContracts(ContractQuery query) {
+    Flowable<WebSocketResponse> response =
+        webSocketClient.post(api.searchContractsForever(), query);
     // TODO: Convert to events (created, archive, error)
     return response
         .map(WebSocketResponse::getEvents)
