@@ -13,7 +13,7 @@ import jsonapi.json.GsonRegisteredAllDeserializers;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class SampleJsonDeserializerTest {
+public class JsonDeserializerTest {
 
   private static final Party OPERATOR = new Party("Operator");
 
