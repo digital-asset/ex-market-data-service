@@ -6,12 +6,10 @@ package jsonapi;
 
 import com.daml.ledger.javaapi.data.Party;
 import da.timeservice.timeservice.CurrentTime;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.time.Instant;
 import java.util.Collections;
 import jsonapi.gson.*;
-import jsonapi.json.SampleCurrentTimeDeserializer;
+import jsonapi.json.GsonRegisteredAllDeserializers;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -28,9 +26,8 @@ public class SampleJsonDeserializerTest {
             "{\"operator\":\"%s\",\"currentTime\":\"%s\",\"observers\":[]}", operator, time);
     CurrentTime expectedCurrentTime =
         new CurrentTime(operator, Instant.parse(time), Collections.emptyList());
-    SampleCurrentTimeDeserializer deserializer = new SampleCurrentTimeDeserializer();
-    InputStream is = new ByteArrayInputStream(serializedCurrentTime.getBytes());
-    CurrentTime deserializedCurrentTime = deserializer.apply(is);
-    Assert.assertEquals(deserializedCurrentTime, expectedCurrentTime);
+    CurrentTime deserializedCurrentTime =
+        GsonRegisteredAllDeserializers.gson().fromJson(serializedCurrentTime, CurrentTime.class);
+    Assert.assertEquals(expectedCurrentTime, deserializedCurrentTime);
   }
 }
