@@ -45,6 +45,7 @@ public class JsonLedgerClientIT {
 
   private static final Path RELATIVE_DAR_PATH = Paths.get("target/market-data-service.dar");
   private static final Party OPERATOR = new Party("Operator");
+  private static final String APPLICATION_ID = "market-data-service";
 
   private static final Sandbox sandbox =
       Sandbox.builder()
@@ -52,14 +53,12 @@ public class JsonLedgerClientIT {
           .parties(OPERATOR.getValue())
           .useWallclockTime()
           .build();
-
   @ClassRule public static ExternalResource startSandbox = sandbox.getClassRule();
 
   @Rule
   public final TestRule processes =
       RuleChain.outerRule(sandbox.getRule()).around(new JsonApi(sandbox::getSandboxPort));
 
-  private final String applicationId = "market-data-service";
   private final SampleJsonSerializer jsonConverter = new SampleJsonSerializer();
   private final JsonDeserializer<HttpResponse> httpResponseDeserializer =
       jsonConverter.getHttpResponseDeserializer();
@@ -75,12 +74,12 @@ public class JsonLedgerClientIT {
   @Before
   public void setUp() {
     ledger = sandbox.getLedgerAdapter();
+    ledgerId = sandbox.getClient().getLedgerId();
     String jwt =
-        Jwt.createToken(ledgerId, applicationId, Collections.singletonList(OPERATOR.getValue()));
+        Jwt.createToken(ledgerId, APPLICATION_ID, Collections.singletonList(OPERATOR.getValue()));
     httpClient = new ApacheHttpClient(httpResponseDeserializer, jsonConverter, jwt);
     webSocketClient = new TyrusWebSocketClient(webSocketResponseDeserializer, jsonConverter, jwt);
     api = new Api("localhost", 7575);
-    ledgerId = sandbox.getClient().getLedgerId();
   }
 
   @Test
@@ -130,7 +129,7 @@ public class JsonLedgerClientIT {
       throws NoSuchFieldException, IllegalAccessException, InterruptedException {
     String marketDataProvider1 = new AppParties(ALL_PARTIES).getMarketDataProvider1();
     String jwt =
-        Jwt.createToken(ledgerId, applicationId, Collections.singletonList(marketDataProvider1));
+        Jwt.createToken(ledgerId, APPLICATION_ID, Collections.singletonList(marketDataProvider1));
     httpClient = new ApacheHttpClient(httpResponseDeserializer, jsonConverter, jwt);
     webSocketClient = new TyrusWebSocketClient(webSocketResponseDeserializer, jsonConverter, jwt);
     api = new Api("localhost", 7575);
