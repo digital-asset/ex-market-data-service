@@ -2,18 +2,18 @@
  * Copyright (c) 2019, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-package jsonapi.json;
+package jsonapi.gson;
 
 import com.daml.ledger.javaapi.data.ExerciseCommand;
 import com.daml.ledger.javaapi.data.Identifier;
 import com.daml.ledger.javaapi.data.Record;
+import com.daml.ledger.javaapi.data.Template;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.time.Instant;
-import jsonapi.gson.ExerciseCommandSerializer;
-import jsonapi.gson.IdentifierSerializer;
-import jsonapi.gson.InstantSerializer;
-import jsonapi.gson.RecordSerializer;
+import jsonapi.events.Event;
+import jsonapi.http.WebSocketResponse;
+import jsonapi.json.JsonSerializer;
 
 public class SampleJsonSerializer implements JsonSerializer {
 
@@ -23,6 +23,9 @@ public class SampleJsonSerializer implements JsonSerializer {
           .registerTypeAdapter(Instant.class, new InstantSerializer())
           .registerTypeAdapter(Record.class, new RecordSerializer())
           .registerTypeAdapter(ExerciseCommand.class, new ExerciseCommandSerializer())
+          .registerTypeAdapter(WebSocketResponse.class, new WebSocketResponseDeserializer())
+          .registerTypeAdapter(Event.class, new EventDeserializer())
+          .registerTypeAdapter(Template.class, new TemplateDeserializer())
           .create();
 
   @Override

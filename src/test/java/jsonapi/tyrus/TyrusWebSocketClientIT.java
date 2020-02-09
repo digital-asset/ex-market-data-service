@@ -14,32 +14,26 @@ import com.digitalasset.testing.junit4.Sandbox;
 import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import com.google.gson.reflect.TypeToken;
 import com.google.protobuf.InvalidProtocolBufferException;
 import da.timeservice.timeservice.CurrentTime;
 import io.reactivex.Flowable;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import jsonapi.ContractQuery;
 import jsonapi.JsonApi;
-import jsonapi.events.ArchivedEvent;
 import jsonapi.events.CreatedEvent;
 import jsonapi.events.Event;
+import jsonapi.gson.EventDeserializer;
 import jsonapi.gson.IdentifierSerializer;
 import jsonapi.gson.InstantSerializer;
+import jsonapi.gson.TemplateDeserializer;
+import jsonapi.gson.WebSocketResponseDeserializer;
 import jsonapi.http.Api;
 import jsonapi.http.Jwt;
 import jsonapi.http.WebSocketClient;
@@ -110,52 +104,5 @@ public class TyrusWebSocketClientIT {
 
   private String toJson(Object o) {
     return json.toJson(o);
-  }
-
-  private static class WebSocketResponseDeserializer
-      implements JsonDeserializer<WebSocketResponse> {
-
-    @Override
-    public WebSocketResponse deserialize(
-        JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext)
-        throws JsonParseException {
-      Type eventsCollection = new TypeToken<Collection<Event>>() {}.getType();
-      Collection<Event> events =
-          jsonDeserializationContext.deserialize(jsonElement, eventsCollection);
-      return new WebSocketResponse(events);
-    }
-  }
-
-  private static class EventDeserializer implements JsonDeserializer<Event> {
-
-    @Override
-    public Event deserialize(
-        JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext)
-        throws JsonParseException {
-      JsonObject event = jsonElement.getAsJsonObject();
-      if (event.has("archive")) {
-        return jsonDeserializationContext.deserialize(event.get("archived"), ArchivedEvent.class);
-      } else if (event.has("created")) {
-        return jsonDeserializationContext.deserialize(event.get("created"), CreatedEvent.class);
-      } else {
-        throw new IllegalStateException("Unsupported event type.");
-      }
-    }
-  }
-
-  private static class TemplateDeserializer implements JsonDeserializer<Template> {
-
-    @Override
-    public Template deserialize(
-        JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext)
-        throws JsonParseException {
-      JsonObject o = jsonElement.getAsJsonObject();
-      String operator = o.getAsJsonPrimitive("operator").getAsString();
-      Instant currentTime =
-          jsonDeserializationContext.deserialize(o.get("currentTime"), Instant.class);
-      List<String> observers =
-          jsonDeserializationContext.deserialize(o.get("observers"), List.class);
-      return new CurrentTime(operator, currentTime, observers);
-    }
   }
 }
