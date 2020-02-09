@@ -4,18 +4,19 @@
  */
 package jsonapi;
 
-import com.daml.ledger.javaapi.data.Party;
+import da.refapps.marketdataservice.datastream.EmptyDataStream;
+import da.refapps.marketdataservice.marketdatatypes.InstrumentId;
+import da.refapps.marketdataservice.marketdatatypes.ObservationReference;
+import da.refapps.marketdataservice.marketdatatypes.Publisher;
 import da.timeservice.timeservice.CurrentTime;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Collections;
-import jsonapi.gson.*;
 import jsonapi.json.GsonRegisteredAllDeserializers;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class JsonDeserializerTest {
-
-  private static final Party OPERATOR = new Party("Operator");
 
   @Test
   public void deserializeCurrentTime() {
@@ -29,5 +30,22 @@ public class JsonDeserializerTest {
     CurrentTime deserializedCurrentTime =
         GsonRegisteredAllDeserializers.gson().fromJson(serializedCurrentTime, CurrentTime.class);
     Assert.assertEquals(expectedCurrentTime, deserializedCurrentTime);
+  }
+
+  @Test
+  public void deserializeEmptyDataStream() {
+    final String operator = "Operator1";
+    final ObservationReference reference =
+        new ObservationReference(
+            "Market1", new InstrumentId("InstrumentId1"), LocalDate.parse("2020-02-08"));
+    final Publisher publisher = new Publisher("Publisher1");
+    EmptyDataStream expectedEmptyDataStream =
+        new EmptyDataStream(operator, reference, Collections.emptyList(), publisher);
+    String serializedEmptyDataStream =
+        "{\"operator\":\"Operator1\",\"reference\":{\"market\":\"Market1\",\"instrumentId\":{\"unpack\":\"InstrumentId1\"},\"maturityDate\":{\"year\":2020,\"month\":2,\"day\":8}},\"consumers\":[],\"publisher\":{\"party\":\"Publisher1\"}}";
+    EmptyDataStream deserializedEmptyDataStream =
+        GsonRegisteredAllDeserializers.gson()
+            .fromJson(serializedEmptyDataStream, EmptyDataStream.class);
+    Assert.assertEquals(expectedEmptyDataStream, deserializedEmptyDataStream);
   }
 }
