@@ -9,7 +9,6 @@ import static org.junit.Assert.assertThat;
 
 import com.daml.ledger.javaapi.data.Identifier;
 import com.daml.ledger.javaapi.data.Party;
-import com.daml.ledger.javaapi.data.Template;
 import com.digitalasset.testing.junit4.Sandbox;
 import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
 import com.google.gson.Gson;
@@ -30,7 +29,6 @@ import jsonapi.JsonApi;
 import jsonapi.events.CreatedEvent;
 import jsonapi.events.Event;
 import jsonapi.gson.CreatedEventDeserializer;
-import jsonapi.gson.EventDeserializer;
 import jsonapi.gson.IdentifierSerializer;
 import jsonapi.gson.InstantSerializer;
 import jsonapi.gson.WebSocketResponseDeserializer;
