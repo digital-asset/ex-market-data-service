@@ -19,7 +19,7 @@ public class GsonRegisteredAllDeserializers {
     return new GsonBuilder()
         .registerTypeAdapter(Instant.class, new InstantDeserializer())
         .registerTypeAdapter(ObservationValue.class, new ObservationValueDeserializer())
-        .registerTypeAdapter(Identifier.class, new IdentifierSerializer())
+        .registerTypeAdapter(Identifier.class, new IdentifierDeserializer())
         .registerTypeAdapter(WebSocketResponse.class, new WebSocketResponseDeserializer())
         .registerTypeAdapter(Event.class, new CreatedEventDeserializer())
         .create();

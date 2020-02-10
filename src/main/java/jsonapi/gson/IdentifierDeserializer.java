@@ -12,20 +12,17 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+
 import java.lang.reflect.Type;
 
-public class IdentifierSerializer
-    implements JsonSerializer<Identifier> {
+public class IdentifierDeserializer
+    implements JsonDeserializer<Identifier> {
 
   @Override
-  public JsonElement serialize(
-      Identifier identifier, Type type, JsonSerializationContext jsonSerializationContext) {
-    return new JsonPrimitive(toTemplateId(identifier));
-  }
-
-  private static String toTemplateId(Identifier identifier) {
-    return String.format(
-        "%s:%s:%s",
-        identifier.getPackageId(), identifier.getModuleName(), identifier.getEntityName());
+  public Identifier deserialize(
+      JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext)
+      throws JsonParseException {
+    String[] parts = jsonElement.getAsString().split(":");
+    return new Identifier(parts[0], parts[1], parts[2]);
   }
 }
