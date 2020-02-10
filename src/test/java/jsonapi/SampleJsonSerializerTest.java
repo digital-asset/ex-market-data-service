@@ -40,4 +40,10 @@ public class SampleJsonSerializerTest {
         "{\"operator\":\"Operator\",\"currentTime\":\"2020-02-04T22:57:29Z\",\"observers\":[]}",
         sampleJsonSerializer.apply(currentTime));
   }
+
+  @Test
+  public void serializeParty() {
+    Party party = new Party("Operator");
+    Assert.assertEquals("\"Operator\"", sampleJsonSerializer.apply(party));
+  }
 }

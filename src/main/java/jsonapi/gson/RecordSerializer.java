@@ -6,21 +6,17 @@ package jsonapi.gson;
 
 import com.daml.ledger.javaapi.data.Record;
 import com.daml.ledger.javaapi.data.Record.Field;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
+import com.google.gson.*;
 import java.lang.reflect.Type;
 
 public class RecordSerializer implements JsonSerializer<Record> {
 
   @Override
-  public JsonElement serialize(
-      Record record, Type type, JsonSerializationContext jsonSerializationContext) {
+  public JsonElement serialize(Record record, Type type, JsonSerializationContext context) {
     JsonObject json = new JsonObject();
     // TODO: Implement properly.
     for (Field field : record.getFields()) {
-      json.addProperty(field.getLabel().get(), field.getValue().asParty().get().getValue());
+      field.getLabel().ifPresent(label -> json.add(label, context.serialize(field.getValue())));
     }
     return json;
   }

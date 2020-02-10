@@ -9,20 +9,22 @@ import static org.junit.Assert.assertThat;
 
 import com.daml.ledger.javaapi.data.ExerciseCommand;
 import com.daml.ledger.javaapi.data.Record;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.*;
 import da.timeservice.timeservice.CurrentTime.ContractId;
 import org.junit.Test;
 
 public class RecordSerializerTest {
 
   @Test
-  public void toJson() {
+  public void choiceArgumentIsSingleParty() {
     ContractId contractId = new ContractId("#0:0");
     ExerciseCommand command = contractId.exerciseCurrentTime_AddObserver("John Doe");
 
     Gson json =
-        new GsonBuilder().registerTypeAdapter(Record.class, new RecordSerializer()).create();
+        new GsonBuilder()
+            .registerTypeAdapter(Record.class, new RecordSerializer())
+            .registerTypeAdapter(PartySerializer.class, new PartySerializer())
+            .create();
     String result = json.toJson(command.getChoiceArgument());
 
     assertThat(result, is("{\"newObserver\":\"John Doe\"}"));
