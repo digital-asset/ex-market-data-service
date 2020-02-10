@@ -29,10 +29,10 @@ import jsonapi.ContractQuery;
 import jsonapi.JsonApi;
 import jsonapi.events.CreatedEvent;
 import jsonapi.events.Event;
+import jsonapi.gson.CreatedEventDeserializer;
 import jsonapi.gson.EventDeserializer;
 import jsonapi.gson.IdentifierSerializer;
 import jsonapi.gson.InstantSerializer;
-import jsonapi.gson.TemplateDeserializer;
 import jsonapi.gson.WebSocketResponseDeserializer;
 import jsonapi.http.Api;
 import jsonapi.http.Jwt;
@@ -60,7 +60,7 @@ public class TyrusWebSocketClientIT {
           .registerTypeAdapter(Identifier.class, new IdentifierSerializer())
           .registerTypeAdapter(WebSocketResponse.class, new WebSocketResponseDeserializer())
           .registerTypeAdapter(Event.class, new EventDeserializer())
-          .registerTypeAdapter(Template.class, new TemplateDeserializer())
+          .registerTypeAdapter(Template.class, new CreatedEventDeserializer())
           .registerTypeAdapter(Instant.class, new InstantSerializer())
           .create();
   private final Api api = new Api("localhost", 7575);

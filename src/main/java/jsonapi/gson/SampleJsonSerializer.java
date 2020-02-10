@@ -30,7 +30,7 @@ public class SampleJsonSerializer implements JsonSerializer {
           .registerTypeAdapter(ExerciseCommand.class, new ExerciseCommandSerializer())
           .registerTypeAdapter(WebSocketResponse.class, new WebSocketResponseDeserializer())
           .registerTypeAdapter(Event.class, new EventDeserializer())
-          .registerTypeAdapter(Template.class, new TemplateDeserializer())
+          .registerTypeAdapter(Template.class, new CreatedEventDeserializer())
           .create();
 
   private final JsonDeserializer<HttpResponse> httpResponseJsonDeserializer =
