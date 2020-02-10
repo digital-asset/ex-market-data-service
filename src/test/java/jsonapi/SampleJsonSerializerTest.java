@@ -91,7 +91,7 @@ public class SampleJsonSerializerTest {
 
   @Test
   public void serializeDate() {
-    Date date = getDate("2020-02-08");
+    Date date = getDate();
     Assert.assertEquals("\"2020-02-08\"", sampleJsonSerializer.apply(date));
   }
 
@@ -120,9 +120,12 @@ public class SampleJsonSerializerTest {
     Assert.assertEquals("\"12.3\"", sampleJsonSerializer.apply(numeric));
   }
 
-  private Date getDate(String date) {
-    long epoch = Instant.parse(date + "T00:00:00Z").getEpochSecond() / 3600 / 24;
-    return new Date((int) epoch);
+  private Date getDate() {
+    Instant instant = Instant.parse("2020-02-08T00:00:00Z");
+    int epochDay = (int)instant.getEpochSecond() / 3600 / 24;
+    Date date = new Date(epochDay);
+    Assert.assertEquals(LocalDate.parse("2020-02-08"), date.getValue());
+    return date;
   }
 
   private Observation getObservation() {
