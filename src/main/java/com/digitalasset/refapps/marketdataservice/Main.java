@@ -21,15 +21,6 @@ import com.digitalasset.refapps.marketdataservice.utils.CliOptions;
 import com.digitalasset.refapps.marketdataservice.utils.CommandsAndPendingSetBuilder;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import jsonapi.ActiveContract;
-import jsonapi.ActiveContractSet;
-import jsonapi.ContractQuery;
-import jsonapi.JsonLedgerClient;
-import org.pcollections.HashTreePMap;
-import org.reactivestreams.Publisher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.time.Clock;
 import java.time.Duration;
 import java.util.concurrent.Executors;
@@ -38,6 +29,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import jsonapi.ActiveContract;
+import jsonapi.ActiveContractSet;
+import jsonapi.ContractQuery;
+import jsonapi.JsonLedgerClient;
+import org.pcollections.HashTreePMap;
+import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Main {
 
@@ -188,7 +187,7 @@ public class Main {
         .flatMap(bot::apply)
         .forEach(
             cps ->
-              cps.getSubmitCommandsRequest().getCommands().forEach(submitCommand(ledgerClient)));
+                cps.getSubmitCommandsRequest().getCommands().forEach(submitCommand(ledgerClient)));
   }
 
   private static Consumer<? super Command> submitCommand(JsonLedgerClient ledgerClient) {
