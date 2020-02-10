@@ -65,16 +65,6 @@ public class SampleJsonSerializerTest {
     Assert.assertEquals(expected, sampleJsonSerializer.apply(exerciseCommand));
   }
 
-  private Observation getObservation() {
-    Instant observationTime = Instant.parse("2019-05-03T10:15:30.00Z");
-    String marketName = "Market";
-    InstrumentId instrumentId = new InstrumentId("ISIN 123 XYZ");
-    LocalDate maturityDate = LocalDate.parse("2019-05-10");
-    ObservationReference label = new ObservationReference(marketName, instrumentId, maturityDate);
-    ObservationValue cleanPrice = new CleanPrice(BigDecimal.valueOf(1.2));
-    return new Observation(label, observationTime.minusSeconds(3600), cleanPrice);
-  }
-
   @Test
   public void serializeCurrentTime() {
     CurrentTime currentTime =
@@ -125,5 +115,15 @@ public class SampleJsonSerializerTest {
   private Date getDate(String date) {
     long epoch = Instant.parse(date + "T00:00:00Z").getEpochSecond() / 3600 / 24;
     return new Date((int) epoch);
+  }
+
+  private Observation getObservation() {
+    Instant observationTime = Instant.parse("2019-05-03T10:15:30.00Z");
+    String marketName = "Market";
+    InstrumentId instrumentId = new InstrumentId("ISIN 123 XYZ");
+    LocalDate maturityDate = LocalDate.parse("2019-05-10");
+    ObservationReference label = new ObservationReference(marketName, instrumentId, maturityDate);
+    ObservationValue cleanPrice = new CleanPrice(BigDecimal.valueOf(1.2));
+    return new Observation(label, observationTime.minusSeconds(3600), cleanPrice);
   }
 }
