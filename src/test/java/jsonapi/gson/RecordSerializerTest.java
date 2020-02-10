@@ -8,6 +8,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 import com.daml.ledger.javaapi.data.ExerciseCommand;
+import com.daml.ledger.javaapi.data.Party;
 import com.daml.ledger.javaapi.data.Record;
 import com.google.gson.*;
 import da.timeservice.timeservice.CurrentTime.ContractId;
@@ -23,7 +24,7 @@ public class RecordSerializerTest {
     Gson json =
         new GsonBuilder()
             .registerTypeAdapter(Record.class, new RecordSerializer())
-            .registerTypeAdapter(PartySerializer.class, new PartySerializer())
+            .registerTypeAdapter(Party.class, new PartySerializer())
             .create();
     String result = json.toJson(command.getChoiceArgument());
 
