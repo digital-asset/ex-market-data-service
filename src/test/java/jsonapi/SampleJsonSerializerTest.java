@@ -113,6 +113,12 @@ public class SampleJsonSerializerTest {
   }
 
   @Test
+  public void serializeRecord() {
+    Record record = new Record(new Record.Field("newObserver", new Party("John Doe")));
+    Assert.assertEquals("{\"newObserver\":\"John Doe\"}", sampleJsonSerializer.apply(record));
+  }
+
+  @Test
   public void serializeNumeric() {
     Numeric numeric = new Numeric(BigDecimal.valueOf(12.3));
     Assert.assertEquals("\"12.3\"", sampleJsonSerializer.apply(numeric));
