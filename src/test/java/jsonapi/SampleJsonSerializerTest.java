@@ -99,7 +99,8 @@ public class SampleJsonSerializerTest {
 
   @Test
   public void serializeVariant() {
-    throw new RuntimeException("TODO");
+    Variant variant = new Variant("VariantType", new Text("SomeValue"));
+    Assert.assertEquals("{\"tag\":\"VariantType\",\"value\":\"SomeValue\"}", sampleJsonSerializer.apply(variant));
   }
 
   @Test
