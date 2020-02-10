@@ -7,12 +7,14 @@ package jsonapi.tyrus;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
+import com.daml.ledger.javaapi.data.Identifier;
 import com.daml.ledger.javaapi.data.Party;
 import com.digitalasset.testing.junit4.Sandbox;
 import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.protobuf.InvalidProtocolBufferException;
+import da.refapps.marketdataservice.marketdatatypes.ObservationValue;
 import da.timeservice.timeservice.CurrentTime;
 import io.reactivex.Flowable;
 import java.io.InputStream;
@@ -90,6 +92,9 @@ public class TyrusWebSocketClientIT {
         new GsonBuilder()
             .registerTypeAdapter(WebSocketResponse.class, new WebSocketResponseDeserializer())
             .registerTypeAdapter(Event.class, new CreatedEventDeserializer())
+            .registerTypeAdapter(Instant.class, new InstantDeserializer())
+            .registerTypeAdapter(Identifier.class, new IdentifierSerializer())
+            .registerTypeAdapter(ObservationValue.class, new ObservationValueDeserializer())
             .create();
     return json.fromJson(new InputStreamReader(inputStream), WebSocketResponse.class);
   }
