@@ -4,10 +4,7 @@
  */
 package jsonapi.json;
 
-import com.daml.ledger.javaapi.data.ExerciseCommand;
-import com.daml.ledger.javaapi.data.Identifier;
-import com.daml.ledger.javaapi.data.Party;
-import com.daml.ledger.javaapi.data.Record;
+import com.daml.ledger.javaapi.data.*;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.time.Instant;
@@ -21,6 +18,7 @@ public class SampleJsonSerializer implements JsonSerializer {
           .registerTypeAdapter(Instant.class, new InstantSerializer())
           .registerTypeAdapter(Record.class, new RecordSerializer())
           .registerTypeAdapter(Party.class, new PartySerializer())
+          .registerTypeAdapter(Text.class, new TextSerializer())
           .registerTypeAdapter(ExerciseCommand.class, new ExerciseCommandSerializer())
           .create();
 
