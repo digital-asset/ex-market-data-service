@@ -34,6 +34,7 @@ import jsonapi.http.Api;
 import jsonapi.http.Jwt;
 import jsonapi.http.WebSocketClient;
 import jsonapi.http.WebSocketResponse;
+import jsonapi.json.GsonRegisteredAllDeserializers;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -88,14 +89,7 @@ public class TyrusWebSocketClientIT {
   }
 
   private WebSocketResponse fromJson(InputStream inputStream) {
-    Gson json =
-        new GsonBuilder()
-            .registerTypeAdapter(WebSocketResponse.class, new WebSocketResponseDeserializer())
-            .registerTypeAdapter(Event.class, new CreatedEventDeserializer())
-            .registerTypeAdapter(Instant.class, new InstantDeserializer())
-            .registerTypeAdapter(Identifier.class, new IdentifierSerializer())
-            .registerTypeAdapter(ObservationValue.class, new ObservationValueDeserializer())
-            .create();
+    Gson json = GsonRegisteredAllDeserializers.gson();
     return json.fromJson(new InputStreamReader(inputStream), WebSocketResponse.class);
   }
 }

@@ -9,9 +9,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import da.refapps.marketdataservice.marketdatatypes.ObservationValue;
 import java.time.Instant;
-import jsonapi.gson.IdentifierSerializer;
-import jsonapi.gson.InstantDeserializer;
-import jsonapi.gson.ObservationValueDeserializer;
+import jsonapi.events.Event;
+import jsonapi.gson.*;
+import jsonapi.http.WebSocketResponse;
 
 public class GsonRegisteredAllDeserializers {
 
@@ -20,6 +20,8 @@ public class GsonRegisteredAllDeserializers {
         .registerTypeAdapter(Instant.class, new InstantDeserializer())
         .registerTypeAdapter(ObservationValue.class, new ObservationValueDeserializer())
         .registerTypeAdapter(Identifier.class, new IdentifierSerializer())
+        .registerTypeAdapter(WebSocketResponse.class, new WebSocketResponseDeserializer())
+        .registerTypeAdapter(Event.class, new CreatedEventDeserializer())
         .create();
   }
 }
