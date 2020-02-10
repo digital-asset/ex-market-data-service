@@ -18,7 +18,6 @@ import com.google.gson.GsonBuilder;
 import java.time.Instant;
 import jsonapi.json.JsonSerializer;
 
-// TODO: Rename
 public class GsonSerializer implements JsonSerializer {
 
   private final Gson gson =
