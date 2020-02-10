@@ -4,7 +4,14 @@
  */
 package jsonapi;
 
-import com.daml.ledger.javaapi.data.*;
+import com.daml.ledger.javaapi.data.Date;
+import com.daml.ledger.javaapi.data.ExerciseCommand;
+import com.daml.ledger.javaapi.data.Numeric;
+import com.daml.ledger.javaapi.data.Party;
+import com.daml.ledger.javaapi.data.Record;
+import com.daml.ledger.javaapi.data.Text;
+import com.daml.ledger.javaapi.data.Timestamp;
+import com.daml.ledger.javaapi.data.Variant;
 import da.refapps.marketdataservice.datastream.EmptyDataStream;
 import da.refapps.marketdataservice.marketdatatypes.InstrumentId;
 import da.refapps.marketdataservice.marketdatatypes.Observation;
@@ -18,7 +25,8 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collections;
 import jsonapi.gson.SampleJsonSerializer;
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class SampleJsonSerializerTest {
 

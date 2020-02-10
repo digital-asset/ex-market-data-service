@@ -26,7 +26,7 @@ import jsonapi.ContractQuery;
 import jsonapi.JsonApi;
 import jsonapi.events.CreatedEvent;
 import jsonapi.events.Event;
-import jsonapi.gson.*;
+import jsonapi.gson.SampleJsonSerializer;
 import jsonapi.http.Api;
 import jsonapi.http.Jwt;
 import jsonapi.http.WebSocketClient;

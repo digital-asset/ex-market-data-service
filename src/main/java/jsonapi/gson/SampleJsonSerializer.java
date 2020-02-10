@@ -4,7 +4,15 @@
  */
 package jsonapi.gson;
 
-import com.daml.ledger.javaapi.data.*;
+import com.daml.ledger.javaapi.data.Date;
+import com.daml.ledger.javaapi.data.ExerciseCommand;
+import com.daml.ledger.javaapi.data.Identifier;
+import com.daml.ledger.javaapi.data.Numeric;
+import com.daml.ledger.javaapi.data.Party;
+import com.daml.ledger.javaapi.data.Record;
+import com.daml.ledger.javaapi.data.Text;
+import com.daml.ledger.javaapi.data.Timestamp;
+import com.daml.ledger.javaapi.data.Variant;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.time.Instant;

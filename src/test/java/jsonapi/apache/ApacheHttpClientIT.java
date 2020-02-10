@@ -32,7 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import jsonapi.JsonApi;
-import jsonapi.gson.*;
+import jsonapi.gson.SampleJsonSerializer;
 import jsonapi.http.Api;
 import jsonapi.http.HttpClient;
 import jsonapi.http.HttpResponse;
