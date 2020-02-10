@@ -4,43 +4,35 @@
  */
 package jsonapi;
 
+import static com.digitalasset.refapps.marketdataservice.utils.AppParties.ALL_PARTIES;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertThat;
 
-import com.daml.ledger.javaapi.data.ExerciseCommand;
-import com.daml.ledger.javaapi.data.Identifier;
 import com.daml.ledger.javaapi.data.Party;
-import com.daml.ledger.javaapi.data.Record;
+import com.daml.ledger.rxjava.DamlLedgerClient;
+import com.digitalasset.refapps.marketdataservice.Main;
+import com.digitalasset.refapps.marketdataservice.utils.AppParties;
 import com.digitalasset.testing.junit4.Sandbox;
 import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
 import com.digitalasset.testing.utils.ContractWithId;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import da.timeservice.timeservice.CurrentTime;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
+import io.grpc.ManagedChannel;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.Key;
 import java.time.Instant;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import jsonapi.apache.ApacheHttpClient;
-import jsonapi.gson.ExerciseCommandSerializer;
-import jsonapi.gson.IdentifierSerializer;
-import jsonapi.gson.InstantSerializer;
-import jsonapi.gson.RecordSerializer;
+import jsonapi.gson.GsonDeserializer;
+import jsonapi.gson.SampleJsonSerializer;
 import jsonapi.http.Api;
 import jsonapi.http.HttpClient;
 import jsonapi.http.HttpResponse;
+import jsonapi.http.Jwt;
 import jsonapi.http.WebSocketClient;
 import jsonapi.http.WebSocketResponse;
-import jsonapi.json.SampleJsonSerializer;
+import jsonapi.json.JsonDeserializer;
 import jsonapi.tyrus.TyrusWebSocketClient;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -54,6 +46,7 @@ public class JsonLedgerClientIT {
 
   private static final Path RELATIVE_DAR_PATH = Paths.get("target/market-data-service.dar");
   private static final Party OPERATOR = new Party("Operator");
+  private static final String APPLICATION_ID = "market-data-service";
 
   private static final Sandbox sandbox =
       Sandbox.builder()
@@ -61,38 +54,33 @@ public class JsonLedgerClientIT {
           .parties(OPERATOR.getValue())
           .useWallclockTime()
           .build();
-
   @ClassRule public static ExternalResource startSandbox = sandbox.getClassRule();
 
   @Rule
   public final TestRule processes =
       RuleChain.outerRule(sandbox.getRule()).around(new JsonApi(sandbox::getSandboxPort));
 
-  private final Gson json =
-      new GsonBuilder()
-          .registerTypeAdapter(Identifier.class, new IdentifierSerializer())
-          .registerTypeAdapter(Instant.class, new InstantSerializer())
-          .registerTypeAdapter(Record.class, new RecordSerializer())
-          .registerTypeAdapter(ExerciseCommand.class, new ExerciseCommandSerializer())
-          .create();
+  private final SampleJsonSerializer jsonSerializer = new SampleJsonSerializer();
+  private final GsonDeserializer jsonDeserializer = new GsonDeserializer();
+  private final JsonDeserializer<HttpResponse> httpResponseDeserializer =
+      jsonDeserializer.getHttpResponseDeserializer();
+  private final JsonDeserializer<WebSocketResponse> webSocketResponseDeserializer =
+      jsonDeserializer.getWebSocketResponseDeserializer();
 
   private DefaultLedgerAdapter ledger;
   private HttpClient httpClient;
   private WebSocketClient webSocketClient;
   private Api api;
+  private String ledgerId;
 
   @Before
   public void setUp() {
     ledger = sandbox.getLedgerAdapter();
-    Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-    Map<String, Object> claim = new HashMap<>();
-    claim.put("ledgerId", sandbox.getClient().getLedgerId());
-    claim.put("applicationId", "market-data-service");
-    claim.put("actAs", Collections.singletonList("Operator"));
-    Map<String, Object> claims = Collections.singletonMap("https://daml.com/ledger-api", claim);
-    String jwt = Jwts.builder().setClaims(claims).signWith(key).compact();
-    httpClient = new ApacheHttpClient(this::fromJson, new SampleJsonSerializer(), jwt);
-    webSocketClient = new TyrusWebSocketClient(this::fromJsonWs, new SampleJsonSerializer(), jwt);
+    ledgerId = sandbox.getClient().getLedgerId();
+    String jwt =
+        Jwt.createToken(ledgerId, APPLICATION_ID, Collections.singletonList(OPERATOR.getValue()));
+    httpClient = new ApacheHttpClient(httpResponseDeserializer, jsonSerializer, jwt);
+    webSocketClient = new TyrusWebSocketClient(webSocketResponseDeserializer, jsonSerializer, jwt);
     api = new Api("localhost", 7575);
   }
 
@@ -104,7 +92,7 @@ public class JsonLedgerClientIT {
     ledger.createContract(OPERATOR, CurrentTime.TEMPLATE_ID, currentTime.toValue());
 
     JsonLedgerClient ledger =
-        new JsonLedgerClient(httpClient, webSocketClient, new SampleJsonSerializer(), api);
+        new JsonLedgerClient(httpClient, webSocketClient, jsonSerializer, api);
     String result = ledger.getActiveContracts();
 
     assertThat(result, containsString("\"status\":200"));
@@ -128,7 +116,7 @@ public class JsonLedgerClientIT {
         ledger.getMatchedContract(OPERATOR, CurrentTime.TEMPLATE_ID, CurrentTime.ContractId::new);
 
     JsonLedgerClient ledger =
-        new JsonLedgerClient(httpClient, webSocketClient, new SampleJsonSerializer(), api);
+        new JsonLedgerClient(httpClient, webSocketClient, jsonSerializer, api);
     String result =
         ledger.exerciseChoice(
             currentTimeWithId.contractId.exerciseCurrentTime_AddObserver(OPERATOR.getValue()));
@@ -140,11 +128,29 @@ public class JsonLedgerClientIT {
             "\"payload\":{\"operator\":\"Operator\",\"currentTime\":\"2020-02-04T22:57:29Z\",\"observers\":[\"Operator\"]}"));
   }
 
-  private HttpResponse fromJson(InputStream is) {
-    return json.fromJson(new InputStreamReader(is), HttpResponse.class);
+  @Test
+  public void usingDataProviderBot()
+      throws NoSuchFieldException, IllegalAccessException, InterruptedException {
+    String marketDataProvider1 = new AppParties(ALL_PARTIES).getMarketDataProvider1();
+    String jwt =
+        Jwt.createToken(ledgerId, APPLICATION_ID, Collections.singletonList(marketDataProvider1));
+    httpClient = new ApacheHttpClient(httpResponseDeserializer, jsonSerializer, jwt);
+    webSocketClient = new TyrusWebSocketClient(webSocketResponseDeserializer, jsonSerializer, jwt);
+    api = new Api("localhost", 7575);
+
+    JsonLedgerClient ledger =
+        new JsonLedgerClient(httpClient, webSocketClient, jsonSerializer, api);
+    Main.runBotsWithJsonApi(new AppParties(ALL_PARTIES), null)
+        .accept(ledger, getManagedChannel(sandbox.getClient()));
+
+    // TODO: Proper test and assertion.
+    //    Thread.currentThread().join();
   }
 
-  private WebSocketResponse fromJsonWs(InputStream is) {
-    return json.fromJson(new InputStreamReader(is), WebSocketResponse.class);
+  private ManagedChannel getManagedChannel(DamlLedgerClient client)
+      throws NoSuchFieldException, IllegalAccessException {
+    Field channel = client.getClass().getDeclaredField("channel");
+    channel.setAccessible(true);
+    return (ManagedChannel) channel.get(client);
   }
 }

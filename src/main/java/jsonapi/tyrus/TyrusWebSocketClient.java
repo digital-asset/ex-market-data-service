@@ -49,6 +49,7 @@ public class TyrusWebSocketClient implements WebSocketClient {
             },
             BackpressureStrategy.LATEST);
     return source
+        // TODO: Either deserialize or ignore heartbeats, so that we can emit InputStreams directly.
         .filter(this::nonHeartbeat)
         .map(this::toWebSocketResponse)
         .subscribeWith(PublishProcessor.create());

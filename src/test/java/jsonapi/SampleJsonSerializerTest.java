@@ -10,7 +10,7 @@ import da.timeservice.timeservice.CurrentTime;
 import da.timeservice.timeservice.TimeManager;
 import java.time.Instant;
 import java.util.Collections;
-import jsonapi.json.SampleJsonSerializer;
+import jsonapi.gson.SampleJsonSerializer;
 import org.junit.*;
 
 public class SampleJsonSerializerTest {
