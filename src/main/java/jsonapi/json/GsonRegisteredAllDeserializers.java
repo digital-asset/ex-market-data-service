@@ -10,7 +10,11 @@ import com.google.gson.GsonBuilder;
 import da.refapps.marketdataservice.marketdatatypes.ObservationValue;
 import java.time.Instant;
 import jsonapi.events.Event;
-import jsonapi.gson.*;
+import jsonapi.gson.CreatedEventDeserializer;
+import jsonapi.gson.IdentifierDeserializer;
+import jsonapi.gson.InstantDeserializer;
+import jsonapi.gson.ObservationValueDeserializer;
+import jsonapi.gson.WebSocketResponseDeserializer;
 import jsonapi.http.WebSocketResponse;
 
 public class GsonRegisteredAllDeserializers {
