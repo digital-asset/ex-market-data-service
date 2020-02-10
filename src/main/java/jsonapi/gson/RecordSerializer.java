@@ -16,7 +16,6 @@ public class RecordSerializer implements JsonSerializer<Record> {
     JsonObject json = new JsonObject();
     // TODO: Implement properly.
     for (Field field : record.getFields()) {
-      System.out.println(field); // TODO remove
       field.getLabel().ifPresent(label -> json.add(label, context.serialize(field.getValue())));
     }
     return json;
