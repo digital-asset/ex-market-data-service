@@ -68,7 +68,6 @@ public class JsonDeserializerTest {
             now,
             OPERATOR,
             now);
-    System.err.println(new SampleJsonSerializer().apply(expectedDataStream));
     String serializedDataStream =
         "{\"observation\":{\"label\":{\"market\":\"Market1\",\"instrumentId\":{\"unpack\":\"InstrumentId1\"},\"maturityDate\":{\"year\":2020,\"month\":2,\"day\":8}},\"time\":\"2020-01-03T10:15:30Z\",\"value\":{\"clean\":1}},\"consumers\":[],\"publisher\":{\"party\":\"Publisher1\"},\"published\":\"2020-01-03T10:15:30Z\",\"operator\":\"Operator1\",\"lastUpdated\":\"2020-01-03T10:15:30Z\"}";
     DataStream deserializedDataStream =
