@@ -24,14 +24,14 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collections;
-import jsonapi.gson.SampleJsonSerializer;
+import jsonapi.gson.GsonSerializer;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class SampleJsonSerializerTest {
+public class GsonSerializerTest {
 
   private static final Party OPERATOR = new Party("Operator");
-  private final SampleJsonSerializer sampleJsonSerializer = new SampleJsonSerializer();
+  private final GsonSerializer gsonSerializer = new GsonSerializer();
 
   @Test
   public void serializeExerciseAdvanceCurrentTime() {
@@ -43,7 +43,7 @@ public class SampleJsonSerializerTest {
             TimeManager.TEMPLATE_ID.getPackageId(),
             TimeManager.TEMPLATE_ID.getModuleName(),
             TimeManager.TEMPLATE_ID.getEntityName());
-    Assert.assertEquals(expected, sampleJsonSerializer.apply(exerciseCommand));
+    Assert.assertEquals(expected, gsonSerializer.apply(exerciseCommand));
   }
 
   @Test
@@ -70,7 +70,7 @@ public class SampleJsonSerializerTest {
     String expected =
         "{\"templateId\":\"b4eb9b86bb78db2acde90edf0a03d96e5d65cc7a7cc422f23b6d98a286e07c09:DA.RefApps.MarketDataService.DataStream:EmptyDataStream\",\"contractId\":\"cid1\",\"choice\":\"StartDataStream\",\"argument\":{\"newObservation\":"
             + "{\"label\":{\"market\":\"Market\",\"instrumentId\":{\"unpack\":\"ISIN 123 XYZ\"},\"maturityDate\":\"2019-05-10\"},\"time\":\"2019-05-03T09:15:30Z\",\"value\":{\"tag\":\"CleanPrice\",\"value\":{\"clean\":\"1.2\"}}}}}";
-    Assert.assertEquals(expected, sampleJsonSerializer.apply(exerciseCommand));
+    Assert.assertEquals(expected, gsonSerializer.apply(exerciseCommand));
   }
 
   @Test
@@ -80,55 +80,55 @@ public class SampleJsonSerializerTest {
             OPERATOR.getValue(), Instant.parse("2020-02-04T22:57:29Z"), Collections.emptyList());
     Assert.assertEquals(
         "{\"operator\":\"Operator\",\"currentTime\":\"2020-02-04T22:57:29Z\",\"observers\":[]}",
-        sampleJsonSerializer.apply(currentTime));
+        gsonSerializer.apply(currentTime));
   }
 
   @Test
   public void serializeParty() {
     Party party = new Party("Operator");
-    Assert.assertEquals("\"Operator\"", sampleJsonSerializer.apply(party));
+    Assert.assertEquals("\"Operator\"", gsonSerializer.apply(party));
   }
 
   @Test
   public void serializeDate() {
     Date date = getDate();
-    Assert.assertEquals("\"2020-02-08\"", sampleJsonSerializer.apply(date));
+    Assert.assertEquals("\"2020-02-08\"", gsonSerializer.apply(date));
   }
 
   @Test
   public void serializeTimestamp() {
     Timestamp timestamp = Timestamp.fromInstant(Instant.parse("2020-02-08T12:30:00Z"));
-    Assert.assertEquals("\"2020-02-08T12:30:00Z\"", sampleJsonSerializer.apply(timestamp));
+    Assert.assertEquals("\"2020-02-08T12:30:00Z\"", gsonSerializer.apply(timestamp));
   }
 
   @Test
   public void serializeVariant() {
     Variant variant = new Variant("VariantType", new Text("SomeValue"));
     Assert.assertEquals(
-        "{\"tag\":\"VariantType\",\"value\":\"SomeValue\"}", sampleJsonSerializer.apply(variant));
+        "{\"tag\":\"VariantType\",\"value\":\"SomeValue\"}", gsonSerializer.apply(variant));
   }
 
   @Test
   public void serializeRecord() {
     Record record = new Record(new Record.Field("newObserver", new Party("John Doe")));
-    Assert.assertEquals("{\"newObserver\":\"John Doe\"}", sampleJsonSerializer.apply(record));
+    Assert.assertEquals("{\"newObserver\":\"John Doe\"}", gsonSerializer.apply(record));
   }
 
   @Test
   public void serializeNumeric() {
     Numeric numeric = new Numeric(BigDecimal.valueOf(12.3));
-    Assert.assertEquals("\"12.3\"", sampleJsonSerializer.apply(numeric));
+    Assert.assertEquals("\"12.3\"", gsonSerializer.apply(numeric));
   }
 
-  private Date getDate() {
+  private static Date getDate() {
     Instant instant = Instant.parse("2020-02-08T00:00:00Z");
-    int epochDay = (int)instant.getEpochSecond() / 3600 / 24;
+    int epochDay = (int) instant.getEpochSecond() / 3600 / 24;
     Date date = new Date(epochDay);
     Assert.assertEquals(LocalDate.parse("2020-02-08"), date.getValue());
     return date;
   }
 
-  private Observation getObservation() {
+  private static Observation getObservation() {
     Instant observationTime = Instant.parse("2019-05-03T10:15:30.00Z");
     String marketName = "Market";
     InstrumentId instrumentId = new InstrumentId("ISIN 123 XYZ");

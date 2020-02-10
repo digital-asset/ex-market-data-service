@@ -19,7 +19,7 @@ import java.time.Instant;
 import jsonapi.json.JsonSerializer;
 
 // TODO: Rename
-public class SampleJsonSerializer implements JsonSerializer {
+public class GsonSerializer implements JsonSerializer {
 
   private final Gson gson =
       new GsonBuilder()

@@ -26,7 +26,7 @@ import jsonapi.ContractQuery;
 import jsonapi.JsonApi;
 import jsonapi.events.CreatedEvent;
 import jsonapi.events.Event;
-import jsonapi.gson.SampleJsonSerializer;
+import jsonapi.gson.GsonSerializer;
 import jsonapi.http.Api;
 import jsonapi.http.Jwt;
 import jsonapi.http.WebSocketClient;
@@ -73,8 +73,7 @@ public class TyrusWebSocketClientIT {
 
     ContractQuery query = new ContractQuery(Collections.singletonList(CurrentTime.TEMPLATE_ID));
 
-    WebSocketClient client =
-        new TyrusWebSocketClient(this::fromJson, new SampleJsonSerializer(), jwt);
+    WebSocketClient client = new TyrusWebSocketClient(this::fromJson, new GsonSerializer(), jwt);
     Flowable<WebSocketResponse> response = client.post(api.searchContractsForever(), query);
 
     WebSocketResponse webSocketResponse = response.blockingFirst();

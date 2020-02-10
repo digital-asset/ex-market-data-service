@@ -25,7 +25,7 @@ import java.time.Instant;
 import java.util.Collections;
 import jsonapi.apache.ApacheHttpClient;
 import jsonapi.gson.GsonDeserializer;
-import jsonapi.gson.SampleJsonSerializer;
+import jsonapi.gson.GsonSerializer;
 import jsonapi.http.Api;
 import jsonapi.http.HttpClient;
 import jsonapi.http.HttpResponse;
@@ -60,7 +60,7 @@ public class JsonLedgerClientIT {
   public final TestRule processes =
       RuleChain.outerRule(sandbox.getRule()).around(new JsonApi(sandbox::getSandboxPort));
 
-  private final SampleJsonSerializer jsonSerializer = new SampleJsonSerializer();
+  private final GsonSerializer jsonSerializer = new GsonSerializer();
   private final GsonDeserializer jsonDeserializer = new GsonDeserializer();
   private final JsonDeserializer<HttpResponse> httpResponseDeserializer =
       jsonDeserializer.getHttpResponseDeserializer();

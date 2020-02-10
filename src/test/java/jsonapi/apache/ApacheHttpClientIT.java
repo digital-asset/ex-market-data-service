@@ -32,7 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import jsonapi.JsonApi;
-import jsonapi.gson.SampleJsonSerializer;
+import jsonapi.gson.GsonSerializer;
 import jsonapi.http.Api;
 import jsonapi.http.HttpClient;
 import jsonapi.http.HttpResponse;
@@ -74,7 +74,7 @@ public class ApacheHttpClientIT {
     CurrentTime currentTime = new CurrentTime("Operator", Instant.now(), Collections.emptyList());
     CreateCommand command = new CreateCommand(CurrentTime.TEMPLATE_ID, currentTime);
 
-    HttpClient client = new ApacheHttpClient(this::fromJson, new SampleJsonSerializer(), jwt);
+    HttpClient client = new ApacheHttpClient(this::fromJson, new GsonSerializer(), jwt);
     HttpResponse response = client.post(api.createContract(), command);
 
     assertThat(response.getStatus(), is(200));
@@ -89,7 +89,7 @@ public class ApacheHttpClientIT {
         ledger.getCreatedContractId(party, CurrentTime.TEMPLATE_ID, ContractId::new);
     ExerciseCommand command = contractId.exerciseCurrentTime_AddObserver("MarketDataVendor");
 
-    HttpClient client = new ApacheHttpClient(this::fromJson, new SampleJsonSerializer(), jwt);
+    HttpClient client = new ApacheHttpClient(this::fromJson, new GsonSerializer(), jwt);
     HttpResponse response = client.post(api.exercise(), command);
 
     assertThat(response.getStatus(), is(200));
