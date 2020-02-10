@@ -38,7 +38,6 @@ public class SampleJsonSerializerTest {
     Assert.assertEquals(expected, sampleJsonSerializer.apply(exerciseCommand));
   }
 
-  //  @Ignore
   @Test
   public void serializeExerciseStartDataStream() {
     Observation observation = getObservation();
