@@ -55,7 +55,6 @@ public class JsonDeserializerTest {
     Assert.assertEquals(expectedEmptyDataStream, deserializedEmptyDataStream);
   }
 
-  @Ignore // TODO: deserialize ObservationValue
   @Test
   public void deserializeDataStream() {
     Instant now = Instant.parse("2020-01-03T10:15:30.00Z");
