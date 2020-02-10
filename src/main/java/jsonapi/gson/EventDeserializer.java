@@ -24,7 +24,7 @@ public class EventDeserializer implements JsonDeserializer<Event> {
     if (event.has("archive")) {
       return jsonDeserializationContext.deserialize(event.get("archived"), ArchivedEvent.class);
     } else if (event.has("created")) {
-      return jsonDeserializationContext.deserialize(event.get("created"), CreatedEvent.class);
+      return jsonDeserializationContext.deserialize(event, CreatedEvent.class);
     } else {
       throw new IllegalStateException("Unsupported event type.");
     }

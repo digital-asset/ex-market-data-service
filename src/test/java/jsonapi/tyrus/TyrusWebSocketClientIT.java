@@ -59,8 +59,7 @@ public class TyrusWebSocketClientIT {
       new GsonBuilder()
           .registerTypeAdapter(Identifier.class, new IdentifierSerializer())
           .registerTypeAdapter(WebSocketResponse.class, new WebSocketResponseDeserializer())
-          .registerTypeAdapter(Event.class, new EventDeserializer())
-          .registerTypeAdapter(Template.class, new CreatedEventDeserializer())
+          .registerTypeAdapter(Event.class, new CreatedEventDeserializer())
           .registerTypeAdapter(Instant.class, new InstantSerializer())
           .create();
   private final Api api = new Api("localhost", 7575);

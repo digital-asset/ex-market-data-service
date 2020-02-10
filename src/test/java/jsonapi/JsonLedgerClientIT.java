@@ -24,6 +24,7 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Collections;
 import jsonapi.apache.ApacheHttpClient;
+import jsonapi.gson.GsonDeserializer;
 import jsonapi.gson.SampleJsonSerializer;
 import jsonapi.http.Api;
 import jsonapi.http.HttpClient;
@@ -59,11 +60,12 @@ public class JsonLedgerClientIT {
   public final TestRule processes =
       RuleChain.outerRule(sandbox.getRule()).around(new JsonApi(sandbox::getSandboxPort));
 
-  private final SampleJsonSerializer jsonConverter = new SampleJsonSerializer();
+  private final SampleJsonSerializer jsonSerializer = new SampleJsonSerializer();
+  private final GsonDeserializer jsonDeserializer = new GsonDeserializer();
   private final JsonDeserializer<HttpResponse> httpResponseDeserializer =
-      jsonConverter.getHttpResponseDeserializer();
+      jsonDeserializer.getHttpResponseDeserializer();
   private final JsonDeserializer<WebSocketResponse> webSocketResponseDeserializer =
-      jsonConverter.getWebSocketResponseDeserializer();
+      jsonDeserializer.getWebSocketResponseDeserializer();
 
   private DefaultLedgerAdapter ledger;
   private HttpClient httpClient;
@@ -77,8 +79,8 @@ public class JsonLedgerClientIT {
     ledgerId = sandbox.getClient().getLedgerId();
     String jwt =
         Jwt.createToken(ledgerId, APPLICATION_ID, Collections.singletonList(OPERATOR.getValue()));
-    httpClient = new ApacheHttpClient(httpResponseDeserializer, jsonConverter, jwt);
-    webSocketClient = new TyrusWebSocketClient(webSocketResponseDeserializer, jsonConverter, jwt);
+    httpClient = new ApacheHttpClient(httpResponseDeserializer, jsonSerializer, jwt);
+    webSocketClient = new TyrusWebSocketClient(webSocketResponseDeserializer, jsonSerializer, jwt);
     api = new Api("localhost", 7575);
   }
 
@@ -89,7 +91,8 @@ public class JsonLedgerClientIT {
             OPERATOR.getValue(), Instant.parse("2020-02-04T22:57:29Z"), Collections.emptyList());
     ledger.createContract(OPERATOR, CurrentTime.TEMPLATE_ID, currentTime.toValue());
 
-    JsonLedgerClient ledger = new JsonLedgerClient(httpClient, webSocketClient, jsonConverter, api);
+    JsonLedgerClient ledger =
+        new JsonLedgerClient(httpClient, webSocketClient, jsonSerializer, api);
     String result = ledger.getActiveContracts();
 
     assertThat(result, containsString("\"status\":200"));
@@ -112,7 +115,8 @@ public class JsonLedgerClientIT {
     ContractWithId<CurrentTime.ContractId> currentTimeWithId =
         ledger.getMatchedContract(OPERATOR, CurrentTime.TEMPLATE_ID, CurrentTime.ContractId::new);
 
-    JsonLedgerClient ledger = new JsonLedgerClient(httpClient, webSocketClient, jsonConverter, api);
+    JsonLedgerClient ledger =
+        new JsonLedgerClient(httpClient, webSocketClient, jsonSerializer, api);
     String result =
         ledger.exerciseChoice(
             currentTimeWithId.contractId.exerciseCurrentTime_AddObserver(OPERATOR.getValue()));
@@ -130,11 +134,12 @@ public class JsonLedgerClientIT {
     String marketDataProvider1 = new AppParties(ALL_PARTIES).getMarketDataProvider1();
     String jwt =
         Jwt.createToken(ledgerId, APPLICATION_ID, Collections.singletonList(marketDataProvider1));
-    httpClient = new ApacheHttpClient(httpResponseDeserializer, jsonConverter, jwt);
-    webSocketClient = new TyrusWebSocketClient(webSocketResponseDeserializer, jsonConverter, jwt);
+    httpClient = new ApacheHttpClient(httpResponseDeserializer, jsonSerializer, jwt);
+    webSocketClient = new TyrusWebSocketClient(webSocketResponseDeserializer, jsonSerializer, jwt);
     api = new Api("localhost", 7575);
 
-    JsonLedgerClient ledger = new JsonLedgerClient(httpClient, webSocketClient, jsonConverter, api);
+    JsonLedgerClient ledger =
+        new JsonLedgerClient(httpClient, webSocketClient, jsonSerializer, api);
     Main.runBotsWithJsonApi(new AppParties(ALL_PARTIES), null)
         .accept(ledger, getManagedChannel(sandbox.getClient()));
 
