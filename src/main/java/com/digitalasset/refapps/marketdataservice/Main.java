@@ -4,6 +4,7 @@
  */
 package com.digitalasset.refapps.marketdataservice;
 
+import com.daml.ledger.javaapi.data.Command;
 import com.daml.ledger.javaapi.data.Template;
 import com.daml.ledger.rxjava.DamlLedgerClient;
 import com.daml.ledger.rxjava.components.Bot;
@@ -20,13 +21,6 @@ import com.digitalasset.refapps.marketdataservice.utils.CliOptions;
 import com.digitalasset.refapps.marketdataservice.utils.CommandsAndPendingSetBuilder;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import java.time.Clock;
-import java.time.Duration;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
 import jsonapi.ActiveContract;
 import jsonapi.ActiveContractSet;
 import jsonapi.ContractQuery;
@@ -35,6 +29,15 @@ import org.pcollections.HashTreePMap;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.time.Clock;
+import java.time.Duration;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class Main {
 
@@ -184,10 +187,15 @@ public class Main {
         .map(Main::toLedgerView)
         .flatMap(bot::apply)
         .forEach(
-            cps -> {
-              // TODO: Send commands
-              // TODO: Handle pending
-            });
+            cps ->
+              cps.getSubmitCommandsRequest().getCommands().forEach(submitCommand(ledgerClient)));
+  }
+
+  private static Consumer<? super Command> submitCommand(JsonLedgerClient ledgerClient) {
+    return command -> {
+      command.asExerciseCommand().ifPresent(ledgerClient::exerciseChoice);
+      command.asCreateCommand().ifPresent(ledgerClient::create);
+    };
   }
 
   static LedgerView<Template> toLedgerView(ActiveContractSet activeContractSet) {
