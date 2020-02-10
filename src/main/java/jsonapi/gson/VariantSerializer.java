@@ -16,7 +16,6 @@ public class VariantSerializer implements JsonSerializer<Variant> {
   @Override
   public JsonElement serialize(Variant variant, Type type, JsonSerializationContext context) {
     JsonObject json = new JsonObject();
-    ;
     json.addProperty("tag", variant.getConstructor());
     json.add("value", context.serialize(variant.getValue()));
     return json;

@@ -17,7 +17,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collections;
-import jsonapi.json.SampleJsonSerializer;
+import jsonapi.gson.SampleJsonSerializer;
 import org.junit.*;
 
 public class SampleJsonSerializerTest {
