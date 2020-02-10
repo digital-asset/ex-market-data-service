@@ -15,7 +15,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collections;
 import jsonapi.json.GsonRegisteredAllDeserializers;
-import jsonapi.json.SampleJsonSerializer;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
