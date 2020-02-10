@@ -46,16 +46,25 @@ public class SampleJsonSerializerTest {
     EmptyDataStream.ContractId contractId = new EmptyDataStream.ContractId("cid1");
     ExerciseCommand exerciseCommand = contractId.exerciseStartDataStream(observation);
     System.err.println(sampleJsonSerializer.apply(exerciseCommand));
-    // Examples:
-    // \"observation\":{\"label\":{\"market\":\"US Bond Market\",\"instrumentId\":{\"unpack\":\"ISIN
-    // 288
-    // 2839\"},\"maturityDate\":\"2021-02-11\"},\"time\":\"2019-11-12T12:30:00Z\",\"value\":{\"tag\":\"CleanPrice\",\"value\":{\"clean\":\"1.0\"}}}}
-    // \"observation\":{\"label\":{\"market\":\"US Bond Market\",\"instrumentId\":{\"unpack\":\"ISIN
-    // 288
-    // 2839\"},\"maturityDate\":\"2021-02-11\"},\"time\":\"2019-11-12T12:30:00Z\",\"value\":{\"tag\":\"EnrichedCleanDirtyPrice\",\"value\":{\"rate\":\"0.02\",\"couponDate\":\"2020-02-11\",\"dirty\":\"1.0150136986\",\"clean\":\"1.0\",\"accrual\":\"0.0150136986\"}}}}
+    // Real examples:
+    // "observation":{
+    //      "label":{"market":"US Bond Market",
+    //      "instrumentId":{"unpack":"ISIN-288-2839"},
+    //      "maturityDate":"2021-02-11"},
+    //      "time":"2019-11-12T12:30:00Z",
+    //      "value":{"tag":"CleanPrice","value":{"clean":"1.0"}}}}
+    // "observation":{
+    //      "label":{"market":"US Bond Market",
+    //      "instrumentId":{"unpack":"ISIN-288-2839"},
+    //      "maturityDate":"2021-02-11"},
+    //      "time":"2019-11-12T12:30:00Z",
+    //      "value":{
+    //            "tag":"EnrichedCleanDirtyPrice",
+    //            "value":{"rate":"0.02","couponDate":"2020-02-11","dirty":"1.0150136986",
+    //                        "clean":"1.0","accrual":"0.0150136986"}}}}
     String expected =
         "{\"templateId\":\"b4eb9b86bb78db2acde90edf0a03d96e5d65cc7a7cc422f23b6d98a286e07c09:DA.RefApps.MarketDataService.DataStream:EmptyDataStream\",\"contractId\":\"cid1\",\"choice\":\"StartDataStream\",\"argument\":{\"newObservation\":"
-            + "{\"label\":{\"market\":\"Market\",\"instrumentId\":{\"unpack\":\"ISIN 123 XYZ\"},\"maturityDate\":\"2019-05-10\"},\"time\":\"2019-05-03T10:15:30Z\",\"value\":{\"tag\":\"CleanPrice\",\"value\":{\"clean\":\"1.0\"}}}}";
+            + "{\"label\":{\"market\":\"Market\",\"instrumentId\":{\"unpack\":\"ISIN 123 XYZ\"},\"maturityDate\":\"2019-05-10\"},\"time\":\"2019-05-03T09:15:30Z\",\"value\":{\"tag\":\"CleanPrice\",\"value\":{\"clean\":\"1.2\"}}}}}";
     Assert.assertEquals(expected, sampleJsonSerializer.apply(exerciseCommand));
   }
 
@@ -65,7 +74,7 @@ public class SampleJsonSerializerTest {
     InstrumentId instrumentId = new InstrumentId("ISIN 123 XYZ");
     LocalDate maturityDate = LocalDate.parse("2019-05-10");
     ObservationReference label = new ObservationReference(marketName, instrumentId, maturityDate);
-    ObservationValue cleanPrice = new CleanPrice(BigDecimal.valueOf(10));
+    ObservationValue cleanPrice = new CleanPrice(BigDecimal.valueOf(1.2));
     return new Observation(label, observationTime.minusSeconds(3600), cleanPrice);
   }
 
