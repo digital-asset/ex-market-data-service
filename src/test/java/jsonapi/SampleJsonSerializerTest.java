@@ -41,7 +41,7 @@ public class SampleJsonSerializerTest {
     Assert.assertEquals(expected, sampleJsonSerializer.apply(exerciseCommand));
   }
 
-//  @Ignore
+  //  @Ignore
   @Test
   public void serializeExerciseStartDataStream() {
     Observation observation = getObservation();
@@ -58,7 +58,7 @@ public class SampleJsonSerializerTest {
     // 2839\"},\"maturityDate\":\"2021-02-11\"},\"time\":\"2019-11-12T12:30:00Z\",\"value\":{\"tag\":\"EnrichedCleanDirtyPrice\",\"value\":{\"rate\":\"0.02\",\"couponDate\":\"2020-02-11\",\"dirty\":\"1.0150136986\",\"clean\":\"1.0\",\"accrual\":\"0.0150136986\"}}}}
     String expected =
         "{\"templateId\":\"b4eb9b86bb78db2acde90edf0a03d96e5d65cc7a7cc422f23b6d98a286e07c09:DA.RefApps.MarketDataService.DataStream:EmptyDataStream\",\"contractId\":\"cid1\",\"choice\":\"StartDataStream\",\"argument\":{\"newObservation\":"
-            + "{\"label\":{\"market\":\"Market\",\"instrumentId\":{\"unpack\":\"ISIN 123 XYZ\"},\"maturityDate\":\"2020-02-17\"},\"time\":\"2019-11-12T12:30:00Z\",\"value\":{\"tag\":\"CleanPrice\",\"value\":{\"clean\":\"1.0\"}}}}";
+            + "{\"label\":{\"market\":\"Market\",\"instrumentId\":{\"unpack\":\"ISIN 123 XYZ\"},\"maturityDate\":\"2019-05-10\"},\"time\":\"2019-05-03T10:15:30.00Z\",\"value\":{\"tag\":\"CleanPrice\",\"value\":{\"clean\":\"1.0\"}}}}";
     Assert.assertEquals(expected, sampleJsonSerializer.apply(exerciseCommand));
   }
 
@@ -66,7 +66,7 @@ public class SampleJsonSerializerTest {
     Instant observationTime = Instant.parse("2019-05-03T10:15:30.00Z");
     String marketName = "Market";
     InstrumentId instrumentId = new InstrumentId("ISIN 123 XYZ");
-    LocalDate maturityDate = LocalDate.now().plusWeeks(1);
+    LocalDate maturityDate = LocalDate.parse("2019-05-10");
     ObservationReference label = new ObservationReference(marketName, instrumentId, maturityDate);
     ObservationValue cleanPrice = new CleanPrice(BigDecimal.valueOf(10));
     return new Observation(label, observationTime.minusSeconds(3600), cleanPrice);
@@ -94,15 +94,19 @@ public class SampleJsonSerializerTest {
     Assert.assertEquals("\"2020-02-08\"", sampleJsonSerializer.apply(date));
   }
 
-
   @Test
   public void serializeTimestamp() {
     Timestamp timestamp = Timestamp.fromInstant(Instant.parse("2020-02-08T12:30:00Z"));
     Assert.assertEquals("\"2020-02-08T12:30:00Z\"", sampleJsonSerializer.apply(timestamp));
   }
 
+  @Test
+  public void serializeVariant() {
+    throw new RuntimeException("TODO");
+  }
+
   private Date getDate(String date) {
     long epoch = Instant.parse(date + "T00:00:00Z").getEpochSecond() / 3600 / 24;
-    return new Date((int)epoch);
+    return new Date((int) epoch);
   }
 }

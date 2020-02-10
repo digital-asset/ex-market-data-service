@@ -21,6 +21,7 @@ public class SampleJsonSerializer implements JsonSerializer {
           .registerTypeAdapter(Text.class, new TextSerializer())
           .registerTypeAdapter(Date.class, new DateSerializer())
           .registerTypeAdapter(Timestamp.class, new TimestampSerializer())
+          .registerTypeAdapter(Variant.class, new VariantSerializer())
           .registerTypeAdapter(ExerciseCommand.class, new ExerciseCommandSerializer())
           .create();
 
