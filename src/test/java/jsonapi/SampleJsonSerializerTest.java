@@ -109,7 +109,8 @@ public class SampleJsonSerializerTest {
   @Test
   public void serializeVariant() {
     Variant variant = new Variant("VariantType", new Text("SomeValue"));
-    Assert.assertEquals("{\"tag\":\"VariantType\",\"value\":\"SomeValue\"}", sampleJsonSerializer.apply(variant));
+    Assert.assertEquals(
+        "{\"tag\":\"VariantType\",\"value\":\"SomeValue\"}", sampleJsonSerializer.apply(variant));
   }
 
   @Test
