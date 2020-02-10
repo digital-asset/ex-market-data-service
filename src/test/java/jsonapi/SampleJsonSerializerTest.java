@@ -41,10 +41,8 @@ public class SampleJsonSerializerTest {
   @Test
   public void serializeExerciseStartDataStream() {
     Observation observation = getObservation();
-
     EmptyDataStream.ContractId contractId = new EmptyDataStream.ContractId("cid1");
     ExerciseCommand exerciseCommand = contractId.exerciseStartDataStream(observation);
-    System.err.println(sampleJsonSerializer.apply(exerciseCommand));
     // Real examples:
     // "observation":{
     //      "label":{"market":"US Bond Market",
