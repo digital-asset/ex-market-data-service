@@ -18,6 +18,8 @@ public class ObservationValueDeserializer implements JsonDeserializer<Observatio
   @Override
   public ObservationValue deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
       throws JsonParseException {
+    // We do not properly deserialize the class hierarchy, we only want a MWE.
+    // A possible way to do this properly: https://stackoverflow.com/a/22081826
     return context.deserialize(json, CleanPrice.class);
   }
 }
