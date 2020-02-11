@@ -33,7 +33,7 @@ daml script \
     --ledger-port ${SANDBOX_PORT}
 echo "DAML script executed"
 
-daml trigger \
+< /dev/zero daml trigger \
     --wall-clock-time \
     --dar "${DAR_FILE}" \
     --trigger-name DA.RefApps.MarketDataService.Triggers.Enrichment:republishObservationTrigger \
@@ -41,7 +41,7 @@ daml trigger \
     --ledger-port ${SANDBOX_PORT} \
     --ledger-party MarketDataVendor &
 
-daml trigger \
+< /dev/zero daml trigger \
     --wall-clock-time \
     --dar "${DAR_FILE}" \
     --trigger-name DA.RefApps.MarketDataService.Triggers.Enrichment:enrichCleanPriceWithAccrualTrigger \
