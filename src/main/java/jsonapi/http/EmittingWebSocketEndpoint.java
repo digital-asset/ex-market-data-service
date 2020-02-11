@@ -4,7 +4,7 @@
  */
 package jsonapi.http;
 
-import io.reactivex.Emitter;
+import io.reactivex.FlowableSubscriber;
 import java.io.IOException;
 import javax.websocket.CloseReason;
 import javax.websocket.EndpointConfig;
@@ -16,11 +16,11 @@ import org.slf4j.LoggerFactory;
 public class EmittingWebSocketEndpoint extends javax.websocket.Endpoint {
   private final Logger log = LoggerFactory.getLogger(getClass());
 
-  private final Emitter<String> emitter;
   private final String query;
+  private final FlowableSubscriber<String> subscriber;
 
-  public EmittingWebSocketEndpoint(Emitter<String> emitter, String query) {
-    this.emitter = emitter;
+  public EmittingWebSocketEndpoint(FlowableSubscriber<String> subscriber, String query) {
+    this.subscriber = subscriber;
     this.query = query;
   }
 
@@ -39,13 +39,13 @@ public class EmittingWebSocketEndpoint extends javax.websocket.Endpoint {
 
   @Override
   public void onError(Session session, Throwable error) {
-    emitter.onError(error);
+    subscriber.onError(error);
   }
 
   @Override
   public void onClose(Session session, CloseReason closeReason) {
     log.debug("Closed.");
-    emitter.onComplete();
+    subscriber.onComplete();
   }
 
   private class MessageHandler implements Whole<String> {
@@ -53,7 +53,7 @@ public class EmittingWebSocketEndpoint extends javax.websocket.Endpoint {
     @Override
     public void onMessage(String message) {
       log.trace("Received message: {}.", message);
-      emitter.onNext(message);
+      subscriber.onNext(message);
     }
   }
 }
