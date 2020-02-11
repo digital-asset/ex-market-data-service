@@ -7,18 +7,20 @@ package jsonapi.gson;
 import com.daml.ledger.javaapi.data.Template;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import jsonapi.events.Event;
 import jsonapi.http.HttpResponse;
 import jsonapi.http.WebSocketResponse;
 import jsonapi.json.JsonDeserializer;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.time.Instant;
+
 public class GsonDeserializer {
 
   private Gson gson =
       new GsonBuilder()
-          .registerTypeAdapter(WebSocketResponse.class, new InstantDeserializer())
+          .registerTypeAdapter(Instant.class, new InstantDeserializer())
           .registerTypeAdapter(WebSocketResponse.class, new WebSocketResponseDeserializer())
           .registerTypeAdapter(Event.class, new EventDeserializer())
           .registerTypeAdapter(Template.class, new CreatedEventDeserializer())
