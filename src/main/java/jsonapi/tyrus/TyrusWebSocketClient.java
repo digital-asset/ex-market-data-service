@@ -4,16 +4,16 @@
  */
 package jsonapi.tyrus;
 
-import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.processors.PublishProcessor;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import javax.websocket.ClientEndpointConfig;
-import javax.websocket.Endpoint;
+import javax.websocket.DeploymentException;
 import jsonapi.http.EmittingWebSocketEndpoint;
 import jsonapi.http.WebSocketClient;
 import jsonapi.http.WebSocketResponse;
@@ -40,19 +40,20 @@ public class TyrusWebSocketClient implements WebSocketClient {
 
   @Override
   public Flowable<WebSocketResponse> post(URI resource, Object body) {
-    Flowable<String> source =
-        Flowable.create(
-            emitter -> {
-              String query = toJson.apply(body);
-              Endpoint endpoint = new EmittingWebSocketEndpoint(emitter, query);
-              client.connectToServer(endpoint, config, resource);
-            },
-            BackpressureStrategy.LATEST);
-    return source
+    String query = toJson.apply(body);
+    Flowable<WebSocketResponse> source =
+        Flowable.defer(() -> createWebSocketPublisher(resource, query));
+    return source.publish().autoConnect();
+  }
+
+  private Flowable<WebSocketResponse> createWebSocketPublisher(URI resource, String query)
+      throws IOException, DeploymentException {
+    PublishProcessor<String> broadcaster = PublishProcessor.create();
+    client.connectToServer(new EmittingWebSocketEndpoint(broadcaster, query), config, resource);
+    return broadcaster
         // TODO: Either deserialize or ignore heartbeats, so that we can emit InputStreams directly.
         .filter(this::nonHeartbeat)
-        .map(this::toWebSocketResponse)
-        .subscribeWith(PublishProcessor.create());
+        .map(this::toWebSocketResponse);
   }
 
   private boolean nonHeartbeat(String message) {
