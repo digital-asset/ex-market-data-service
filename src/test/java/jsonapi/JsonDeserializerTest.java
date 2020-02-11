@@ -6,7 +6,11 @@ package jsonapi;
 
 import da.refapps.marketdataservice.datastream.DataStream;
 import da.refapps.marketdataservice.datastream.EmptyDataStream;
-import da.refapps.marketdataservice.marketdatatypes.*;
+import da.refapps.marketdataservice.marketdatatypes.InstrumentId;
+import da.refapps.marketdataservice.marketdatatypes.Observation;
+import da.refapps.marketdataservice.marketdatatypes.ObservationReference;
+import da.refapps.marketdataservice.marketdatatypes.ObservationValue;
+import da.refapps.marketdataservice.marketdatatypes.Publisher;
 import da.refapps.marketdataservice.marketdatatypes.observationvalue.CleanPrice;
 import da.timeservice.timeservice.CurrentTime;
 import java.math.BigDecimal;

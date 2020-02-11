@@ -4,23 +4,20 @@
  */
 package jsonapi.gson;
 
-import com.daml.ledger.javaapi.data.Record;
-import com.daml.ledger.javaapi.data.Record.Field;
+import com.daml.ledger.javaapi.data.Variant;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import java.lang.reflect.Type;
 
-public class RecordSerializer implements JsonSerializer<Record> {
+public class VariantSerializer implements JsonSerializer<Variant> {
 
   @Override
-  public JsonElement serialize(Record record, Type type, JsonSerializationContext context) {
+  public JsonElement serialize(Variant variant, Type type, JsonSerializationContext context) {
     JsonObject json = new JsonObject();
-    // TODO: Implement properly.
-    for (Field field : record.getFields()) {
-      field.getLabel().ifPresent(label -> json.add(label, context.serialize(field.getValue())));
-    }
+    json.addProperty("tag", variant.getConstructor());
+    json.add("value", context.serialize(variant.getValue()));
     return json;
   }
 }

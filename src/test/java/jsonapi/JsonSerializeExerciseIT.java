@@ -29,14 +29,18 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import jsonapi.apache.ApacheHttpClient;
-import jsonapi.gson.SampleJsonSerializer;
+import jsonapi.gson.GsonSerializer;
 import jsonapi.http.Api;
 import jsonapi.http.HttpClient;
 import jsonapi.http.HttpResponse;
 import jsonapi.http.WebSocketClient;
 import jsonapi.http.WebSocketResponse;
 import jsonapi.tyrus.TyrusWebSocketClient;
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExternalResource;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
@@ -76,8 +80,8 @@ public class JsonSerializeExerciseIT {
     claim.put("actAs", Collections.singletonList("Operator"));
     Map<String, Object> claims = Collections.singletonMap("https://daml.com/ledger-api", claim);
     String jwt = Jwts.builder().setClaims(claims).signWith(key).compact();
-    httpClient = new ApacheHttpClient(this::fromJson, new SampleJsonSerializer(), jwt);
-    webSocketClient = new TyrusWebSocketClient(this::fromJsonWs, new SampleJsonSerializer(), jwt);
+    httpClient = new ApacheHttpClient(this::fromJson, new GsonSerializer(), jwt);
+    webSocketClient = new TyrusWebSocketClient(this::fromJsonWs, new GsonSerializer(), jwt);
     api = new Api("localhost", 7575);
   }
 
@@ -89,7 +93,7 @@ public class JsonSerializeExerciseIT {
     ContractWithId<TimeManager.ContractId> timeManagerWithId =
         ledger.getMatchedContract(OPERATOR, TimeManager.TEMPLATE_ID, TimeManager.ContractId::new);
     JsonLedgerClient jsonLedgerClient =
-        new JsonLedgerClient(httpClient, webSocketClient, new SampleJsonSerializer(), api);
+        new JsonLedgerClient(httpClient, webSocketClient, new GsonSerializer(), api);
     jsonLedgerClient.exerciseChoice(timeManagerWithId.contractId.exerciseAdvanceCurrentTime());
     getNextCurrentTime();
     CurrentTime currentTime = getNextCurrentTime();

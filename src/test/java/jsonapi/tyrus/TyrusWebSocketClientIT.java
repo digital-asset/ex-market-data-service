@@ -7,12 +7,10 @@ package jsonapi.tyrus;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-import com.daml.ledger.javaapi.data.Identifier;
 import com.daml.ledger.javaapi.data.Party;
 import com.digitalasset.testing.junit4.Sandbox;
 import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.protobuf.InvalidProtocolBufferException;
 import da.timeservice.timeservice.CurrentTime;
 import io.reactivex.Flowable;
@@ -28,14 +26,12 @@ import jsonapi.ContractQuery;
 import jsonapi.JsonApi;
 import jsonapi.events.CreatedEvent;
 import jsonapi.events.Event;
-import jsonapi.gson.CreatedEventDeserializer;
-import jsonapi.gson.IdentifierSerializer;
-import jsonapi.gson.InstantSerializer;
-import jsonapi.gson.WebSocketResponseDeserializer;
+import jsonapi.gson.GsonSerializer;
 import jsonapi.http.Api;
 import jsonapi.http.Jwt;
 import jsonapi.http.WebSocketClient;
 import jsonapi.http.WebSocketResponse;
+import jsonapi.json.GsonRegisteredAllDeserializers;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -53,13 +49,6 @@ public class TyrusWebSocketClientIT {
       Sandbox.builder().dar(RELATIVE_DAR_PATH).useWallclockTime().build();
 
   @ClassRule public static ExternalResource startSandbox = sandbox.getClassRule();
-  private final Gson json =
-      new GsonBuilder()
-          .registerTypeAdapter(Identifier.class, new IdentifierSerializer())
-          .registerTypeAdapter(WebSocketResponse.class, new WebSocketResponseDeserializer())
-          .registerTypeAdapter(Event.class, new CreatedEventDeserializer())
-          .registerTypeAdapter(Instant.class, new InstantSerializer())
-          .create();
   private final Api api = new Api("localhost", 7575);
 
   @Rule
@@ -84,7 +73,7 @@ public class TyrusWebSocketClientIT {
 
     ContractQuery query = new ContractQuery(Collections.singletonList(CurrentTime.TEMPLATE_ID));
 
-    WebSocketClient client = new TyrusWebSocketClient(this::fromJson, this::toJson, jwt);
+    WebSocketClient client = new TyrusWebSocketClient(this::fromJson, new GsonSerializer(), jwt);
     Flowable<WebSocketResponse> response = client.post(api.searchContractsForever(), query);
 
     WebSocketResponse webSocketResponse = response.blockingFirst();
@@ -96,10 +85,7 @@ public class TyrusWebSocketClientIT {
   }
 
   private WebSocketResponse fromJson(InputStream inputStream) {
+    Gson json = GsonRegisteredAllDeserializers.gson();
     return json.fromJson(new InputStreamReader(inputStream), WebSocketResponse.class);
-  }
-
-  private String toJson(Object o) {
-    return json.toJson(o);
   }
 }
