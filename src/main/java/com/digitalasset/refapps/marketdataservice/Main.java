@@ -4,6 +4,7 @@
  */
 package com.digitalasset.refapps.marketdataservice;
 
+import com.daml.ledger.javaapi.data.Command;
 import com.daml.ledger.javaapi.data.Template;
 import com.daml.ledger.rxjava.DamlLedgerClient;
 import com.daml.ledger.rxjava.components.Bot;
@@ -26,6 +27,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import jsonapi.ActiveContract;
 import jsonapi.ActiveContractSet;
@@ -184,10 +186,15 @@ public class Main {
         .map(Main::toLedgerView)
         .flatMap(bot::apply)
         .forEach(
-            cps -> {
-              // TODO: Send commands
-              // TODO: Handle pending
-            });
+            cps ->
+                cps.getSubmitCommandsRequest().getCommands().forEach(submitCommand(ledgerClient)));
+  }
+
+  private static Consumer<? super Command> submitCommand(JsonLedgerClient ledgerClient) {
+    return command -> {
+      command.asExerciseCommand().ifPresent(ledgerClient::exerciseChoice);
+      command.asCreateCommand().ifPresent(ledgerClient::create);
+    };
   }
 
   static LedgerView<Template> toLedgerView(ActiveContractSet activeContractSet) {

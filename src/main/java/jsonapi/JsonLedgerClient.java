@@ -4,6 +4,7 @@
  */
 package jsonapi;
 
+import com.daml.ledger.javaapi.data.CreateCommand;
 import com.daml.ledger.javaapi.data.ExerciseCommand;
 import io.reactivex.Flowable;
 import jsonapi.http.Api;
@@ -26,6 +27,12 @@ public class JsonLedgerClient {
     this.webSocketClient = webSocketClient;
     this.toJson = toJson;
     this.api = api;
+  }
+
+  public String create(CreateCommand command) {
+    HttpResponse httpResponse = httpClient.post(api.createContract(), command);
+    // TODO: Return type safe result
+    return toJson.apply(httpResponse);
   }
 
   public String exerciseChoice(ExerciseCommand command) {
