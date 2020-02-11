@@ -91,7 +91,8 @@ public class GsonSerializerTest {
 
   @Test
   public void serializeDate() {
-    Date date = getDate();
+    LocalDate javaDate = LocalDate.parse("2020-02-08");
+    Date date = new Date((int) javaDate.toEpochDay());
     Assert.assertEquals("\"2020-02-08\"", gsonSerializer.apply(date));
   }
 
@@ -118,14 +119,6 @@ public class GsonSerializerTest {
   public void serializeNumeric() {
     Numeric numeric = new Numeric(BigDecimal.valueOf(12.3));
     Assert.assertEquals("\"12.3\"", gsonSerializer.apply(numeric));
-  }
-
-  private static Date getDate() {
-    Instant instant = Instant.parse("2020-02-08T00:00:00Z");
-    int epochDay = (int) instant.getEpochSecond() / 3600 / 24;
-    Date date = new Date(epochDay);
-    Assert.assertEquals(LocalDate.parse("2020-02-08"), date.getValue());
-    return date;
   }
 
   private static Observation getObservation() {
