@@ -38,6 +38,18 @@ public class TyrusWebSocketClient implements WebSocketClient {
     this.client = ClientManager.createClient(JdkClientContainer.class.getName());
   }
 
+  // TODO: Visible only for testing. Likely should refactor.
+  TyrusWebSocketClient(
+      JsonDeserializer<WebSocketResponse> fromJson,
+      JsonSerializer toJson,
+      ClientEndpointConfig config,
+      ClientManager client) {
+    this.fromJson = fromJson;
+    this.toJson = toJson;
+    this.config = config;
+    this.client = client;
+  }
+
   @Override
   public Flowable<WebSocketResponse> post(URI resource, Object body) {
     String query = toJson.apply(body);
