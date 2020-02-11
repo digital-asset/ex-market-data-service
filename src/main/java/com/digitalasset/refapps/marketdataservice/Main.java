@@ -14,6 +14,8 @@ import com.daml.ledger.rxjava.components.helpers.CommandsAndPendingSet;
 import com.digitalasset.refapps.marketdataservice.publishing.CachingCsvDataProvider;
 import com.digitalasset.refapps.marketdataservice.publishing.DataProviderBot;
 import com.digitalasset.refapps.marketdataservice.publishing.PublishingDataProvider;
+import com.digitalasset.refapps.marketdataservice.timeservice.GrpcLedgerApiHandle;
+import com.digitalasset.refapps.marketdataservice.timeservice.JsonLedgerApiHandle;
 import com.digitalasset.refapps.marketdataservice.timeservice.TimeUpdaterBot;
 import com.digitalasset.refapps.marketdataservice.timeservice.TimeUpdaterBotExecutor;
 import com.digitalasset.refapps.marketdataservice.utils.AppParties;
@@ -21,22 +23,33 @@ import com.digitalasset.refapps.marketdataservice.utils.CliOptions;
 import com.digitalasset.refapps.marketdataservice.utils.CommandsAndPendingSetBuilder;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import jsonapi.ActiveContract;
+import jsonapi.ActiveContractSet;
+import jsonapi.ContractQuery;
+import jsonapi.JsonLedgerClient;
+import jsonapi.apache.ApacheHttpClient;
+import jsonapi.gson.GsonDeserializer;
+import jsonapi.gson.GsonSerializer;
+import jsonapi.http.Api;
+import jsonapi.http.HttpResponse;
+import jsonapi.http.Jwt;
+import jsonapi.http.WebSocketResponse;
+import jsonapi.json.JsonDeserializer;
+import jsonapi.tyrus.TyrusWebSocketClient;
+import org.pcollections.HashTreePMap;
+import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.Clock;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import jsonapi.ActiveContract;
-import jsonapi.ActiveContractSet;
-import jsonapi.ContractQuery;
-import jsonapi.JsonLedgerClient;
-import org.pcollections.HashTreePMap;
-import org.reactivestreams.Publisher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class Main {
 
@@ -44,6 +57,12 @@ public class Main {
   private static final String APPLICATION_ID = "MarketDataService";
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
   private static final Duration SYSTEM_PERIOD_TIME = Duration.ofSeconds(5);
+  private static final GsonSerializer jsonSerializer = new GsonSerializer();
+  private static final GsonDeserializer jsonDeserializer = new GsonDeserializer();
+  private static final JsonDeserializer<HttpResponse> httpResponseDeserializer =
+      jsonDeserializer.getHttpResponseDeserializer();
+  private static final JsonDeserializer<WebSocketResponse> webSocketResponseDeserializer =
+      jsonDeserializer.getWebSocketResponseDeserializer();
   private static ScheduledExecutorService scheduler;
   private static TimeUpdaterBotExecutor timeUpdaterBotExecutor;
 
@@ -112,7 +131,7 @@ public class Main {
       if (parties.hasOperator()) {
         logger.info("Starting automation for Operator.");
         TimeUpdaterBot timeUpdaterBot =
-            new TimeUpdaterBot(client, commandBuilderFactory, parties.getOperator());
+            new TimeUpdaterBot(new GrpcLedgerApiHandle(client, commandBuilderFactory, parties.getOperator()));
         scheduler = Executors.newScheduledThreadPool(1);
         timeUpdaterBotExecutor = new TimeUpdaterBotExecutor(scheduler);
         timeUpdaterBotExecutor.start(timeUpdaterBot, systemPeriodTime);
@@ -136,50 +155,63 @@ public class Main {
     }
   }
 
-  private static void logPackages(DamlLedgerClient client) {
-    StringBuilder sb = new StringBuilder("Listing packages:");
-    client.getPackageClient().listPackages().forEach(id -> sb.append("\n").append(id));
-    logger.debug(sb.toString());
-  }
+  public static void runBotsWithJsonApi(
+      String ledgerId, AppParties parties, Duration systemPeriodTime) {
+    Duration mrt = Duration.ofSeconds(10);
+    CommandsAndPendingSetBuilder.Factory commandBuilderFactory =
+        CommandsAndPendingSetBuilder.factory(APPLICATION_ID, Clock::systemUTC, mrt);
 
-  public static void waitForSandbox(String host, int port, DamlLedgerClient client) {
-    boolean connected = false;
-    while (!connected) {
-      try {
-        client.connect();
-        connected = true;
-      } catch (Exception _ignored) {
-        logger.info(String.format("Connecting to sandbox at %s:%s", host, port));
-        try {
-          Thread.sleep(1000);
-        } catch (InterruptedException ignored) {
-        }
-      }
+    if (parties.hasMarketDataProvider1()) {
+      logger.info("Starting automation for MarketDataProvider1.");
+      PublishingDataProvider dataProvider = new CachingCsvDataProvider();
+      DataProviderBot dataProviderBot =
+          new DataProviderBot(
+              commandBuilderFactory, parties.getMarketDataProvider1(), dataProvider);
+      wire(
+          ledgerId,
+          dataProviderBot.getPartyName(),
+          dataProviderBot.getContractQuery(),
+          dataProviderBot::calculateCommands);
+    }
+
+    if (parties.hasMarketDataProvider2()) {
+      logger.info("Starting automation for MarketDataProvider2.");
+      PublishingDataProvider dataProvider = new CachingCsvDataProvider();
+      DataProviderBot dataProviderBot =
+              new DataProviderBot(
+                      commandBuilderFactory, parties.getMarketDataProvider2(), dataProvider);
+      wire(
+              ledgerId,
+              dataProviderBot.getPartyName(),
+              dataProviderBot.getContractQuery(),
+              dataProviderBot::calculateCommands);
+    }
+
+    if (parties.hasOperator()) {
+      logger.info("Starting automation for Operator.");
+      TimeUpdaterBot timeUpdaterBot =
+              new TimeUpdaterBot(new JsonLedgerApiHandle(parties.getOperator(), ledgerId, APPLICATION_ID, httpResponseDeserializer, jsonSerializer, webSocketResponseDeserializer));
+      scheduler = Executors.newScheduledThreadPool(1);
+      timeUpdaterBotExecutor = new TimeUpdaterBotExecutor(scheduler);
+      timeUpdaterBotExecutor.start(timeUpdaterBot, systemPeriodTime);
     }
   }
 
-  public static BiConsumer<JsonLedgerClient, ManagedChannel> runBotsWithJsonApi(
-      AppParties parties, Duration systemPeriodTime) {
-    return (JsonLedgerClient client, ManagedChannel channel) -> {
-      Duration mrt = Duration.ofSeconds(10);
-      CommandsAndPendingSetBuilder.Factory commandBuilderFactory =
-          CommandsAndPendingSetBuilder.factory(APPLICATION_ID, Clock::systemUTC, mrt);
-
-      if (parties.hasMarketDataProvider1()) {
-        logger.info("Starting automation for MarketDataProvider1.");
-        PublishingDataProvider dataProvider = new CachingCsvDataProvider();
-        DataProviderBot dataProviderBot =
-            new DataProviderBot(
-                commandBuilderFactory, parties.getMarketDataProvider1(), dataProvider);
-        wire(client, dataProviderBot.getContractQuery(), dataProviderBot::calculateCommands);
-      }
-    };
-  }
-
   public static void wire(
-      JsonLedgerClient ledgerClient,
+      String ledgerId,
+      String party,
       ContractQuery contractQuery,
       Function<LedgerView<Template>, Publisher<CommandsAndPendingSet>> bot) {
+
+    String jwt = Jwt.createToken(ledgerId, APPLICATION_ID, Collections.singletonList(party));
+    ApacheHttpClient httpClient =
+        new ApacheHttpClient(httpResponseDeserializer, jsonSerializer, jwt);
+    TyrusWebSocketClient webSocketClient =
+        new TyrusWebSocketClient(webSocketResponseDeserializer, jsonSerializer, jwt);
+    Api api = new Api("localhost", 7575);
+
+    JsonLedgerClient ledgerClient =
+        new JsonLedgerClient(httpClient, webSocketClient, jsonSerializer, api);
 
     ledgerClient
         .getActiveContracts(contractQuery)
@@ -205,6 +237,22 @@ public class Main {
     return emptyLedgerView;
   }
 
+  public static void waitForSandbox(String host, int port, DamlLedgerClient client) {
+    boolean connected = false;
+    while (!connected) {
+      try {
+        client.connect();
+        connected = true;
+      } catch (Exception _ignored) {
+        logger.info(String.format("Connecting to sandbox at %s:%s", host, port));
+        try {
+          Thread.sleep(1000);
+        } catch (InterruptedException ignored) {
+        }
+      }
+    }
+  }
+
   private static LedgerTestView<Template> addActiveContract(
       LedgerTestView<Template> emptyLedgerView, ActiveContract activeContract) {
     return emptyLedgerView.addActiveContract(
@@ -216,5 +264,11 @@ public class Main {
   private static LedgerTestView<Template> createEmptyLedgerView() {
     return new LedgerTestView<>(
         HashTreePMap.empty(), HashTreePMap.empty(), HashTreePMap.empty(), HashTreePMap.empty());
+  }
+
+  private static void logPackages(DamlLedgerClient client) {
+    StringBuilder sb = new StringBuilder("Listing packages:");
+    client.getPackageClient().listPackages().forEach(id -> sb.append("\n").append(id));
+    logger.debug(sb.toString());
   }
 }

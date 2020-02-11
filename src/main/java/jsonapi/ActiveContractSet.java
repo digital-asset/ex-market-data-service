@@ -5,13 +5,10 @@
 package jsonapi;
 
 import com.daml.ledger.javaapi.data.Identifier;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Stream;
 import jsonapi.events.Event;
+
+import java.util.*;
+import java.util.stream.Stream;
 
 public class ActiveContractSet {
 
@@ -43,7 +40,7 @@ public class ActiveContractSet {
     return new Contract<>(x.getContractId(), type.cast(x.getTemplate()));
   }
 
-  public ActiveContractSet update(Collection<Event> events) {
+  public ActiveContractSet update(Collection<? extends Event> events) {
     return events
         // TODO: Can this be correct?
         .parallelStream()

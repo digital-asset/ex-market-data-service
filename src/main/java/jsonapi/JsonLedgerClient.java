@@ -41,10 +41,11 @@ public class JsonLedgerClient {
     return toJson.apply(httpResponse);
   }
 
-  public String getActiveContracts() {
+  public ActiveContractSet getActiveContracts() {
     HttpResponse httpResponse = httpClient.get(api.searchContract());
     // TODO: Return type safe result
-    return toJson.apply(httpResponse);
+    ActiveContractSet acs = ActiveContractSet.empty();
+    return acs.update(httpResponse.getResult());
   }
 
   public Flowable<ActiveContractSet> getActiveContracts(ContractQuery query) {
