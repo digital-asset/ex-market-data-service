@@ -17,7 +17,7 @@ public class ActiveContractSet {
 
   private final Map<String, ActiveContract> activeContracts;
 
-  ActiveContractSet() {
+  private ActiveContractSet() {
     this(new HashMap<>());
   }
 
@@ -26,7 +26,7 @@ public class ActiveContractSet {
   }
 
   public static ActiveContractSet empty() {
-    return new ActiveContractSet(new HashMap<>());
+    return new ActiveContractSet();
   }
 
   public Iterable<ActiveContract> getActiveContracts() {
@@ -57,9 +57,13 @@ public class ActiveContractSet {
   }
 
   public ActiveContractSet add(ActiveContract activeContract) {
-    Map<String, ActiveContract> newActiveContracts = new HashMap<>(this.activeContracts);
-    newActiveContracts.put(activeContract.getContractId(), activeContract);
-    return new ActiveContractSet(newActiveContracts);
+    if (!this.activeContracts.containsKey(activeContract.getContractId())) {
+      Map<String, ActiveContract> newActiveContracts = new HashMap<>(this.activeContracts);
+      newActiveContracts.put(activeContract.getContractId(), activeContract);
+      return new ActiveContractSet(newActiveContracts);
+    } else {
+      return this;
+    }
   }
 
   public ActiveContractSet remove(String contractId) {
