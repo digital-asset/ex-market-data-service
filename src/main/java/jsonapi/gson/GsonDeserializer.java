@@ -7,14 +7,13 @@ package jsonapi.gson;
 import com.daml.ledger.javaapi.data.Template;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.time.Instant;
 import jsonapi.events.Event;
 import jsonapi.http.HttpResponse;
 import jsonapi.http.WebSocketResponse;
 import jsonapi.json.JsonDeserializer;
-
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.time.Instant;
 
 public class GsonDeserializer {
 

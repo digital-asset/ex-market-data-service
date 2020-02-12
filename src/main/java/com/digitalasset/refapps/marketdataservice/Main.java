@@ -23,6 +23,15 @@ import com.digitalasset.refapps.marketdataservice.utils.CliOptions;
 import com.digitalasset.refapps.marketdataservice.utils.CommandsAndPendingSetBuilder;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import java.time.Clock;
+import java.time.Duration;
+import java.util.Collections;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import jsonapi.ActiveContract;
 import jsonapi.ActiveContractSet;
 import jsonapi.ContractQuery;
@@ -40,16 +49,6 @@ import org.pcollections.HashTreePMap;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.time.Clock;
-import java.time.Duration;
-import java.util.Collections;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 public class Main {
 
@@ -131,7 +130,8 @@ public class Main {
       if (parties.hasOperator()) {
         logger.info("Starting automation for Operator.");
         TimeUpdaterBot timeUpdaterBot =
-            new TimeUpdaterBot(new GrpcLedgerApiHandle(client, commandBuilderFactory, parties.getOperator()));
+            new TimeUpdaterBot(
+                new GrpcLedgerApiHandle(client, commandBuilderFactory, parties.getOperator()));
         scheduler = Executors.newScheduledThreadPool(1);
         timeUpdaterBotExecutor = new TimeUpdaterBotExecutor(scheduler);
         timeUpdaterBotExecutor.start(timeUpdaterBot, systemPeriodTime);
@@ -178,19 +178,26 @@ public class Main {
       logger.info("Starting automation for MarketDataProvider2.");
       PublishingDataProvider dataProvider = new CachingCsvDataProvider();
       DataProviderBot dataProviderBot =
-              new DataProviderBot(
-                      commandBuilderFactory, parties.getMarketDataProvider2(), dataProvider);
+          new DataProviderBot(
+              commandBuilderFactory, parties.getMarketDataProvider2(), dataProvider);
       wire(
-              ledgerId,
-              dataProviderBot.getPartyName(),
-              dataProviderBot.getContractQuery(),
-              dataProviderBot::calculateCommands);
+          ledgerId,
+          dataProviderBot.getPartyName(),
+          dataProviderBot.getContractQuery(),
+          dataProviderBot::calculateCommands);
     }
 
     if (parties.hasOperator()) {
       logger.info("Starting automation for Operator.");
       TimeUpdaterBot timeUpdaterBot =
-              new TimeUpdaterBot(new JsonLedgerApiHandle(parties.getOperator(), ledgerId, APPLICATION_ID, httpResponseDeserializer, jsonSerializer, webSocketResponseDeserializer));
+          new TimeUpdaterBot(
+              new JsonLedgerApiHandle(
+                  parties.getOperator(),
+                  ledgerId,
+                  APPLICATION_ID,
+                  httpResponseDeserializer,
+                  jsonSerializer,
+                  webSocketResponseDeserializer));
       scheduler = Executors.newScheduledThreadPool(1);
       timeUpdaterBotExecutor = new TimeUpdaterBotExecutor(scheduler);
       timeUpdaterBotExecutor.start(timeUpdaterBot, systemPeriodTime);

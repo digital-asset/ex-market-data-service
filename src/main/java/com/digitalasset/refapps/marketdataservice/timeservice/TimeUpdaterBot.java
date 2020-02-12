@@ -7,13 +7,12 @@ package com.digitalasset.refapps.marketdataservice.timeservice;
 import com.google.common.collect.Iterables;
 import da.timeservice.timeservice.CurrentTime;
 import da.timeservice.timeservice.TimeManager;
-import jsonapi.ContractQuery;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
+import jsonapi.ContractQuery;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TimeUpdaterBot {
 
@@ -23,8 +22,7 @@ public class TimeUpdaterBot {
   private final ContractQuery timeManagerFilter;
   private final ContractQuery currentTimeFilter;
 
-  public TimeUpdaterBot(
-      LedgerApiHandle handle) {
+  public TimeUpdaterBot(LedgerApiHandle handle) {
     this.handle = handle;
     this.timeManagerFilter = new ContractQuery(Collections.singleton(TimeManager.TEMPLATE_ID));
     this.currentTimeFilter = new ContractQuery(Collections.singleton(CurrentTime.TEMPLATE_ID));

@@ -4,9 +4,8 @@
  */
 package jsonapi.http;
 
-import jsonapi.events.CreatedEvent;
-
 import java.util.Collection;
+import jsonapi.events.CreatedEvent;
 
 @SuppressWarnings("PMD.DataClass")
 public class HttpResponse {

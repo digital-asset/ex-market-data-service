@@ -5,10 +5,9 @@
 package jsonapi;
 
 import com.daml.ledger.javaapi.data.Identifier;
-import jsonapi.events.Event;
-
 import java.util.*;
 import java.util.stream.Stream;
+import jsonapi.events.Event;
 
 public class ActiveContractSet {
 

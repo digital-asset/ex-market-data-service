@@ -1,16 +1,19 @@
+/*
+ * Copyright (c) 2019, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package com.digitalasset.refapps.marketdataservice.timeservice;
 
 import com.daml.ledger.javaapi.data.*;
 import com.daml.ledger.rxjava.LedgerClient;
 import com.digitalasset.refapps.marketdataservice.utils.CommandsAndPendingSetBuilder;
-import jsonapi.ContractQuery;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import jsonapi.ContractQuery;
 
 public class GrpcLedgerApiHandle implements LedgerApiHandle {
 
@@ -59,7 +62,10 @@ public class GrpcLedgerApiHandle implements LedgerApiHandle {
   }
 
   public List<Contract> getCreatedEvents(ContractQuery contractQuery) {
-    FiltersByParty filter = createFilter(getOperatingParty(), contractQuery.getTemplateIds().stream().collect(Collectors.toSet()));
+    FiltersByParty filter =
+        createFilter(
+            getOperatingParty(),
+            contractQuery.getTemplateIds().stream().collect(Collectors.toSet()));
     GetActiveContractsResponse activeContractSetResponse =
         client
             .getActiveContractSetClient()
@@ -90,8 +96,7 @@ public class GrpcLedgerApiHandle implements LedgerApiHandle {
     return party;
   }
 
-    private static FiltersByParty createFilter(String party, Set<Identifier> templateIds) {
-        return new FiltersByParty(
-                Collections.singletonMap(party, new InclusiveFilter(templateIds)));
-    }
+  private static FiltersByParty createFilter(String party, Set<Identifier> templateIds) {
+    return new FiltersByParty(Collections.singletonMap(party, new InclusiveFilter(templateIds)));
+  }
 }
