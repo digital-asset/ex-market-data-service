@@ -2,7 +2,7 @@
  * Copyright (c) 2019, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-package jsonapi.json;
+package jsonapi.gson;
 
 import com.daml.ledger.javaapi.data.Identifier;
 import com.google.gson.Gson;

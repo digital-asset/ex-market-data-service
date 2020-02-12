@@ -25,7 +25,7 @@ import jsonapi.events.ArchivedEvent;
 import jsonapi.events.CreatedEvent;
 import jsonapi.gson.GsonSerializer;
 import jsonapi.http.HttpResponse;
-import jsonapi.json.GsonRegisteredAllDeserializers;
+import jsonapi.gson.GsonRegisteredAllDeserializers;
 import org.junit.Assert;
 import org.junit.Test;
 

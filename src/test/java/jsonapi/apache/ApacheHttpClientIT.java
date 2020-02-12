@@ -35,7 +35,7 @@ import jsonapi.gson.GsonSerializer;
 import jsonapi.http.Api;
 import jsonapi.http.HttpClient;
 import jsonapi.http.HttpResponse;
-import jsonapi.json.GsonRegisteredAllDeserializers;
+import jsonapi.gson.GsonRegisteredAllDeserializers;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;

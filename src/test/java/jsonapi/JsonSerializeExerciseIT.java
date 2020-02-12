@@ -35,7 +35,7 @@ import jsonapi.http.HttpClient;
 import jsonapi.http.HttpResponse;
 import jsonapi.http.WebSocketClient;
 import jsonapi.http.WebSocketResponse;
-import jsonapi.json.GsonRegisteredAllDeserializers;
+import jsonapi.gson.GsonRegisteredAllDeserializers;
 import jsonapi.tyrus.TyrusWebSocketClient;
 import org.junit.Assert;
 import org.junit.Before;

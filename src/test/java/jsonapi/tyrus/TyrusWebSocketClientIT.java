@@ -31,7 +31,7 @@ import jsonapi.http.Api;
 import jsonapi.http.Jwt;
 import jsonapi.http.WebSocketClient;
 import jsonapi.http.WebSocketResponse;
-import jsonapi.json.GsonRegisteredAllDeserializers;
+import jsonapi.gson.GsonRegisteredAllDeserializers;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
