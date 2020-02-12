@@ -8,7 +8,6 @@ import com.daml.ledger.javaapi.data.Command;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 import jsonapi.ContractQuery;
 import jsonapi.JsonLedgerClient;
 import jsonapi.apache.ApacheHttpClient;
@@ -50,8 +49,9 @@ public class JsonLedgerApiHandle implements LedgerApiHandle {
 
   @Override
   public List<Contract> getCreatedEvents(ContractQuery filter) {
-    return StreamSupport.stream(
-            ledgerClient.getActiveContracts().getActiveContracts().spliterator(), false)
+    return ledgerClient
+        .getActiveContracts()
+        .getActiveContracts()
         .map(
             activeContract ->
                 new Contract(

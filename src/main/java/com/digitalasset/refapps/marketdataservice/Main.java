@@ -237,11 +237,9 @@ public class Main {
   }
 
   static LedgerView<Template> toLedgerView(ActiveContractSet activeContractSet) {
-    LedgerTestView<Template> emptyLedgerView = createEmptyLedgerView();
-    for (ActiveContract activeContract : activeContractSet.getActiveContracts()) {
-      emptyLedgerView = addActiveContract(emptyLedgerView, activeContract);
-    }
-    return emptyLedgerView;
+    return activeContractSet
+        .getActiveContracts()
+        .reduce(createEmptyLedgerView(), Main::addActiveContract, (x, y) -> x);
   }
 
   public static void waitForSandbox(String host, int port, DamlLedgerClient client) {

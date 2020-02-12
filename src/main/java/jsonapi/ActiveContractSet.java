@@ -25,11 +25,12 @@ public class ActiveContractSet {
     return new ActiveContractSet(new HashMap<>());
   }
 
-  public Iterable<ActiveContract> getActiveContracts() {
-    return Collections.unmodifiableCollection(activeContracts.values());
+  // TODO: Rename this method.
+  public Stream<ActiveContract> getActiveContracts() {
+    return Collections.unmodifiableCollection(activeContracts.values()).stream();
   }
 
-  public <T> Stream<Contract<T>> getContracts(Identifier identifier, Class<T> type) {
+  public <T> Stream<Contract<T>> getActiveContracts(Identifier identifier, Class<T> type) {
     return activeContracts.values().stream()
         .filter(x -> x.getIdentifier().equals(identifier))
         .map(x -> createContract(x, type));
