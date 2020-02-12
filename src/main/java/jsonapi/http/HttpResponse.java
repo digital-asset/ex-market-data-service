@@ -11,11 +11,11 @@ import jsonapi.events.Event;
 public class HttpResponse {
 
   // TODO make Result an interface with 2 implementations: one for Exercise, one for Search
-  public static class Result {
+  public static class ExerciseResult {
     private final String exerciseResult;
     private final Collection<Event> contracts;
 
-    public Result(String exerciseResult, Collection<Event> contracts) {
+    public ExerciseResult(String exerciseResult, Collection<Event> contracts) {
       this.exerciseResult = exerciseResult;
       this.contracts = contracts;
     }
@@ -30,11 +30,11 @@ public class HttpResponse {
   }
 
   private final int status;
-  private final Result result;
+  private final ExerciseResult result;
   private final Object errors;
   private final Object warnings;
 
-  public HttpResponse(int status, Result result, Object errors, Object warnings) {
+  public HttpResponse(int status, ExerciseResult result, Object errors, Object warnings) {
     this.status = status;
     this.result = result;
     this.errors = errors;
@@ -45,7 +45,7 @@ public class HttpResponse {
     return status;
   }
 
-  public Result getResult() {
+  public ExerciseResult getResult() {
     return result;
   }
 
