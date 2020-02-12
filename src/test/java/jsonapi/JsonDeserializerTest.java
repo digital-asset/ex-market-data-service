@@ -4,6 +4,7 @@
  */
 package jsonapi;
 
+import com.google.common.collect.Iterables;
 import da.refapps.marketdataservice.datastream.DataStream;
 import da.refapps.marketdataservice.datastream.EmptyDataStream;
 import da.refapps.marketdataservice.marketdatatypes.InstrumentId;
@@ -20,12 +21,12 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
+import jsonapi.events.ArchivedEvent;
 import jsonapi.events.CreatedEvent;
 import jsonapi.gson.GsonSerializer;
 import jsonapi.http.HttpResponse;
 import jsonapi.json.GsonRegisteredAllDeserializers;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class JsonDeserializerTest {
@@ -86,7 +87,6 @@ public class JsonDeserializerTest {
   public void deserializeSimplifiedExerciseHttpResponseWithoutArchivedEvent() {
     String serializedHttpResponse =
         "{ \n"
-            + "   \"status\":200,\n"
             + "   \"result\":{ \n"
             + "      \"exerciseResult\":\"#14:1\",\n"
             + "      \"contracts\":[ \n"
@@ -107,49 +107,15 @@ public class JsonDeserializerTest {
     CreatedEvent expectedCreatedEvent = new CreatedEvent(null, null, new OperatorRole("Operator"));
     HttpResponse deserializedHttpResponse =
         GsonRegisteredAllDeserializers.gson().fromJson(serializedHttpResponse, HttpResponse.class);
-    ArrayList deserializedContracts =
-        (ArrayList) deserializedHttpResponse.getResult().getContracts();
-    CreatedEvent deserializedCreatedEvent = (CreatedEvent) deserializedContracts.get(0);
+    CreatedEvent deserializedCreatedEvent =
+        (CreatedEvent)
+            Iterables.getOnlyElement(deserializedHttpResponse.getResult().getContracts());
     Assert.assertEquals(expectedCreatedEvent.getPayload(), deserializedCreatedEvent.getPayload());
-    Assert.assertEquals(200, deserializedHttpResponse.getStatus());
   }
 
-  @Ignore
   @Test
   public void deserializeExerciseHttpResponse() {
-    /* For example:
-     {
-    "status":200,
-    "result":{
-       "exerciseResult":"#14:1",
-       "contracts":[
-          {
-             "archived":{
-                "contractId":"#12:0",
-                "templateId":"b4eb9b86bb78db2acde90edf0a03d96e5d65cc7a7cc422f23b6d98a286e07c09:DA.TimeService.TimeService:CurrentTime"
-             }
-          },
-          {
-             "created":{
-                "observers":[
-                   "MarketDataVendor"
-                ],
-                "agreementText":"",
-                "payload":{
-                   "operator":"Operator",
-                   "currentTime":"2020-02-11T16:50:10.256734Z",
-                   "observers":[
-                      "MarketDataVendor"
-                   ]
-                },
-                "signatories":[
-                   "Operator"
-                ],
-                "key":"Operator",
-                "contractId":"#14:1",
-                "templateId":"b4eb9b86bb78db2acde90edf0a03d96e5d65cc7a7cc422f23b6d98a286e07c09:DA.TimeService.TimeService:CurrentTime"
-             }}]}}
-      */
+    String tid = new GsonSerializer().apply(OperatorRole.TEMPLATE_ID);
     String serializedHttpResponse =
         "{ \n"
             + "   \"status\":200,\n"
@@ -159,37 +125,37 @@ public class JsonDeserializerTest {
             + "         { \n"
             + "            \"archived\":{ \n"
             + "               \"contractId\":\"#12:0\",\n"
-            + "               \"templateId\":\"b4eb9b86bb78db2acde90edf0a03d96e5d65cc7a7cc422f23b6d98a286e07c09:DA.TimeService.TimeService:CurrentTime\"\n"
+            + "               \"templateId\":"
+            + tid
+            + "\n"
             + "            }\n"
             + "         },\n"
             + "         { \n"
             + "            \"created\":{ \n"
-            + "               \"observers\":[ \n"
-            + "                  \"MarketDataVendor\"\n"
-            + "               ],\n"
-            + "               \"agreementText\":\"\",\n"
             + "               \"payload\":{ \n"
-            + "                  \"operator\":\"Operator\",\n"
-            + "                  \"currentTime\":\"2020-02-11T16:50:10.256734Z\",\n"
-            + "                  \"observers\":[ \n"
-            + "                     \"MarketDataVendor\"\n"
-            + "                  ]\n"
+            + "                  \"operator\":\"Operator\"\n"
             + "               },\n"
-            + "               \"signatories\":[ \n"
-            + "                  \"Operator\"\n"
-            + "               ],\n"
-            + "               \"key\":\"Operator\",\n"
             + "               \"contractId\":\"#14:1\",\n"
-            + "               \"templateId\":\"b4eb9b86bb78db2acde90edf0a03d96e5d65cc7a7cc422f23b6d98a286e07c09:DA.TimeService.TimeService:CurrentTime\"\n"
+            + "               \"templateId\":"
+            + tid
+            + "\n"
             + "            }\n"
             + "         }\n"
             + "      ]\n"
             + "   }\n"
             + "}";
-    HttpResponse expectedHttpResponse = new HttpResponse(200, null, null, null);
+    ArchivedEvent expectedArchivedEvent = new ArchivedEvent(null);
+    CreatedEvent expectedCreatedEvent = new CreatedEvent(null, null, new OperatorRole("Operator"));
     HttpResponse deserializedHttpResponse =
         GsonRegisteredAllDeserializers.gson().fromJson(serializedHttpResponse, HttpResponse.class);
-    System.err.println(deserializedHttpResponse.getResult());
-    Assert.assertEquals(expectedHttpResponse.getResult(), deserializedHttpResponse.getResult());
+    ArrayList deserializedContracts =
+        (ArrayList) deserializedHttpResponse.getResult().getContracts();
+    Assert.assertEquals(2, deserializedContracts.size());
+    ArchivedEvent deserializedArchivedEvent = (ArchivedEvent) deserializedContracts.get(0);
+    CreatedEvent deserializedCreatedEvent = (CreatedEvent) deserializedContracts.get(1);
+    Assert.assertEquals(expectedCreatedEvent.getPayload(), deserializedCreatedEvent.getPayload());
+    Assert.assertEquals(
+        expectedArchivedEvent.getContractId(), deserializedArchivedEvent.getContractId());
+    Assert.assertEquals(200, deserializedHttpResponse.getStatus());
   }
 }
