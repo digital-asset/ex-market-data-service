@@ -12,14 +12,20 @@ import da.refapps.marketdataservice.marketdatatypes.ObservationReference;
 import da.refapps.marketdataservice.marketdatatypes.ObservationValue;
 import da.refapps.marketdataservice.marketdatatypes.Publisher;
 import da.refapps.marketdataservice.marketdatatypes.observationvalue.CleanPrice;
+import da.refapps.marketdataservice.roles.OperatorRole;
 import da.timeservice.timeservice.CurrentTime;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collections;
+import jsonapi.events.CreatedEvent;
+import jsonapi.gson.GsonSerializer;
+import jsonapi.http.HttpResponse;
 import jsonapi.json.GsonRegisteredAllDeserializers;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class JsonDeserializerTest {
@@ -74,5 +80,116 @@ public class JsonDeserializerTest {
     DataStream deserializedDataStream =
         GsonRegisteredAllDeserializers.gson().fromJson(serializedDataStream, DataStream.class);
     Assert.assertEquals(expectedDataStream, deserializedDataStream);
+  }
+
+  @Test
+  public void deserializeSimplifiedExerciseHttpResponseWithoutArchivedEvent() {
+    String serializedHttpResponse =
+        "{ \n"
+            + "   \"status\":200,\n"
+            + "   \"result\":{ \n"
+            + "      \"exerciseResult\":\"#14:1\",\n"
+            + "      \"contracts\":[ \n"
+            + "         { \n"
+            + "            \"created\":{ \n"
+            + "               \"payload\":{ \n"
+            + "                  \"operator\":\"Operator\"\n"
+            + "               },\n"
+            + "               \"contractId\":\"#14:1\",\n"
+            + "               \"templateId\":"
+            + new GsonSerializer().apply(OperatorRole.TEMPLATE_ID)
+            + "\n"
+            + "            }\n"
+            + "         }\n"
+            + "      ]\n"
+            + "   }\n"
+            + "}";
+    CreatedEvent expectedCreatedEvent = new CreatedEvent(null, null, new OperatorRole("Operator"));
+    HttpResponse deserializedHttpResponse =
+        GsonRegisteredAllDeserializers.gson().fromJson(serializedHttpResponse, HttpResponse.class);
+    ArrayList deserializedContracts =
+        (ArrayList) deserializedHttpResponse.getResult().getContracts();
+    CreatedEvent deserializedCreatedEvent = (CreatedEvent) deserializedContracts.get(0);
+    Assert.assertEquals(expectedCreatedEvent.getPayload(), deserializedCreatedEvent.getPayload());
+    Assert.assertEquals(200, deserializedHttpResponse.getStatus());
+  }
+
+  @Ignore
+  @Test
+  public void deserializeExerciseHttpResponse() {
+    /* For example:
+     {
+    "status":200,
+    "result":{
+       "exerciseResult":"#14:1",
+       "contracts":[
+          {
+             "archived":{
+                "contractId":"#12:0",
+                "templateId":"b4eb9b86bb78db2acde90edf0a03d96e5d65cc7a7cc422f23b6d98a286e07c09:DA.TimeService.TimeService:CurrentTime"
+             }
+          },
+          {
+             "created":{
+                "observers":[
+                   "MarketDataVendor"
+                ],
+                "agreementText":"",
+                "payload":{
+                   "operator":"Operator",
+                   "currentTime":"2020-02-11T16:50:10.256734Z",
+                   "observers":[
+                      "MarketDataVendor"
+                   ]
+                },
+                "signatories":[
+                   "Operator"
+                ],
+                "key":"Operator",
+                "contractId":"#14:1",
+                "templateId":"b4eb9b86bb78db2acde90edf0a03d96e5d65cc7a7cc422f23b6d98a286e07c09:DA.TimeService.TimeService:CurrentTime"
+             }}]}}
+      */
+    String serializedHttpResponse =
+        "{ \n"
+            + "   \"status\":200,\n"
+            + "   \"result\":{ \n"
+            + "      \"exerciseResult\":\"#14:1\",\n"
+            + "      \"contracts\":[ \n"
+            + "         { \n"
+            + "            \"archived\":{ \n"
+            + "               \"contractId\":\"#12:0\",\n"
+            + "               \"templateId\":\"b4eb9b86bb78db2acde90edf0a03d96e5d65cc7a7cc422f23b6d98a286e07c09:DA.TimeService.TimeService:CurrentTime\"\n"
+            + "            }\n"
+            + "         },\n"
+            + "         { \n"
+            + "            \"created\":{ \n"
+            + "               \"observers\":[ \n"
+            + "                  \"MarketDataVendor\"\n"
+            + "               ],\n"
+            + "               \"agreementText\":\"\",\n"
+            + "               \"payload\":{ \n"
+            + "                  \"operator\":\"Operator\",\n"
+            + "                  \"currentTime\":\"2020-02-11T16:50:10.256734Z\",\n"
+            + "                  \"observers\":[ \n"
+            + "                     \"MarketDataVendor\"\n"
+            + "                  ]\n"
+            + "               },\n"
+            + "               \"signatories\":[ \n"
+            + "                  \"Operator\"\n"
+            + "               ],\n"
+            + "               \"key\":\"Operator\",\n"
+            + "               \"contractId\":\"#14:1\",\n"
+            + "               \"templateId\":\"b4eb9b86bb78db2acde90edf0a03d96e5d65cc7a7cc422f23b6d98a286e07c09:DA.TimeService.TimeService:CurrentTime\"\n"
+            + "            }\n"
+            + "         }\n"
+            + "      ]\n"
+            + "   }\n"
+            + "}";
+    HttpResponse expectedHttpResponse = new HttpResponse(200, null, null, null);
+    HttpResponse deserializedHttpResponse =
+        GsonRegisteredAllDeserializers.gson().fromJson(serializedHttpResponse, HttpResponse.class);
+    System.err.println(deserializedHttpResponse.getResult());
+    Assert.assertEquals(expectedHttpResponse.getResult(), deserializedHttpResponse.getResult());
   }
 }
