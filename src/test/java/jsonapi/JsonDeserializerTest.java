@@ -109,7 +109,7 @@ public class JsonDeserializerTest {
         GsonRegisteredAllDeserializers.gson().fromJson(serializedHttpResponse, HttpResponse.class);
     CreatedEvent deserializedCreatedEvent =
         (CreatedEvent)
-            Iterables.getOnlyElement(deserializedHttpResponse.getResult().getContracts());
+            Iterables.getOnlyElement(deserializedHttpResponse.getResult().getContracts()).getCreated();
     Assert.assertEquals(expectedCreatedEvent.getPayload(), deserializedCreatedEvent.getPayload());
   }
 
