@@ -6,9 +6,11 @@ package jsonapi;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertSame;
 
 import com.daml.ledger.javaapi.data.CreateCommand;
+import com.daml.ledger.javaapi.data.Identifier;
 import com.daml.ledger.javaapi.data.Template;
 import da.refapps.marketdataservice.roles.OperatorRole;
 import io.reactivex.Flowable;
@@ -61,6 +63,23 @@ public class ActiveContractSetTest {
     ActiveContractSet sameAcs = acs.add(activeContract);
 
     assertSame(acs, sameAcs);
+  }
+
+  @Test
+  public void addingContractWithExistingIdReturnsNewUpdatedSet() {
+    Identifier identifier = new Identifier("p", "m", "e");
+    DummyTemplate template1 = new DummyTemplate();
+    ActiveContract activeContract = new ActiveContract(identifier, "#123", template1);
+    ActiveContractSet acs = ActiveContractSet.empty().add(activeContract);
+
+    DummyTemplate template2 = new DummyTemplate();
+    ActiveContract updatedContract = new ActiveContract(identifier, "#123", template2);
+    ActiveContractSet newAcs = acs.add(updatedContract);
+
+    Iterator<ActiveContract> contracts = newAcs.getActiveContracts().iterator();
+    assertNotEquals(activeContract, updatedContract);
+    assertEquals(updatedContract, contracts.next());
+    assertFalse(contracts.hasNext());
   }
 
   @Test

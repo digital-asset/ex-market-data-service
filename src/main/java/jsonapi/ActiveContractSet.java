@@ -58,12 +58,18 @@ public class ActiveContractSet {
 
   public ActiveContractSet add(ActiveContract activeContract) {
     if (!this.activeContracts.containsKey(activeContract.getContractId())) {
-      Map<String, ActiveContract> newActiveContracts = new HashMap<>(this.activeContracts);
-      newActiveContracts.put(activeContract.getContractId(), activeContract);
-      return new ActiveContractSet(newActiveContracts);
+      return updateSet(activeContract);
+    } else if (!this.activeContracts.get(activeContract.getContractId()).equals(activeContract)) {
+      return updateSet(activeContract);
     } else {
       return this;
     }
+  }
+
+  private ActiveContractSet updateSet(ActiveContract activeContract) {
+    Map<String, ActiveContract> newActiveContracts = new HashMap<>(this.activeContracts);
+    newActiveContracts.put(activeContract.getContractId(), activeContract);
+    return new ActiveContractSet(newActiveContracts);
   }
 
   public ActiveContractSet remove(String contractId) {
