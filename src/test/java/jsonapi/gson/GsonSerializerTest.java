@@ -24,7 +24,6 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collections;
-import jsonapi.gson.GsonSerializer;
 import org.junit.Assert;
 import org.junit.Test;
 
