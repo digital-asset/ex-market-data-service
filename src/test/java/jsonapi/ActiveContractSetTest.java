@@ -18,7 +18,6 @@ import java.util.Iterator;
 import jsonapi.events.ArchivedEvent;
 import jsonapi.events.CreatedEvent;
 import jsonapi.http.WebSocketResponse;
-import org.junit.Assert;
 import org.junit.Test;
 
 public class ActiveContractSetTest {
@@ -62,6 +61,37 @@ public class ActiveContractSetTest {
     ActiveContractSet sameAcs = acs.add(activeContract);
 
     assertSame(acs, sameAcs);
+  }
+
+  @Test
+  public void removeFromEmptySetReturnsTheSameSet() {
+    ActiveContract activeContract = new ActiveContract(null, "#123", new DummyTemplate());
+    ActiveContractSet acs = ActiveContractSet.empty();
+
+    ActiveContractSet sameAcs = acs.remove(activeContract.getContractId());
+
+    assertSame(acs, sameAcs);
+  }
+
+  @Test
+  public void removeContractNotInSetReturnsTheSameSet() {
+    ActiveContract activeContract = new ActiveContract(null, "#123", new DummyTemplate());
+    ActiveContractSet acs = ActiveContractSet.empty().add(activeContract);
+
+    ActiveContractSet sameAcs = acs.remove("non existing id");
+
+    assertSame(acs, sameAcs);
+  }
+
+  @Test
+  public void removingExistingContractReturnsNewSetWithoutGivenContract() {
+    ActiveContract activeContract = new ActiveContract(null, "#123", new DummyTemplate());
+    ActiveContractSet acs = ActiveContractSet.empty().add(activeContract);
+
+    ActiveContractSet newAcs = acs.remove(activeContract.getContractId());
+    Iterator<ActiveContract> contracts = newAcs.getActiveContracts().iterator();
+
+    assertFalse(contracts.hasNext());
   }
 
   @Test

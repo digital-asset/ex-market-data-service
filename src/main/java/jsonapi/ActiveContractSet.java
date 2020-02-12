@@ -67,9 +67,13 @@ public class ActiveContractSet {
   }
 
   public ActiveContractSet remove(String contractId) {
-    Map<String, ActiveContract> newActiveContracts = new HashMap<>(this.activeContracts);
-    newActiveContracts.remove(contractId);
-    return new ActiveContractSet(newActiveContracts);
+    if (this.activeContracts.containsKey(contractId)) {
+      Map<String, ActiveContract> newActiveContracts = new HashMap<>(this.activeContracts);
+      newActiveContracts.remove(contractId);
+      return new ActiveContractSet(newActiveContracts);
+    } else {
+      return this;
+    }
   }
 
   @Override
