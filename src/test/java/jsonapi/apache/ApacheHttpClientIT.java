@@ -14,7 +14,6 @@ import com.daml.ledger.javaapi.data.Template;
 import com.digitalasset.testing.junit4.Sandbox;
 import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.protobuf.InvalidProtocolBufferException;
 import da.timeservice.timeservice.CurrentTime;
 import da.timeservice.timeservice.CurrentTime.ContractId;

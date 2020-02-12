@@ -35,6 +35,7 @@ import jsonapi.http.HttpClient;
 import jsonapi.http.HttpResponse;
 import jsonapi.http.WebSocketClient;
 import jsonapi.http.WebSocketResponse;
+import jsonapi.json.GsonRegisteredAllDeserializers;
 import jsonapi.tyrus.TyrusWebSocketClient;
 import org.junit.Assert;
 import org.junit.Before;
@@ -63,7 +64,7 @@ public class JsonSerializeExerciseIT {
   public final TestRule processes =
       RuleChain.outerRule(sandbox.getRule()).around(new JsonApi(sandbox::getSandboxPort));
 
-  private final Gson json = new Gson();
+  private final Gson json = new GsonRegisteredAllDeserializers().gson();
 
   private DefaultLedgerAdapter ledger;
   private HttpClient httpClient;
