@@ -14,7 +14,6 @@ import com.daml.ledger.javaapi.data.Template;
 import com.digitalasset.testing.junit4.Sandbox;
 import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.protobuf.InvalidProtocolBufferException;
 import da.timeservice.timeservice.CurrentTime;
 import da.timeservice.timeservice.CurrentTime.ContractId;
@@ -36,6 +35,7 @@ import jsonapi.gson.GsonSerializer;
 import jsonapi.http.Api;
 import jsonapi.http.HttpClient;
 import jsonapi.http.HttpResponse;
+import jsonapi.json.GsonRegisteredAllDeserializers;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -54,6 +54,7 @@ public class ApacheHttpClientIT {
 
   @ClassRule public static ExternalResource startSandbox = sandbox.getClassRule();
   private final Api api = new Api("localhost", 7575);
+  private final Gson json = GsonRegisteredAllDeserializers.gson();
 
   @Rule
   public TestRule processes =
@@ -106,7 +107,6 @@ public class ApacheHttpClientIT {
   }
 
   private HttpResponse fromJson(InputStream inputStream) {
-    Gson json = new GsonBuilder().create();
     return json.fromJson(new InputStreamReader(inputStream), HttpResponse.class);
   }
 
