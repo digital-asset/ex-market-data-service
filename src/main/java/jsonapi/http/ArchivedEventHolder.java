@@ -5,7 +5,6 @@
 package jsonapi.http;
 
 import jsonapi.events.ArchivedEvent;
-import jsonapi.events.Event;
 
 public class ArchivedEventHolder implements EventHolder {
   private final ArchivedEvent archived;

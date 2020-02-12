@@ -9,12 +9,8 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import jsonapi.events.ArchivedEvent;
-import jsonapi.events.CreatedEvent;
-import jsonapi.events.Event;
-import jsonapi.http.HttpResponse;
-
 import java.lang.reflect.Type;
+import jsonapi.http.HttpResponse;
 
 public class ResultDeserializer implements JsonDeserializer<HttpResponse.Result> {
 

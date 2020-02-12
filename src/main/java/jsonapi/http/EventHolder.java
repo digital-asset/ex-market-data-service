@@ -7,5 +7,5 @@ package jsonapi.http;
 import jsonapi.events.Event;
 
 public interface EventHolder {
-    Event event();
+  Event event();
 }
