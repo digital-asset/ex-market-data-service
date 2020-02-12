@@ -21,7 +21,7 @@ public class EventDeserializer implements JsonDeserializer<Event> {
       JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext)
       throws JsonParseException {
     JsonObject event = jsonElement.getAsJsonObject();
-    if (event.has("archive")) {
+    if (event.has("archived")) {
       return jsonDeserializationContext.deserialize(event.get("archived"), ArchivedEvent.class);
     } else if (event.has("created")) {
       return jsonDeserializationContext.deserialize(event, CreatedEvent.class);
