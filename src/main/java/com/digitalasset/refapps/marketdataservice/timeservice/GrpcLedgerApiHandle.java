@@ -4,7 +4,15 @@
  */
 package com.digitalasset.refapps.marketdataservice.timeservice;
 
-import com.daml.ledger.javaapi.data.*;
+import com.daml.ledger.javaapi.data.Command;
+import com.daml.ledger.javaapi.data.CreatedEvent;
+import com.daml.ledger.javaapi.data.FiltersByParty;
+import com.daml.ledger.javaapi.data.GetActiveContractsResponse;
+import com.daml.ledger.javaapi.data.Identifier;
+import com.daml.ledger.javaapi.data.InclusiveFilter;
+import com.daml.ledger.javaapi.data.LedgerOffset;
+import com.daml.ledger.javaapi.data.SubmitCommandsRequest;
+import com.daml.ledger.javaapi.data.Transaction;
 import com.daml.ledger.rxjava.LedgerClient;
 import com.digitalasset.refapps.marketdataservice.utils.CommandsAndPendingSetBuilder;
 import java.util.Collections;
@@ -32,11 +40,16 @@ public class GrpcLedgerApiHandle implements LedgerApiHandle {
       LedgerClient client,
       CommandsAndPendingSetBuilder.Factory commandsAndPendingSetBuilderFactory,
       String party,
-      String workflowId) {
+      String botId) {
     this.client = client;
     this.party = party;
+    String workflowId = String.format("WORKFLOW-%s-%s", party, botId);
     this.commandsAndPendingSetBuilder =
         commandsAndPendingSetBuilderFactory.create(party, workflowId);
+  }
+
+  private static FiltersByParty createFilter(String party, Set<Identifier> templateIds) {
+    return new FiltersByParty(Collections.singletonMap(party, new InclusiveFilter(templateIds)));
   }
 
   public void submitCommand(Command command) {
@@ -94,9 +107,5 @@ public class GrpcLedgerApiHandle implements LedgerApiHandle {
   @Override
   public String getOperatingParty() {
     return party;
-  }
-
-  private static FiltersByParty createFilter(String party, Set<Identifier> templateIds) {
-    return new FiltersByParty(Collections.singletonMap(party, new InclusiveFilter(templateIds)));
   }
 }
