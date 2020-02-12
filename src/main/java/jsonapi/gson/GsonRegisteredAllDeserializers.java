@@ -11,6 +11,7 @@ import da.refapps.marketdataservice.marketdatatypes.ObservationValue;
 import java.time.Instant;
 import jsonapi.events.CreatedEvent;
 import jsonapi.events.Event;
+import jsonapi.http.EventHolder;
 import jsonapi.http.WebSocketResponse;
 
 public class GsonRegisteredAllDeserializers {
@@ -23,6 +24,7 @@ public class GsonRegisteredAllDeserializers {
         .registerTypeAdapter(WebSocketResponse.class, new WebSocketResponseDeserializer())
         .registerTypeAdapter(Event.class, new EventDeserializer())
         .registerTypeAdapter(CreatedEvent.class, new CreatedEventDeserializer())
+        .registerTypeAdapter(EventHolder.class, new EventHolderDeserializer())
         .create();
   }
 }

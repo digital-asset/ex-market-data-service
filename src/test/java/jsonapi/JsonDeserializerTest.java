@@ -25,6 +25,8 @@ import jsonapi.events.ArchivedEvent;
 import jsonapi.events.CreatedEvent;
 import jsonapi.gson.GsonRegisteredAllDeserializers;
 import jsonapi.gson.GsonSerializer;
+import jsonapi.http.ArchivedEventHolder;
+import jsonapi.http.CreatedEventHolder;
 import jsonapi.http.HttpResponse;
 import org.junit.Assert;
 import org.junit.Test;
@@ -107,10 +109,12 @@ public class JsonDeserializerTest {
     CreatedEvent expectedCreatedEvent = new CreatedEvent(null, null, new OperatorRole("Operator"));
     HttpResponse deserializedHttpResponse =
         GsonRegisteredAllDeserializers.gson().fromJson(serializedHttpResponse, HttpResponse.class);
-    CreatedEvent deserializedCreatedEvent =
-        (CreatedEvent)
-            Iterables.getOnlyElement(deserializedHttpResponse.getResult().getContracts()).getCreated();
-    Assert.assertEquals(expectedCreatedEvent.getPayload(), deserializedCreatedEvent.getPayload());
+    CreatedEventHolder deserializedCreatedEventHolder =
+        (CreatedEventHolder)
+            Iterables.getOnlyElement(deserializedHttpResponse.getResult().getContracts());
+    Assert.assertEquals(
+        expectedCreatedEvent.getPayload(),
+        deserializedCreatedEventHolder.getCreated().getPayload());
   }
 
   @Test
@@ -144,15 +148,17 @@ public class JsonDeserializerTest {
             + "      ]\n"
             + "   }\n"
             + "}";
-    ArchivedEvent expectedArchivedEvent = new ArchivedEvent(null);
+    ArchivedEvent expectedArchivedEvent = new ArchivedEvent("#12:0");
     CreatedEvent expectedCreatedEvent = new CreatedEvent(null, null, new OperatorRole("Operator"));
     HttpResponse deserializedHttpResponse =
         GsonRegisteredAllDeserializers.gson().fromJson(serializedHttpResponse, HttpResponse.class);
     ArrayList deserializedContracts =
         (ArrayList) deserializedHttpResponse.getResult().getContracts();
     Assert.assertEquals(2, deserializedContracts.size());
-    ArchivedEvent deserializedArchivedEvent = (ArchivedEvent) deserializedContracts.get(0);
-    CreatedEvent deserializedCreatedEvent = (CreatedEvent) deserializedContracts.get(1);
+    ArchivedEvent deserializedArchivedEvent =
+        ((ArchivedEventHolder) deserializedContracts.get(0)).getArchived();
+    CreatedEvent deserializedCreatedEvent =
+        ((CreatedEventHolder) deserializedContracts.get(1)).getCreated();
     Assert.assertEquals(expectedCreatedEvent.getPayload(), deserializedCreatedEvent.getPayload());
     Assert.assertEquals(
         expectedArchivedEvent.getContractId(), deserializedArchivedEvent.getContractId());

@@ -6,46 +6,15 @@ package jsonapi.http;
 
 import java.util.Collection;
 
-import jsonapi.events.ArchivedEvent;
-import jsonapi.events.CreatedEvent;
-
 @SuppressWarnings("PMD.DataClass")
 public class HttpResponse {
-
-  public interface EventHolder {
-  }
-
-  public static class ArchivedEventHolder implements EventHolder {
-    private final ArchivedEvent archived;
-
-    public ArchivedEventHolder(ArchivedEvent archived) {
-      this.archived = archived;
-    }
-
-    public ArchivedEvent getArchived() {
-      return archived;
-    }
-  }
-
-  public static class CreatedEventHolder implements EventHolder {
-    private CreatedEvent created;
-
-    public CreatedEventHolder(CreatedEvent created) {
-      this.created = created;
-    }
-
-    public CreatedEvent getCreated() {
-      return created;
-    }
-  }
 
   // TODO make Result an interface with several implementations: ExerciseResult, SearchResult etc
   public static class ExerciseResult {
     private final String exerciseResult;
-    // TODO replace with Collection<EventHolder>
-    private final Collection<CreatedEventHolder> contracts;
+    private final Collection<EventHolder> contracts;
 
-    public ExerciseResult(String exerciseResult, Collection<CreatedEventHolder> contracts) {
+    public ExerciseResult(String exerciseResult, Collection<EventHolder> contracts) {
       this.exerciseResult = exerciseResult;
       this.contracts = contracts;
     }
@@ -54,7 +23,7 @@ public class HttpResponse {
       return exerciseResult;
     }
 
-    public Collection<CreatedEventHolder> getContracts() {
+    public Collection<EventHolder> getContracts() {
       return contracts;
     }
   }
