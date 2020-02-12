@@ -6,6 +6,7 @@ package jsonapi.gson;
 
 import static org.junit.Assert.assertEquals;
 
+import com.daml.ledger.javaapi.data.Identifier;
 import com.daml.ledger.javaapi.data.Record;
 import com.google.gson.Gson;
 import com.google.gson.JsonSerializer;
@@ -17,6 +18,15 @@ public class RecordSerializerTest extends SerializerBaseTest<Record> {
   @Test
   public void emptyRecordIsSerializedToEmptyObject() {
     Record record = new Record();
+
+    Gson serializer = createSerializer();
+
+    assertEquals("{}", serializer.toJson(record));
+  }
+
+  @Test
+  public void identifierIsLeftOut() {
+    Record record = new Record(new Identifier("p", "m", "e"));
 
     Gson serializer = createSerializer();
 
