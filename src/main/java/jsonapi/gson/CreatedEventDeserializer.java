@@ -22,7 +22,7 @@ public class CreatedEventDeserializer implements JsonDeserializer<CreatedEvent> 
   public CreatedEvent deserialize(
       JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext)
       throws JsonParseException {
-    JsonObject o = jsonElement.getAsJsonObject().getAsJsonObject("created");
+    JsonObject o = jsonElement.getAsJsonObject();
     // TODO: This is likely not needed and can be eliminated.
     JsonPrimitive templateId = o.getAsJsonPrimitive("templateId");
     Identifier identifier = jsonDeserializationContext.deserialize(templateId, Identifier.class);

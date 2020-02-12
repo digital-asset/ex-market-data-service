@@ -4,12 +4,13 @@
  */
 package jsonapi.gson;
 
-import com.daml.ledger.javaapi.data.Template;
+import com.daml.ledger.javaapi.data.Identifier;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.time.Instant;
+import jsonapi.events.CreatedEvent;
 import jsonapi.events.Event;
 import jsonapi.http.HttpResponse;
 import jsonapi.http.WebSocketResponse;
@@ -20,9 +21,11 @@ public class GsonDeserializer {
   private Gson gson =
       new GsonBuilder()
           .registerTypeAdapter(Instant.class, new InstantDeserializer())
+          .registerTypeAdapter(Identifier.class, new IdentifierDeserializer())
           .registerTypeAdapter(WebSocketResponse.class, new WebSocketResponseDeserializer())
+          .registerTypeAdapter(HttpResponse.class, new HttpResponseDeserializer())
           .registerTypeAdapter(Event.class, new EventDeserializer())
-          .registerTypeAdapter(Template.class, new CreatedEventDeserializer())
+          .registerTypeAdapter(CreatedEvent.class, new CreatedEventDeserializer())
           .create();
 
   private final JsonDeserializer<HttpResponse> httpResponseJsonDeserializer =
