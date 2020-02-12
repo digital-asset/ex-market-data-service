@@ -11,12 +11,6 @@ import da.refapps.marketdataservice.marketdatatypes.ObservationValue;
 import java.time.Instant;
 import jsonapi.events.CreatedEvent;
 import jsonapi.events.Event;
-import jsonapi.gson.CreatedEventDeserializer;
-import jsonapi.gson.EventDeserializer;
-import jsonapi.gson.IdentifierDeserializer;
-import jsonapi.gson.InstantDeserializer;
-import jsonapi.gson.ObservationValueDeserializer;
-import jsonapi.gson.WebSocketResponseDeserializer;
 import jsonapi.http.WebSocketResponse;
 
 public class GsonRegisteredAllDeserializers {

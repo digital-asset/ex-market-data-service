@@ -23,9 +23,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import jsonapi.events.ArchivedEvent;
 import jsonapi.events.CreatedEvent;
+import jsonapi.gson.GsonRegisteredAllDeserializers;
 import jsonapi.gson.GsonSerializer;
 import jsonapi.http.HttpResponse;
-import jsonapi.gson.GsonRegisteredAllDeserializers;
 import org.junit.Assert;
 import org.junit.Test;
 

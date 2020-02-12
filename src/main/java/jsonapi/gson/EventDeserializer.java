@@ -10,8 +10,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import java.lang.reflect.Type;
-
-import com.google.gson.JsonPrimitive;
 import jsonapi.events.ArchivedEvent;
 import jsonapi.events.CreatedEvent;
 import jsonapi.events.Event;
@@ -27,11 +25,9 @@ public class EventDeserializer implements JsonDeserializer<Event> {
   }
 
   private static Class dispatch(JsonObject event) {
-    if (event.size()==2 && event.has("contractId") && event.has("templateId"))
+    if (event.size() == 2 && event.has("contractId") && event.has("templateId"))
       return ArchivedEvent.class;
-    else if (event.has("payload"))
-      return CreatedEvent.class;
-    else
-      throw new IllegalStateException("Unsupported event type. Json content: " + event);
+    else if (event.has("payload")) return CreatedEvent.class;
+    else throw new IllegalStateException("Unsupported event type. Json content: " + event);
   }
 }
