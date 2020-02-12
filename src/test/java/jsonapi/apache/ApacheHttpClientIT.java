@@ -36,6 +36,7 @@ import jsonapi.gson.GsonSerializer;
 import jsonapi.http.Api;
 import jsonapi.http.HttpClient;
 import jsonapi.http.HttpResponse;
+import jsonapi.json.GsonRegisteredAllDeserializers;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -106,7 +107,7 @@ public class ApacheHttpClientIT {
   }
 
   private HttpResponse fromJson(InputStream inputStream) {
-    Gson json = new GsonBuilder().create();
+    Gson json = GsonRegisteredAllDeserializers.gson();
     return json.fromJson(new InputStreamReader(inputStream), HttpResponse.class);
   }
 

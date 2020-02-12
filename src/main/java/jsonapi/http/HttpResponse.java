@@ -10,6 +10,7 @@ import jsonapi.events.Event;
 @SuppressWarnings("PMD.DataClass")
 public class HttpResponse {
 
+  // TODO make Result an interface with 2 implementations: one for Exercise, one for Search
   public static class Result {
     private final String exerciseResult;
     private final Collection<Event> contracts;
