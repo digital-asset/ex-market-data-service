@@ -13,7 +13,8 @@ public class CreatedEventHolder implements EventHolder {
     this.created = created;
   }
 
-  public CreatedEvent getCreated() {
+  @Override
+  public CreatedEvent event() {
     return created;
   }
 }

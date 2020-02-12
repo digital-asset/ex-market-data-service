@@ -115,7 +115,7 @@ public class JsonDeserializerTest {
             Iterables.getOnlyElement(result.getContracts());
     Assert.assertEquals(
         expectedCreatedEvent.getPayload(),
-        deserializedCreatedEventHolder.getCreated().getPayload());
+        deserializedCreatedEventHolder.event().getPayload());
   }
 
   @Test
@@ -158,12 +158,16 @@ public class JsonDeserializerTest {
         (ArrayList) result.getContracts();
     Assert.assertEquals(2, deserializedContracts.size());
     ArchivedEvent deserializedArchivedEvent =
-        ((ArchivedEventHolder) deserializedContracts.get(0)).getArchived();
+        ((ArchivedEventHolder) deserializedContracts.get(0)).event();
     CreatedEvent deserializedCreatedEvent =
-        ((CreatedEventHolder) deserializedContracts.get(1)).getCreated();
+        ((CreatedEventHolder) deserializedContracts.get(1)).event();
     Assert.assertEquals(expectedCreatedEvent.getPayload(), deserializedCreatedEvent.getPayload());
     Assert.assertEquals(
         expectedArchivedEvent.getContractId(), deserializedArchivedEvent.getContractId());
     Assert.assertEquals(200, deserializedHttpResponse.getStatus());
   }
+
+  new test WebSocketResponse:
+          [{"created":{"observers":[],"agreementText":"","payload":{"operator":"Operator","currentTime":"2020-02-12T16:43:44.571076Z","observers":[]},"signatories":["Operator"],"key":"Operator","contractId":"#11:0","templateId":"b4eb9b86bb78db2acde90edf0a03d96e5d65cc7a7cc422f23b6d98a286e07c09:DA.TimeService.TimeService:CurrentTime"}}]
+
 }

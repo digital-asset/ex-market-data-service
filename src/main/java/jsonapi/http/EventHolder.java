@@ -4,4 +4,8 @@
  */
 package jsonapi.http;
 
-public interface EventHolder {}
+import jsonapi.events.Event;
+
+public interface EventHolder {
+    Event event();
+}
