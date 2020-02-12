@@ -114,6 +114,23 @@ public class ActiveContractSetTest {
   }
 
   @Test
+  public void collectionOfEventsUpdatesTheSet() {
+    Identifier identifier = new Identifier("p", "m", "e");
+    DummyTemplate template = new DummyTemplate();
+    ActiveContractSet acs =
+        ActiveContractSet.empty().add(new ActiveContract(identifier, "#123", template));
+
+    ActiveContractSet newAcs =
+        acs.update(
+            Arrays.asList(
+                new ArchivedEvent("#123"), new CreatedEvent(identifier, "#789", template)));
+
+    Iterator<ActiveContract> contracts = newAcs.getActiveContracts().iterator();
+    assertEquals(contracts.next(), new ActiveContract(identifier, "#789", template));
+    assertFalse(contracts.hasNext());
+  }
+
+  @Test
   public void scan() {
     Flowable<WebSocketResponse> response =
         Flowable.just(
