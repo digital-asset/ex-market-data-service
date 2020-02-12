@@ -6,32 +6,30 @@ package jsonapi.gson;
 
 import static org.junit.Assert.assertEquals;
 
-import com.daml.ledger.javaapi.data.Date;
+import com.daml.ledger.javaapi.data.Identifier;
 import com.google.gson.Gson;
 import com.google.gson.JsonSerializer;
 import java.lang.reflect.Type;
-import java.time.LocalDate;
 import org.junit.Test;
 
-public class DateSerializerTest extends SerializerBaseTest<Date> {
+public class IdentifierSerializerTest extends SerializerBaseTest<Identifier> {
 
   @Test
-  public void serializeDate() {
-    LocalDate javaDate = LocalDate.parse("2020-02-08");
-    Date date = new Date((int) javaDate.toEpochDay());
+  public void identifierPartsSeparatedWithColons() {
+    Identifier identifier = new Identifier("package", "module", "entity");
 
     Gson serializer = createSerializer();
 
-    assertEquals("\"2020-02-08\"", serializer.toJson(date));
+    assertEquals("\"package:module:entity\"", serializer.toJson(identifier));
   }
 
   @Override
   protected Type getSerializedClass() {
-    return Date.class;
+    return Identifier.class;
   }
 
   @Override
-  protected JsonSerializer<Date> getClassSerializer() {
-    return new DateSerializer();
+  protected JsonSerializer<Identifier> getClassSerializer() {
+    return new IdentifierSerializer();
   }
 }
