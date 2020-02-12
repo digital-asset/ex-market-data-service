@@ -109,9 +109,10 @@ public class JsonDeserializerTest {
     CreatedEvent expectedCreatedEvent = new CreatedEvent(null, null, new OperatorRole("Operator"));
     HttpResponse deserializedHttpResponse =
         GsonRegisteredAllDeserializers.gson().fromJson(serializedHttpResponse, HttpResponse.class);
+    HttpResponse.ExerciseResult result = (HttpResponse.ExerciseResult) deserializedHttpResponse.getResult();
     CreatedEventHolder deserializedCreatedEventHolder =
         (CreatedEventHolder)
-            Iterables.getOnlyElement(deserializedHttpResponse.getResult().getContracts());
+            Iterables.getOnlyElement(result.getContracts());
     Assert.assertEquals(
         expectedCreatedEvent.getPayload(),
         deserializedCreatedEventHolder.getCreated().getPayload());
@@ -152,8 +153,9 @@ public class JsonDeserializerTest {
     CreatedEvent expectedCreatedEvent = new CreatedEvent(null, null, new OperatorRole("Operator"));
     HttpResponse deserializedHttpResponse =
         GsonRegisteredAllDeserializers.gson().fromJson(serializedHttpResponse, HttpResponse.class);
+    HttpResponse.ExerciseResult result = (HttpResponse.ExerciseResult) deserializedHttpResponse.getResult();
     ArrayList deserializedContracts =
-        (ArrayList) deserializedHttpResponse.getResult().getContracts();
+        (ArrayList) result.getContracts();
     Assert.assertEquals(2, deserializedContracts.size());
     ArchivedEvent deserializedArchivedEvent =
         ((ArchivedEventHolder) deserializedContracts.get(0)).getArchived();

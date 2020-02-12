@@ -12,6 +12,7 @@ import java.time.Instant;
 import jsonapi.events.CreatedEvent;
 import jsonapi.events.Event;
 import jsonapi.http.EventHolder;
+import jsonapi.http.HttpResponse;
 import jsonapi.http.WebSocketResponse;
 
 public class GsonRegisteredAllDeserializers {
@@ -25,6 +26,7 @@ public class GsonRegisteredAllDeserializers {
         .registerTypeAdapter(Event.class, new EventDeserializer())
         .registerTypeAdapter(CreatedEvent.class, new CreatedEventDeserializer())
         .registerTypeAdapter(EventHolder.class, new EventHolderDeserializer())
+            .registerTypeAdapter(HttpResponse.Result.class, new ResultDeserializer())
         .create();
   }
 }
