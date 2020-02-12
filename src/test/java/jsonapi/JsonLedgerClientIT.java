@@ -100,7 +100,7 @@ public class JsonLedgerClientIT {
             .getActiveContracts(CurrentTime.TEMPLATE_ID, CurrentTime.class)
             .collect(Collectors.toList());
     assertThat(currentTimes.size(), is(1));
-    assertThat(currentTimes.get(0), is(currentTime));
+    assertThat(currentTimes.get(0).getContract(), is(currentTime));
   }
 
   @Test
