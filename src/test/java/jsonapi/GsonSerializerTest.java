@@ -4,7 +4,6 @@
  */
 package jsonapi;
 
-import com.daml.ledger.javaapi.data.Date;
 import com.daml.ledger.javaapi.data.ExerciseCommand;
 import com.daml.ledger.javaapi.data.Numeric;
 import com.daml.ledger.javaapi.data.Party;
@@ -32,6 +31,16 @@ public class GsonSerializerTest {
 
   private static final Party OPERATOR = new Party("Operator");
   private final GsonSerializer gsonSerializer = new GsonSerializer();
+
+  private static Observation getObservation() {
+    Instant observationTime = Instant.parse("2019-05-03T10:15:30.00Z");
+    String marketName = "Market";
+    InstrumentId instrumentId = new InstrumentId("ISIN 123 XYZ");
+    LocalDate maturityDate = LocalDate.parse("2019-05-10");
+    ObservationReference label = new ObservationReference(marketName, instrumentId, maturityDate);
+    ObservationValue cleanPrice = new CleanPrice(BigDecimal.valueOf(1.2));
+    return new Observation(label, observationTime.minusSeconds(3600), cleanPrice);
+  }
 
   @Test
   public void serializeExerciseAdvanceCurrentTime() {
@@ -90,13 +99,6 @@ public class GsonSerializerTest {
   }
 
   @Test
-  public void serializeDate() {
-    LocalDate javaDate = LocalDate.parse("2020-02-08");
-    Date date = new Date((int) javaDate.toEpochDay());
-    Assert.assertEquals("\"2020-02-08\"", gsonSerializer.apply(date));
-  }
-
-  @Test
   public void serializeTimestamp() {
     Timestamp timestamp = Timestamp.fromInstant(Instant.parse("2020-02-08T12:30:00Z"));
     Assert.assertEquals("\"2020-02-08T12:30:00Z\"", gsonSerializer.apply(timestamp));
@@ -119,15 +121,5 @@ public class GsonSerializerTest {
   public void serializeNumeric() {
     Numeric numeric = new Numeric(BigDecimal.valueOf(12.3));
     Assert.assertEquals("\"12.3\"", gsonSerializer.apply(numeric));
-  }
-
-  private static Observation getObservation() {
-    Instant observationTime = Instant.parse("2019-05-03T10:15:30.00Z");
-    String marketName = "Market";
-    InstrumentId instrumentId = new InstrumentId("ISIN 123 XYZ");
-    LocalDate maturityDate = LocalDate.parse("2019-05-10");
-    ObservationReference label = new ObservationReference(marketName, instrumentId, maturityDate);
-    ObservationValue cleanPrice = new CleanPrice(BigDecimal.valueOf(1.2));
-    return new Observation(label, observationTime.minusSeconds(3600), cleanPrice);
   }
 }
