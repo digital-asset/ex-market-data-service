@@ -6,32 +6,30 @@ package jsonapi.gson;
 
 import static org.junit.Assert.assertEquals;
 
-import com.daml.ledger.javaapi.data.Date;
 import com.google.gson.Gson;
 import com.google.gson.JsonDeserializer;
 import java.time.LocalDate;
 import org.junit.Test;
 
-public class DateDeserializerTest extends DeserializerBaseTest<Date> {
+public class LocalDateDeserializerTest extends DeserializerBaseTest<LocalDate> {
 
   @Test
-  public void deserializeDate() {
+  public void deserializeLocalDate() {
     String json = "\"2020-02-08\"";
 
     Gson deserializer = createDeserializer();
 
-    LocalDate javaDate = LocalDate.parse("2020-02-08");
-    Date date = new Date((int) javaDate.toEpochDay());
+    LocalDate date = LocalDate.parse("2020-02-08");
     assertEquals(date, deserializer.fromJson(json, getDeserializedClass()));
   }
 
   @Override
-  protected Class<Date> getDeserializedClass() {
-    return Date.class;
+  protected Class<LocalDate> getDeserializedClass() {
+    return LocalDate.class;
   }
 
   @Override
-  protected JsonDeserializer<Date> getClassDeserializer() {
-    return new DateDeserializer();
+  protected JsonDeserializer<LocalDate> getClassDeserializer() {
+    return new LocalDateDeserializer();
   }
 }
