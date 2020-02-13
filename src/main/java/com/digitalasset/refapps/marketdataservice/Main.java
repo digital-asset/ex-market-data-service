@@ -95,7 +95,6 @@ public class Main {
 
   public interface Wirer {
     void wire(
-        String ledgerId,
         String party,
         ContractQuery contractQuery,
         TransactionFilter transactionFilter,
@@ -112,7 +111,6 @@ public class Main {
 
     @Override
     public void wire(
-        String ledgerId,
         String party,
         ContractQuery contractQuery,
         TransactionFilter transactionFilter,
@@ -123,10 +121,14 @@ public class Main {
   }
 
   public static class JsonWirer implements Wirer {
+    private final String ledgerId;
+
+    public JsonWirer(String ledgerId) {
+      this.ledgerId = ledgerId;
+    }
 
     @Override
     public void wire(
-        String ledgerId,
         String party,
         ContractQuery contractQuery,
         TransactionFilter transactionFilter,
@@ -142,12 +144,11 @@ public class Main {
       Function<CommandsAndPendingSetBuilder.Factory, LedgerApiHandle> handlerFactory =
           commandBuilderFactory ->
               new GrpcLedgerApiHandle(client, commandBuilderFactory, parties.getOperator());
-      runBotsWithGrpcApi(client, parties, systemPeriodTime, new GrpcWirer(client), handlerFactory);
+      runBotsWithGrpcApi(parties, systemPeriodTime, new GrpcWirer(client), handlerFactory);
     };
   }
 
   public static void runBotsWithGrpcApi(
-      DamlLedgerClient client,
       AppParties parties,
       Duration systemPeriodTime,
       Wirer wirer,
@@ -166,7 +167,6 @@ public class Main {
       wirer.wire(
           null,
           null,
-          null,
           dataProviderBot.getTransactionFilter(),
           dataProviderBot::calculateCommands,
           dataProviderBot::getContractInfo);
@@ -179,7 +179,6 @@ public class Main {
           new DataProviderBot(
               commandBuilderFactory, parties.getMarketDataProvider2(), dataProvider);
       wirer.wire(
-          null,
           null,
           null,
           dataProviderBot.getTransactionFilter(),
@@ -214,7 +213,6 @@ public class Main {
   }
 
   public static void runBotsWithJsonApi(
-      String ledgerId,
       AppParties parties,
       Duration systemPeriodTime,
       Wirer wirer,
@@ -230,7 +228,6 @@ public class Main {
           new DataProviderBot(
               commandBuilderFactory, parties.getMarketDataProvider1(), dataProvider);
       wirer.wire(
-          ledgerId,
           dataProviderBot.getPartyName(),
           dataProviderBot.getContractQuery(),
           null,
@@ -245,7 +242,6 @@ public class Main {
           new DataProviderBot(
               commandBuilderFactory, parties.getMarketDataProvider2(), dataProvider);
       wirer.wire(
-          ledgerId,
           dataProviderBot.getPartyName(),
           dataProviderBot.getContractQuery(),
           null,

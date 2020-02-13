@@ -144,7 +144,7 @@ public class JsonLedgerClientIT {
                 jsonSerializer,
                 webSocketResponseDeserializer);
     Main.runBotsWithJsonApi(
-        ledgerId, parties, systemPeriodTime, new Main.JsonWirer(), handlerFactory);
+        parties, systemPeriodTime, new Main.JsonWirer(ledgerId), handlerFactory);
 
     // TODO: Proper test and assertion.
     //    Thread.currentThread().join();
