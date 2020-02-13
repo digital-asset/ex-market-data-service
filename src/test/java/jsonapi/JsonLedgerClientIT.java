@@ -129,7 +129,8 @@ public class JsonLedgerClientIT {
   @Test
   public void usingDataProviderBot() {
     Duration systemPeriodTime = Duration.ofSeconds(5);
-    Main.runBotsWithJsonApi(ledgerId, new AppParties(ALL_PARTIES), systemPeriodTime);
+    Main.runBotsWithJsonApi(
+        ledgerId, new AppParties(ALL_PARTIES), systemPeriodTime, new Main.JsonWirer());
 
     // TODO: Proper test and assertion.
     //    Thread.currentThread().join();

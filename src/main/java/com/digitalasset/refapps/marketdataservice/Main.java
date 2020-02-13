@@ -50,7 +50,6 @@ import jsonapi.http.WebSocketResponse;
 import jsonapi.json.JsonDeserializer;
 import jsonapi.tyrus.TyrusWebSocketClient;
 import org.pcollections.HashTreePMap;
-import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,6 +95,9 @@ public class Main {
 
   public interface Wirer {
     void wire(
+        String ledgerId,
+        String party,
+        ContractQuery contractQuery,
         String applicationId,
         LedgerClient ledgerClient,
         TransactionFilter transactionFilter,
@@ -106,12 +108,31 @@ public class Main {
   public static class GrpcWirer implements Wirer {
     @Override
     public void wire(
+        String ledgerId,
+        String party,
+        ContractQuery contractQuery,
         String applicationId,
         LedgerClient ledgerClient,
         TransactionFilter transactionFilter,
         Function<LedgerView<Template>, Flowable<CommandsAndPendingSet>> bot,
         Function<CreatedContract, Template> transform) {
       Bot.wire(applicationId, ledgerClient, transactionFilter, bot, transform);
+    }
+  }
+
+  public static class JsonWirer implements Wirer {
+
+    @Override
+    public void wire(
+        String ledgerId,
+        String party,
+        ContractQuery contractQuery,
+        String applicationId,
+        LedgerClient ledgerClient,
+        TransactionFilter transactionFilter,
+        Function<LedgerView<Template>, Flowable<CommandsAndPendingSet>> bot,
+        Function<CreatedContract, Template> transform) {
+      Main.wire(ledgerId, party, contractQuery, bot);
     }
   }
 
@@ -131,6 +152,9 @@ public class Main {
             new DataProviderBot(
                 commandBuilderFactory, parties.getMarketDataProvider1(), dataProvider);
         wirer.wire(
+            null,
+            null,
+            null,
             APPLICATION_ID,
             client,
             dataProviderBot.getTransactionFilter(),
@@ -145,6 +169,9 @@ public class Main {
             new DataProviderBot(
                 commandBuilderFactory, parties.getMarketDataProvider2(), dataProvider);
         wirer.wire(
+            null,
+            null,
+            null,
             APPLICATION_ID,
             client,
             dataProviderBot.getTransactionFilter(),
@@ -181,7 +208,7 @@ public class Main {
   }
 
   public static void runBotsWithJsonApi(
-      String ledgerId, AppParties parties, Duration systemPeriodTime) {
+      String ledgerId, AppParties parties, Duration systemPeriodTime, Wirer wirer) {
     Duration mrt = Duration.ofSeconds(10);
     CommandsAndPendingSetBuilder.Factory commandBuilderFactory =
         CommandsAndPendingSetBuilder.factory(APPLICATION_ID, Clock::systemUTC, mrt);
@@ -192,11 +219,15 @@ public class Main {
       DataProviderBot dataProviderBot =
           new DataProviderBot(
               commandBuilderFactory, parties.getMarketDataProvider1(), dataProvider);
-      wire(
+      wirer.wire(
           ledgerId,
           dataProviderBot.getPartyName(),
           dataProviderBot.getContractQuery(),
-          dataProviderBot::calculateCommands);
+          null,
+          null,
+          null,
+          dataProviderBot::calculateCommands,
+          null);
     }
 
     if (parties.hasMarketDataProvider2()) {
@@ -205,11 +236,15 @@ public class Main {
       DataProviderBot dataProviderBot =
           new DataProviderBot(
               commandBuilderFactory, parties.getMarketDataProvider2(), dataProvider);
-      wire(
+      wirer.wire(
           ledgerId,
           dataProviderBot.getPartyName(),
           dataProviderBot.getContractQuery(),
-          dataProviderBot::calculateCommands);
+          null,
+          null,
+          null,
+          dataProviderBot::calculateCommands,
+          null);
     }
 
     if (parties.hasOperator()) {
@@ -233,7 +268,7 @@ public class Main {
       String ledgerId,
       String party,
       ContractQuery contractQuery,
-      Function<LedgerView<Template>, Publisher<CommandsAndPendingSet>> bot) {
+      Function<LedgerView<Template>, Flowable<CommandsAndPendingSet>> bot) {
 
     String jwt = Jwt.createToken(ledgerId, APPLICATION_ID, Collections.singletonList(party));
     ApacheHttpClient httpClient =
