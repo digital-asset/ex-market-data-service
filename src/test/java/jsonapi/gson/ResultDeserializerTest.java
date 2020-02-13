@@ -22,6 +22,7 @@ import jsonapi.events.ArchivedEvent;
 import jsonapi.events.CreatedEvent;
 import jsonapi.http.ArchivedEventHolder;
 import jsonapi.http.CreatedEventHolder;
+import jsonapi.http.EventHolder;
 import jsonapi.http.HttpResponse;
 import jsonapi.http.HttpResponse.CreateResult;
 import jsonapi.http.HttpResponse.Result;
@@ -133,11 +134,15 @@ public class ResultDeserializerTest extends DeserializerBaseTest<HttpResponse.Re
             + "     }\n"
             + "  ]\n"
             + "}\n";
+    registerDeserializer(HttpResponse.SearchResult.class, new SearchResultDeserializer());
+    registerDeserializer(CreatedEvent.class, new CreatedEventDeserializer());
+    registerDeserializer(EventHolder.class, new EventHolderDeserializer());
+    registerDeserializer(Identifier.class, new IdentifierDeserializer());
+    Gson deserializer = createDeserializer();
     ArchivedEvent expectedArchivedEvent = new ArchivedEvent("#12:0");
     CreatedEvent expectedCreatedEvent = new CreatedEvent(null, null, new OperatorRole("Operator"));
     HttpResponse.ExerciseResult deserializedExerciseResult =
-        GsonRegisteredAllDeserializers.gson()
-            .fromJson(serializedExerciseResult, HttpResponse.ExerciseResult.class);
+        deserializer.fromJson(serializedExerciseResult, HttpResponse.ExerciseResult.class);
     ArrayList deserializedContracts = (ArrayList) deserializedExerciseResult.getEvents();
     Assert.assertEquals(2, deserializedContracts.size());
     ArchivedEvent deserializedArchivedEvent =
