@@ -23,7 +23,7 @@ public class ResultDeserializer implements JsonDeserializer<HttpResponse.Result>
   }
 
   private static Class dispatch(JsonObject result) {
-    if (result.size() == 2 && result.has("exerciseResult") && result.has("contracts"))
+    if (result.size() == 2 && result.has("exerciseResult") && result.has("events"))
       return HttpResponse.ExerciseResult.class;
     else throw new IllegalStateException("Unsupported result type. Json content: " + result);
   }
