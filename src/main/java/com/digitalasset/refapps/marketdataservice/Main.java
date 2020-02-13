@@ -98,7 +98,6 @@ public class Main {
         String ledgerId,
         String party,
         ContractQuery contractQuery,
-        String applicationId,
         TransactionFilter transactionFilter,
         Function<LedgerView<Template>, Flowable<CommandsAndPendingSet>> bot,
         Function<CreatedContract, Template> transform);
@@ -116,11 +115,10 @@ public class Main {
         String ledgerId,
         String party,
         ContractQuery contractQuery,
-        String applicationId,
         TransactionFilter transactionFilter,
         Function<LedgerView<Template>, Flowable<CommandsAndPendingSet>> bot,
         Function<CreatedContract, Template> transform) {
-      Bot.wire(applicationId, ledgerClient, transactionFilter, bot, transform);
+      Bot.wire(APPLICATION_ID, ledgerClient, transactionFilter, bot, transform);
     }
   }
 
@@ -131,7 +129,6 @@ public class Main {
         String ledgerId,
         String party,
         ContractQuery contractQuery,
-        String applicationId,
         TransactionFilter transactionFilter,
         Function<LedgerView<Template>, Flowable<CommandsAndPendingSet>> bot,
         Function<CreatedContract, Template> transform) {
@@ -170,7 +167,6 @@ public class Main {
           null,
           null,
           null,
-          APPLICATION_ID,
           dataProviderBot.getTransactionFilter(),
           dataProviderBot::calculateCommands,
           dataProviderBot::getContractInfo);
@@ -186,7 +182,6 @@ public class Main {
           null,
           null,
           null,
-          APPLICATION_ID,
           dataProviderBot.getTransactionFilter(),
           dataProviderBot::calculateCommands,
           dataProviderBot::getContractInfo);
@@ -239,7 +234,6 @@ public class Main {
           dataProviderBot.getPartyName(),
           dataProviderBot.getContractQuery(),
           null,
-          null,
           dataProviderBot::calculateCommands,
           null);
     }
@@ -254,7 +248,6 @@ public class Main {
           ledgerId,
           dataProviderBot.getPartyName(),
           dataProviderBot.getContractQuery(),
-          null,
           null,
           dataProviderBot::calculateCommands,
           null);
