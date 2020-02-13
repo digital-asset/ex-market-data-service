@@ -27,6 +27,7 @@ public class GsonRegisteredAllDeserializers {
         .registerTypeAdapter(CreatedEvent.class, new CreatedEventDeserializer())
         .registerTypeAdapter(EventHolder.class, new EventHolderDeserializer())
         .registerTypeAdapter(HttpResponse.Result.class, new ResultDeserializer())
+        .registerTypeAdapter(HttpResponse.SearchResult.class, new SearchResultDeserializer())
         .create();
   }
 }
