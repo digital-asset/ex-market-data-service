@@ -19,6 +19,7 @@ import com.digitalasset.refapps.marketdataservice.publishing.DataProviderBot;
 import com.digitalasset.refapps.marketdataservice.publishing.PublishingDataProvider;
 import com.digitalasset.refapps.marketdataservice.timeservice.GrpcLedgerApiHandle;
 import com.digitalasset.refapps.marketdataservice.timeservice.JsonLedgerApiHandle;
+import com.digitalasset.refapps.marketdataservice.timeservice.LedgerApiHandle;
 import com.digitalasset.refapps.marketdataservice.timeservice.TimeUpdaterBot;
 import com.digitalasset.refapps.marketdataservice.timeservice.TimeUpdaterBotExecutor;
 import com.digitalasset.refapps.marketdataservice.utils.AppParties;
@@ -139,12 +140,19 @@ public class Main {
   public static BiConsumer<DamlLedgerClient, ManagedChannel> runBots(
       AppParties parties, Duration systemPeriodTime, Wirer wirer) {
     return (DamlLedgerClient client, ManagedChannel channel) -> {
-      runBotsWithGrpcApi(client, parties, systemPeriodTime, wirer);
+      Function<CommandsAndPendingSetBuilder.Factory, LedgerApiHandle> handlerFactory =
+          commandBuilderFactory ->
+              new GrpcLedgerApiHandle(client, commandBuilderFactory, parties.getOperator());
+      runBotsWithGrpcApi(client, parties, systemPeriodTime, wirer, handlerFactory);
     };
   }
 
   public static void runBotsWithGrpcApi(
-      DamlLedgerClient client, AppParties parties, Duration systemPeriodTime, Wirer wirer) {
+      DamlLedgerClient client,
+      AppParties parties,
+      Duration systemPeriodTime,
+      Wirer wirer,
+      Function<CommandsAndPendingSetBuilder.Factory, LedgerApiHandle> handlerFactory) {
     logPackages(client);
 
     Duration mrt = Duration.ofSeconds(10);
@@ -188,8 +196,7 @@ public class Main {
     if (parties.hasOperator()) {
       logger.info("Starting automation for Operator.");
       TimeUpdaterBot timeUpdaterBot =
-          new TimeUpdaterBot(
-              new GrpcLedgerApiHandle(client, commandBuilderFactory, parties.getOperator()));
+          new TimeUpdaterBot(handlerFactory.apply(commandBuilderFactory));
       scheduler = Executors.newScheduledThreadPool(1);
       timeUpdaterBotExecutor = new TimeUpdaterBotExecutor(scheduler);
       timeUpdaterBotExecutor.start(timeUpdaterBot, systemPeriodTime);
