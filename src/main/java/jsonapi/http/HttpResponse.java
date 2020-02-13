@@ -14,19 +14,19 @@ public class HttpResponse {
   // TODO make Result an interface with several implementations: ExerciseResult, SearchResult etc
   public static class ExerciseResult implements Result {
     private final String exerciseResult;
-    private final Collection<EventHolder> contracts;
+    private final Collection<EventHolder> events;
 
-    public ExerciseResult(String exerciseResult, Collection<EventHolder> contracts) {
+    public ExerciseResult(String exerciseResult, Collection<EventHolder> events) {
       this.exerciseResult = exerciseResult;
-      this.contracts = contracts;
+      this.events = events;
     }
 
     public String getExerciseResult() {
       return exerciseResult;
     }
 
-    public Collection<EventHolder> getContracts() {
-      return contracts;
+    public Collection<EventHolder> getEvents() {
+      return events;
     }
   }
 

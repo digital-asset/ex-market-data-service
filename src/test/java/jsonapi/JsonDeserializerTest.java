@@ -91,7 +91,7 @@ public class JsonDeserializerTest {
         "{ \n"
             + "   \"result\":{ \n"
             + "      \"exerciseResult\":\"#14:1\",\n"
-            + "      \"contracts\":[ \n"
+            + "      \"events\":[ \n"
             + "         { \n"
             + "            \"created\":{ \n"
             + "               \"payload\":{ \n"
@@ -112,7 +112,7 @@ public class JsonDeserializerTest {
     HttpResponse.ExerciseResult result =
         (HttpResponse.ExerciseResult) deserializedHttpResponse.getResult();
     CreatedEventHolder deserializedCreatedEventHolder =
-        (CreatedEventHolder) Iterables.getOnlyElement(result.getContracts());
+        (CreatedEventHolder) Iterables.getOnlyElement(result.getEvents());
     Assert.assertEquals(
         expectedCreatedEvent.getPayload(), deserializedCreatedEventHolder.event().getPayload());
   }
@@ -125,7 +125,7 @@ public class JsonDeserializerTest {
             + "   \"status\":200,\n"
             + "   \"result\":{ \n"
             + "      \"exerciseResult\":\"#14:1\",\n"
-            + "      \"contracts\":[ \n"
+            + "      \"events\":[ \n"
             + "         { \n"
             + "            \"archived\":{ \n"
             + "               \"contractId\":\"#12:0\",\n"
@@ -154,7 +154,7 @@ public class JsonDeserializerTest {
         GsonRegisteredAllDeserializers.gson().fromJson(serializedHttpResponse, HttpResponse.class);
     HttpResponse.ExerciseResult result =
         (HttpResponse.ExerciseResult) deserializedHttpResponse.getResult();
-    ArrayList deserializedContracts = (ArrayList) result.getContracts();
+    ArrayList deserializedContracts = (ArrayList) result.getEvents();
     Assert.assertEquals(2, deserializedContracts.size());
     ArchivedEvent deserializedArchivedEvent =
         ((ArchivedEventHolder) deserializedContracts.get(0)).event();
