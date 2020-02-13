@@ -18,7 +18,6 @@ import com.digitalasset.refapps.marketdataservice.publishing.CachingCsvDataProvi
 import com.digitalasset.refapps.marketdataservice.publishing.DataProviderBot;
 import com.digitalasset.refapps.marketdataservice.publishing.PublishingDataProvider;
 import com.digitalasset.refapps.marketdataservice.timeservice.GrpcLedgerApiHandle;
-import com.digitalasset.refapps.marketdataservice.timeservice.JsonLedgerApiHandle;
 import com.digitalasset.refapps.marketdataservice.timeservice.LedgerApiHandle;
 import com.digitalasset.refapps.marketdataservice.timeservice.TimeUpdaterBot;
 import com.digitalasset.refapps.marketdataservice.timeservice.TimeUpdaterBotExecutor;
@@ -87,7 +86,7 @@ public class Main {
 
     logPackages(client);
     AppParties appParties = new AppParties(cliOptions.getParties());
-    runBots(appParties, SYSTEM_PERIOD_TIME, new GrpcWirer()).accept(client, channel);
+    runBots(appParties, SYSTEM_PERIOD_TIME).accept(client, channel);
 
     logger.info("Welcome to Market Data Service!");
     logger.info("Press Ctrl+C to shut down the program.");
@@ -100,20 +99,24 @@ public class Main {
         String party,
         ContractQuery contractQuery,
         String applicationId,
-        LedgerClient ledgerClient,
         TransactionFilter transactionFilter,
         Function<LedgerView<Template>, Flowable<CommandsAndPendingSet>> bot,
         Function<CreatedContract, Template> transform);
   }
 
   public static class GrpcWirer implements Wirer {
+    private final LedgerClient ledgerClient;
+
+    public GrpcWirer(LedgerClient ledgerClient) {
+      this.ledgerClient = ledgerClient;
+    }
+
     @Override
     public void wire(
         String ledgerId,
         String party,
         ContractQuery contractQuery,
         String applicationId,
-        LedgerClient ledgerClient,
         TransactionFilter transactionFilter,
         Function<LedgerView<Template>, Flowable<CommandsAndPendingSet>> bot,
         Function<CreatedContract, Template> transform) {
@@ -129,7 +132,6 @@ public class Main {
         String party,
         ContractQuery contractQuery,
         String applicationId,
-        LedgerClient ledgerClient,
         TransactionFilter transactionFilter,
         Function<LedgerView<Template>, Flowable<CommandsAndPendingSet>> bot,
         Function<CreatedContract, Template> transform) {
@@ -138,12 +140,12 @@ public class Main {
   }
 
   public static BiConsumer<DamlLedgerClient, ManagedChannel> runBots(
-      AppParties parties, Duration systemPeriodTime, Wirer wirer) {
+      AppParties parties, Duration systemPeriodTime) {
     return (DamlLedgerClient client, ManagedChannel channel) -> {
       Function<CommandsAndPendingSetBuilder.Factory, LedgerApiHandle> handlerFactory =
           commandBuilderFactory ->
               new GrpcLedgerApiHandle(client, commandBuilderFactory, parties.getOperator());
-      runBotsWithGrpcApi(client, parties, systemPeriodTime, wirer, handlerFactory);
+      runBotsWithGrpcApi(client, parties, systemPeriodTime, new GrpcWirer(client), handlerFactory);
     };
   }
 
@@ -153,7 +155,6 @@ public class Main {
       Duration systemPeriodTime,
       Wirer wirer,
       Function<CommandsAndPendingSetBuilder.Factory, LedgerApiHandle> handlerFactory) {
-    logPackages(client);
 
     Duration mrt = Duration.ofSeconds(10);
     CommandsAndPendingSetBuilder.Factory commandBuilderFactory =
@@ -170,7 +171,6 @@ public class Main {
           null,
           null,
           APPLICATION_ID,
-          client,
           dataProviderBot.getTransactionFilter(),
           dataProviderBot::calculateCommands,
           dataProviderBot::getContractInfo);
@@ -187,7 +187,6 @@ public class Main {
           null,
           null,
           APPLICATION_ID,
-          client,
           dataProviderBot.getTransactionFilter(),
           dataProviderBot::calculateCommands,
           dataProviderBot::getContractInfo);
@@ -241,7 +240,6 @@ public class Main {
           dataProviderBot.getContractQuery(),
           null,
           null,
-          null,
           dataProviderBot::calculateCommands,
           null);
     }
@@ -256,7 +254,6 @@ public class Main {
           ledgerId,
           dataProviderBot.getPartyName(),
           dataProviderBot.getContractQuery(),
-          null,
           null,
           null,
           dataProviderBot::calculateCommands,
