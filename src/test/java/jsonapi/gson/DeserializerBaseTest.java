@@ -7,14 +7,13 @@ package jsonapi.gson;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonSerializer;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
 public abstract class DeserializerBaseTest<T> {
 
-  private Map<Type, JsonSerializer<?>> serializers = new HashMap<>();
+  private Map<Type, JsonDeserializer<?>> serializers = new HashMap<>();
 
   protected Gson createDeserializer() {
     GsonBuilder builderWithDefaultSerializer =
@@ -28,8 +27,8 @@ public abstract class DeserializerBaseTest<T> {
         .create();
   }
 
-  protected <U> void registerSerializer(Type type, JsonSerializer<U> serializer) {
-    serializers.put(type, serializer);
+  protected <U> void registerDeserializer(Type type, JsonDeserializer<U> deserializer) {
+    serializers.put(type, deserializer);
   }
 
   protected abstract Type getDeserializedClass();
