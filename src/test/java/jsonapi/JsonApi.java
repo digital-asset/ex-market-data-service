@@ -8,6 +8,7 @@ import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.ProcessBuilder.Redirect;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.function.IntSupplier;
@@ -30,7 +31,7 @@ public class JsonApi extends ExternalResource {
   @Override
   protected void before() throws Throwable {
     super.before();
-    jsonApi =
+    ProcessBuilder processBuilder =
         new ProcessBuilder(
                 "daml",
                 "json-api",
@@ -46,9 +47,10 @@ public class JsonApi extends ExternalResource {
                 "5s",
                 "--application-id",
                 "HTTP-JSON-API-Gateway")
-            .redirectOutput(ProcessBuilder.Redirect.appendTo(new File("json-api.log")))
-            .redirectError(ProcessBuilder.Redirect.appendTo(new File("json-api.err.log")))
-            .start();
+            .redirectOutput(Redirect.appendTo(new File("json-api.log")))
+            .redirectError(Redirect.appendTo(new File("json-api.err.log")));
+    log.debug("Executing: {}", String.join(" ", processBuilder.command()));
+    jsonApi = processBuilder.start();
     waitForJsonApi();
   }
 
