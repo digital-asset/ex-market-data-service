@@ -18,23 +18,17 @@ public class WebSocketResponseDeserializerTest {
         String serializedWebSocketResponse = "[ \n" +
                 "   { \n" +
                 "      \"created\":{ \n" +
-                "         \"observers\":[ \n" +
-                "\n" +
-                "         ],\n" +
+                "         \"observers\":[],\n" +
                 "         \"agreementText\":\"\",\n" +
                 "         \"payload\":{ \n" +
-                "            \"operator\":\"Operator\",\n" +
-                "            \"currentTime\":\"2020-02-12T16:43:44.571076Z\",\n" +
-                "            \"observers\":[ \n" +
-                "\n" +
-                "            ]\n" +
+                "            \"operator\":\"Operator\"\n" +
                 "         },\n" +
                 "         \"signatories\":[ \n" +
                 "            \"Operator\"\n" +
                 "         ],\n" +
                 "         \"key\":\"Operator\",\n" +
                 "         \"contractId\":\"#11:0\",\n" +
-                "         \"templateId\":\"b4eb9b86bb78db2acde90edf0a03d96e5d65cc7a7cc422f23b6d98a286e07c09:DA.TimeService.TimeService:CurrentTime\"\n" +
+                "         \"templateId\":" + tid + "\n" +
                 "      }\n" +
                 "   }\n" +
                 "]";
