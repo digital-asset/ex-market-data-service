@@ -17,26 +17,30 @@ public class Api {
   }
 
   public URI createContract() {
-    return baseHttp.resolve("/command/create");
+    return baseHttp.resolve("/v1/create");
   }
 
   public URI exercise() {
-    return baseHttp.resolve("/command/exercise");
+    return baseHttp.resolve("/v1/exercise");
   }
 
   public URI fetchContract() {
-    return baseHttp.resolve("/contracts/lookup");
+    return baseHttp.resolve("/v1/fetch");
   }
 
   public URI searchContract() {
-    return baseHttp.resolve("/contracts/search");
+    return baseHttp.resolve("/v1/query");
   }
 
   public URI parties() {
-    return baseHttp.resolve("/parties");
+    return baseHttp.resolve("/v1/parties");
   }
 
   public URI searchContractsForever() {
-    return baseWs.resolve("/contracts/searchForever");
+    return baseWs.resolve("/v1/stream/query");
+  }
+
+  public URI fetchContractsForever() {
+    return baseWs.resolve("/v1/stream/fetch");
   }
 }
