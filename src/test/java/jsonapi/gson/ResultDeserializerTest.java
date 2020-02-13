@@ -4,6 +4,7 @@
  */
 package jsonapi.gson;
 
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
@@ -16,9 +17,8 @@ import da.refapps.marketdataservice.roles.OperatorRole;
 import da.timeservice.timeservice.CurrentTime;
 import java.lang.reflect.Type;
 import java.time.Instant;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import jsonapi.events.ArchivedEvent;
 import jsonapi.events.CreatedEvent;
 import jsonapi.http.ArchivedEventHolder;
 import jsonapi.http.CreatedEventHolder;
@@ -26,7 +26,6 @@ import jsonapi.http.EventHolder;
 import jsonapi.http.HttpResponse;
 import jsonapi.http.HttpResponse.CreateResult;
 import jsonapi.http.HttpResponse.Result;
-import org.junit.Assert;
 import org.junit.Test;
 
 public class ResultDeserializerTest extends DeserializerBaseTest<HttpResponse.Result> {
@@ -139,19 +138,13 @@ public class ResultDeserializerTest extends DeserializerBaseTest<HttpResponse.Re
     registerDeserializer(EventHolder.class, new EventHolderDeserializer());
     registerDeserializer(Identifier.class, new IdentifierDeserializer());
     Gson deserializer = createDeserializer();
-    ArchivedEvent expectedArchivedEvent = new ArchivedEvent("#12:0");
-    CreatedEvent expectedCreatedEvent = new CreatedEvent(null, null, new OperatorRole("Operator"));
     HttpResponse.ExerciseResult deserializedExerciseResult =
         deserializer.fromJson(serializedExerciseResult, HttpResponse.ExerciseResult.class);
-    ArrayList deserializedContracts = (ArrayList) deserializedExerciseResult.getEvents();
-    Assert.assertEquals(2, deserializedContracts.size());
-    ArchivedEvent deserializedArchivedEvent =
-        ((ArchivedEventHolder) deserializedContracts.get(0)).event();
-    CreatedEvent deserializedCreatedEvent =
-        ((CreatedEventHolder) deserializedContracts.get(1)).event();
-    Assert.assertEquals(expectedCreatedEvent.getPayload(), deserializedCreatedEvent.getPayload());
-    Assert.assertEquals(
-        expectedArchivedEvent.getContractId(), deserializedArchivedEvent.getContractId());
+
+    Collection<EventHolder> events = deserializedExerciseResult.getEvents();
+    assertEquals(2, events.size());
+    assertThat(events, hasItem(instanceOf(CreatedEventHolder.class)));
+    assertThat(events, hasItem(instanceOf(ArchivedEventHolder.class)));
   }
 
   private String identifierToJson(Identifier templateId) {
