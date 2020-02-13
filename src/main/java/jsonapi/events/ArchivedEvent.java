@@ -8,14 +8,14 @@ import jsonapi.ActiveContractSet;
 
 public class ArchivedEvent implements Event {
 
-  private final String archived;
+  private final String contractId;
 
-  public ArchivedEvent(String archived) {
-    this.archived = archived;
+  public ArchivedEvent(String contractId) {
+    this.contractId = contractId;
   }
 
   public String getContractId() {
-    return archived;
+    return contractId;
   }
 
   @Override

@@ -2,7 +2,7 @@
  * Copyright (c) 2019, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-package jsonapi;
+package jsonapi.gson;
 
 import static org.hamcrest.CoreMatchers.containsString;
 
@@ -26,7 +26,6 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collections;
-import jsonapi.gson.GsonSerializer;
 import org.junit.Assert;
 import org.junit.Test;
 

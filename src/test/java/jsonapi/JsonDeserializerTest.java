@@ -4,6 +4,7 @@
  */
 package jsonapi;
 
+import com.google.common.collect.Iterables;
 import da.refapps.marketdataservice.datastream.DataStream;
 import da.refapps.marketdataservice.datastream.EmptyDataStream;
 import da.refapps.marketdataservice.marketdatatypes.InstrumentId;
@@ -12,13 +13,21 @@ import da.refapps.marketdataservice.marketdatatypes.ObservationReference;
 import da.refapps.marketdataservice.marketdatatypes.ObservationValue;
 import da.refapps.marketdataservice.marketdatatypes.Publisher;
 import da.refapps.marketdataservice.marketdatatypes.observationvalue.CleanPrice;
+import da.refapps.marketdataservice.roles.OperatorRole;
 import da.timeservice.timeservice.CurrentTime;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collections;
-import jsonapi.json.GsonRegisteredAllDeserializers;
+import jsonapi.events.ArchivedEvent;
+import jsonapi.events.CreatedEvent;
+import jsonapi.gson.GsonRegisteredAllDeserializers;
+import jsonapi.gson.GsonSerializer;
+import jsonapi.http.ArchivedEventHolder;
+import jsonapi.http.CreatedEventHolder;
+import jsonapi.http.HttpResponse;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -74,5 +83,88 @@ public class JsonDeserializerTest {
     DataStream deserializedDataStream =
         GsonRegisteredAllDeserializers.gson().fromJson(serializedDataStream, DataStream.class);
     Assert.assertEquals(expectedDataStream, deserializedDataStream);
+  }
+
+  // TODO split to ResultDeserializerTest and HttpResponseDeserializerTest
+  @Test
+  public void deserializeSimplifiedExerciseHttpResponseWithoutArchivedEvent() {
+    String serializedHttpResponse =
+        "{ \n"
+            + "   \"result\":{ \n"
+            + "      \"exerciseResult\":\"#14:1\",\n"
+            + "      \"events\":[ \n"
+            + "         { \n"
+            + "            \"created\":{ \n"
+            + "               \"payload\":{ \n"
+            + "                  \"operator\":\"Operator\"\n"
+            + "               },\n"
+            + "               \"contractId\":\"#14:1\",\n"
+            + "               \"templateId\":"
+            + new GsonSerializer().apply(OperatorRole.TEMPLATE_ID)
+            + "\n"
+            + "            }\n"
+            + "         }\n"
+            + "      ]\n"
+            + "   }\n"
+            + "}";
+    CreatedEvent expectedCreatedEvent = new CreatedEvent(null, null, new OperatorRole("Operator"));
+    HttpResponse deserializedHttpResponse =
+        GsonRegisteredAllDeserializers.gson().fromJson(serializedHttpResponse, HttpResponse.class);
+    HttpResponse.ExerciseResult result =
+        (HttpResponse.ExerciseResult) deserializedHttpResponse.getResult();
+    CreatedEventHolder deserializedCreatedEventHolder =
+        (CreatedEventHolder) Iterables.getOnlyElement(result.getEvents());
+    Assert.assertEquals(
+        expectedCreatedEvent.getPayload(), deserializedCreatedEventHolder.event().getPayload());
+  }
+
+  // TODO split to ResultDeserializerTest and HttpResponseDeserializerTest
+  @Test
+  public void deserializeExerciseHttpResponse() {
+    String tid = new GsonSerializer().apply(OperatorRole.TEMPLATE_ID);
+    String serializedHttpResponse =
+        "{ \n"
+            + "   \"status\":200,\n"
+            + "   \"result\":{ \n"
+            + "      \"exerciseResult\":\"#14:1\",\n"
+            + "      \"events\":[ \n"
+            + "         { \n"
+            + "            \"archived\":{ \n"
+            + "               \"contractId\":\"#12:0\",\n"
+            + "               \"templateId\":"
+            + tid
+            + "\n"
+            + "            }\n"
+            + "         },\n"
+            + "         { \n"
+            + "            \"created\":{ \n"
+            + "               \"payload\":{ \n"
+            + "                  \"operator\":\"Operator\"\n"
+            + "               },\n"
+            + "               \"contractId\":\"#14:1\",\n"
+            + "               \"templateId\":"
+            + tid
+            + "\n"
+            + "            }\n"
+            + "         }\n"
+            + "      ]\n"
+            + "   }\n"
+            + "}";
+    ArchivedEvent expectedArchivedEvent = new ArchivedEvent("#12:0");
+    CreatedEvent expectedCreatedEvent = new CreatedEvent(null, null, new OperatorRole("Operator"));
+    HttpResponse deserializedHttpResponse =
+        GsonRegisteredAllDeserializers.gson().fromJson(serializedHttpResponse, HttpResponse.class);
+    HttpResponse.ExerciseResult result =
+        (HttpResponse.ExerciseResult) deserializedHttpResponse.getResult();
+    ArrayList deserializedContracts = (ArrayList) result.getEvents();
+    Assert.assertEquals(2, deserializedContracts.size());
+    ArchivedEvent deserializedArchivedEvent =
+        ((ArchivedEventHolder) deserializedContracts.get(0)).event();
+    CreatedEvent deserializedCreatedEvent =
+        ((CreatedEventHolder) deserializedContracts.get(1)).event();
+    Assert.assertEquals(expectedCreatedEvent.getPayload(), deserializedCreatedEvent.getPayload());
+    Assert.assertEquals(
+        expectedArchivedEvent.getContractId(), deserializedArchivedEvent.getContractId());
+    Assert.assertEquals(200, deserializedHttpResponse.getStatus());
   }
 }
