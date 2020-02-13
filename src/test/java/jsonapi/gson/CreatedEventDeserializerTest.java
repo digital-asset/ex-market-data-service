@@ -31,7 +31,6 @@ public class CreatedEventDeserializerTest extends DeserializerBaseTest<CreatedEv
     CreatedEvent expectedCreatedEvent =
         new CreatedEvent(OperatorRole.TEMPLATE_ID, "#14:1", new OperatorRole("Operator"));
     registerDeserializer(Identifier.class, new IdentifierDeserializer());
-    registerDeserializer(CreatedEvent.class, new CreatedEventDeserializer());
 
     Gson deserializer = createDeserializer();
 

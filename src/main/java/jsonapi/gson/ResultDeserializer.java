@@ -21,7 +21,7 @@ public class ResultDeserializer implements JsonDeserializer<HttpResponse.Result>
     return jsonDeserializationContext.deserialize(jsonElement, dispatch(jsonElement));
   }
 
-  private static Class dispatch(JsonElement jsonElement) {
+  private Type dispatch(JsonElement jsonElement) {
     if (jsonElement.isJsonObject()) {
       JsonObject object = jsonElement.getAsJsonObject();
       if (object.size() == 2 && object.has("exerciseResult") && object.has("events")) {
@@ -31,7 +31,7 @@ public class ResultDeserializer implements JsonDeserializer<HttpResponse.Result>
     if (jsonElement.isJsonArray()) {
       return HttpResponse.SearchResult.class;
     } else {
-      throw new IllegalStateException("Unsupported result type. Json content: " + jsonElement);
+      return HttpResponse.CreateResult.class;
     }
   }
 }
