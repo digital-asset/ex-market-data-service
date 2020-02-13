@@ -4,12 +4,14 @@
  */
 package jsonapi.gson;
 
-import static org.junit.Assert.*;
-
+import com.google.gson.Gson;
+import com.google.gson.JsonDeserializer;
+import java.lang.reflect.Type;
 import jsonapi.http.HttpResponse;
+import jsonapi.http.HttpResponse.Result;
 import org.junit.Test;
 
-public class ResultDeserializerTest {
+public class ResultDeserializerTest extends DeserializerBaseTest<HttpResponse.Result> {
 
   @Test
   public void deserializeCreateResult() {
@@ -33,7 +35,8 @@ public class ResultDeserializerTest {
             + "   \"contractId\":\"#11:0\",\n"
             + "   \"templateId\":\"230a15b6240603917c18612a7dcb83a7040ab1cf8d498bb4b523b5de03659f58:DA.TimeService.TimeService:CurrentTime\"\n"
             + "}";
-    GsonRegisteredAllDeserializers.gson().fromJson(serializedResult, HttpResponse.Result.class);
+    Gson deserializer = createDeserializer();
+    deserializer.fromJson(serializedResult, HttpResponse.Result.class);
   }
 
   @Test
@@ -60,6 +63,17 @@ public class ResultDeserializerTest {
             + "      \"templateId\":\"230a15b6240603917c18612a7dcb83a7040ab1cf8d498bb4b523b5de03659f58:DA.TimeService.TimeService:CurrentTime\"\n"
             + "   }\n"
             + "]";
-    GsonRegisteredAllDeserializers.gson().fromJson(serializedResult, HttpResponse.Result.class);
+    Gson deserializer = createDeserializer();
+    deserializer.fromJson(serializedResult, HttpResponse.Result.class);
+  }
+
+  @Override
+  protected Type getDeserializedClass() {
+    return Result.class;
+  }
+
+  @Override
+  protected JsonDeserializer<Result> getClassDeserializer() {
+    return new ResultDeserializer();
   }
 }
