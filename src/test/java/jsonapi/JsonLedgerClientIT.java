@@ -19,6 +19,7 @@ import da.timeservice.timeservice.CurrentTime;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
@@ -85,7 +86,6 @@ public class JsonLedgerClientIT {
     api = new Api("localhost", 7575);
   }
 
-  @Ignore
   @Test
   public void getActiveContracts() throws IOException {
     CurrentTime currentTime =
@@ -129,7 +129,8 @@ public class JsonLedgerClientIT {
 
   @Test
   public void usingDataProviderBot() {
-    Main.runBotsWithJsonApi(ledgerId, new AppParties(ALL_PARTIES), null);
+    Duration systemPeriodTime = Duration.ofSeconds(5);
+    Main.runBotsWithJsonApi(ledgerId, new AppParties(ALL_PARTIES), systemPeriodTime);
 
     // TODO: Proper test and assertion.
     //    Thread.currentThread().join();
