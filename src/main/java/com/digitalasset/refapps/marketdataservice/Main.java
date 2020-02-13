@@ -6,11 +6,14 @@ package com.digitalasset.refapps.marketdataservice;
 
 import com.daml.ledger.javaapi.data.Command;
 import com.daml.ledger.javaapi.data.Template;
+import com.daml.ledger.javaapi.data.TransactionFilter;
 import com.daml.ledger.rxjava.DamlLedgerClient;
+import com.daml.ledger.rxjava.LedgerClient;
 import com.daml.ledger.rxjava.components.Bot;
 import com.daml.ledger.rxjava.components.LedgerViewFlowable.LedgerTestView;
 import com.daml.ledger.rxjava.components.LedgerViewFlowable.LedgerView;
 import com.daml.ledger.rxjava.components.helpers.CommandsAndPendingSet;
+import com.daml.ledger.rxjava.components.helpers.CreatedContract;
 import com.digitalasset.refapps.marketdataservice.publishing.CachingCsvDataProvider;
 import com.digitalasset.refapps.marketdataservice.publishing.DataProviderBot;
 import com.digitalasset.refapps.marketdataservice.publishing.PublishingDataProvider;
@@ -23,6 +26,7 @@ import com.digitalasset.refapps.marketdataservice.utils.CliOptions;
 import com.digitalasset.refapps.marketdataservice.utils.CommandsAndPendingSetBuilder;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.reactivex.Flowable;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Collections;
@@ -83,15 +87,36 @@ public class Main {
 
     logPackages(client);
     AppParties appParties = new AppParties(cliOptions.getParties());
-    runBots(appParties, SYSTEM_PERIOD_TIME).accept(client, channel);
+    runBots(appParties, SYSTEM_PERIOD_TIME, new GrpcWirer()).accept(client, channel);
 
     logger.info("Welcome to Market Data Service!");
     logger.info("Press Ctrl+C to shut down the program.");
     Thread.currentThread().join();
   }
 
+  public interface Wirer {
+    void wire(
+        String applicationId,
+        LedgerClient ledgerClient,
+        TransactionFilter transactionFilter,
+        Function<LedgerView<Template>, Flowable<CommandsAndPendingSet>> bot,
+        Function<CreatedContract, Template> transform);
+  }
+
+  public static class GrpcWirer implements Wirer {
+    @Override
+    public void wire(
+        String applicationId,
+        LedgerClient ledgerClient,
+        TransactionFilter transactionFilter,
+        Function<LedgerView<Template>, Flowable<CommandsAndPendingSet>> bot,
+        Function<CreatedContract, Template> transform) {
+      Bot.wire(applicationId, ledgerClient, transactionFilter, bot, transform);
+    }
+  }
+
   public static BiConsumer<DamlLedgerClient, ManagedChannel> runBots(
-      AppParties parties, Duration systemPeriodTime) {
+      AppParties parties, Duration systemPeriodTime, Wirer wirer) {
     return (DamlLedgerClient client, ManagedChannel channel) -> {
       logPackages(client);
 
@@ -105,7 +130,7 @@ public class Main {
         DataProviderBot dataProviderBot =
             new DataProviderBot(
                 commandBuilderFactory, parties.getMarketDataProvider1(), dataProvider);
-        Bot.wire(
+        wirer.wire(
             APPLICATION_ID,
             client,
             dataProviderBot.getTransactionFilter(),
@@ -119,7 +144,7 @@ public class Main {
         DataProviderBot dataProviderBot =
             new DataProviderBot(
                 commandBuilderFactory, parties.getMarketDataProvider2(), dataProvider);
-        Bot.wire(
+        wirer.wire(
             APPLICATION_ID,
             client,
             dataProviderBot.getTransactionFilter(),

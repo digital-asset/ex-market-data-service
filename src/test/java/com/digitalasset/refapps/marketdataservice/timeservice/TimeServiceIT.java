@@ -43,7 +43,8 @@ public class TimeServiceIT {
           .dar(RELATIVE_DAR_PATH)
           .parties(OPERATOR_PARTY.getValue())
           .useWallclockTime()
-          .setupAppCallback(Main.runBots(new AppParties(ALL_PARTIES), systemPeriodTime))
+          .setupAppCallback(
+              Main.runBots(new AppParties(ALL_PARTIES), systemPeriodTime, new Main.GrpcWirer()))
           .build();
 
   @ClassRule public static ExternalResource compile = sandbox.getClassRule();
