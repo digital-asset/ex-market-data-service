@@ -6,15 +6,18 @@ package jsonapi.gson;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.daml.ledger.javaapi.data.Identifier;
+import com.google.common.collect.Iterables;
 import com.google.gson.Gson;
 import com.google.gson.JsonDeserializer;
 import da.refapps.marketdataservice.roles.OperatorRole;
 import da.timeservice.timeservice.CurrentTime;
 import java.lang.reflect.Type;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Collections;
 import jsonapi.events.CreatedEvent;
 import jsonapi.http.HttpResponse;
@@ -94,7 +97,9 @@ public class ResultDeserializerTest extends DeserializerBaseTest<HttpResponse.Re
     registerDeserializer(CreatedEvent.class, new CreatedEventDeserializer());
     registerDeserializer(Identifier.class, new IdentifierDeserializer());
     Gson deserializer = createDeserializer();
-    deserializer.fromJson(serializedResult, HttpResponse.Result.class);
+    Result result = deserializer.fromJson(serializedResult, Result.class);
+    assertThat(result, instanceOf(HttpResponse.SearchResult.class));
+    assertEquals(1, ((HttpResponse.SearchResult) result).getCreatedEvents().size());
   }
 
   private String identifierToJson(Identifier templateId) {
