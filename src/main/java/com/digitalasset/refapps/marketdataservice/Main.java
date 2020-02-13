@@ -144,16 +144,15 @@ public class Main {
       Function<CommandsAndPendingSetBuilder.Factory, LedgerApiHandle> handlerFactory =
           commandBuilderFactory ->
               new GrpcLedgerApiHandle(client, commandBuilderFactory, parties.getOperator());
-      runBotsWithGrpcApi(parties, systemPeriodTime, new GrpcWirer(client), handlerFactory);
+      runBots(parties, systemPeriodTime, new GrpcWirer(client), handlerFactory);
     };
   }
 
-  public static void runBotsWithGrpcApi(
+  public static void runBots(
       AppParties parties,
       Duration systemPeriodTime,
       Wirer wirer,
       Function<CommandsAndPendingSetBuilder.Factory, LedgerApiHandle> handlerFactory) {
-
     Duration mrt = Duration.ofSeconds(10);
     CommandsAndPendingSetBuilder.Factory commandBuilderFactory =
         CommandsAndPendingSetBuilder.factory(APPLICATION_ID, Clock::systemUTC, mrt);
@@ -209,53 +208,6 @@ public class Main {
       logger.error("Stopping", e);
       scheduler.shutdownNow();
       Thread.currentThread().interrupt();
-    }
-  }
-
-  public static void runBotsWithJsonApi(
-      AppParties parties,
-      Duration systemPeriodTime,
-      Wirer wirer,
-      Function<CommandsAndPendingSetBuilder.Factory, LedgerApiHandle> handlerFactory) {
-    Duration mrt = Duration.ofSeconds(10);
-    CommandsAndPendingSetBuilder.Factory commandBuilderFactory =
-        CommandsAndPendingSetBuilder.factory(APPLICATION_ID, Clock::systemUTC, mrt);
-
-    if (parties.hasMarketDataProvider1()) {
-      logger.info("Starting automation for MarketDataProvider1.");
-      PublishingDataProvider dataProvider = new CachingCsvDataProvider();
-      DataProviderBot dataProviderBot =
-          new DataProviderBot(
-              commandBuilderFactory, parties.getMarketDataProvider1(), dataProvider);
-      wirer.wire(
-          dataProviderBot.getPartyName(),
-          dataProviderBot.getContractQuery(),
-          dataProviderBot.getTransactionFilter(),
-          dataProviderBot::calculateCommands,
-          dataProviderBot::getContractInfo);
-    }
-
-    if (parties.hasMarketDataProvider2()) {
-      logger.info("Starting automation for MarketDataProvider2.");
-      PublishingDataProvider dataProvider = new CachingCsvDataProvider();
-      DataProviderBot dataProviderBot =
-          new DataProviderBot(
-              commandBuilderFactory, parties.getMarketDataProvider2(), dataProvider);
-      wirer.wire(
-          dataProviderBot.getPartyName(),
-          dataProviderBot.getContractQuery(),
-          dataProviderBot.getTransactionFilter(),
-          dataProviderBot::calculateCommands,
-          dataProviderBot::getContractInfo);
-    }
-
-    if (parties.hasOperator()) {
-      logger.info("Starting automation for Operator.");
-      TimeUpdaterBot timeUpdaterBot =
-          new TimeUpdaterBot(handlerFactory.apply(commandBuilderFactory));
-      scheduler = Executors.newScheduledThreadPool(1);
-      timeUpdaterBotExecutor = new TimeUpdaterBotExecutor(scheduler);
-      timeUpdaterBotExecutor.start(timeUpdaterBot, systemPeriodTime);
     }
   }
 
