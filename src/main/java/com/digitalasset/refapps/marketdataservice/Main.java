@@ -139,56 +139,61 @@ public class Main {
   public static BiConsumer<DamlLedgerClient, ManagedChannel> runBots(
       AppParties parties, Duration systemPeriodTime, Wirer wirer) {
     return (DamlLedgerClient client, ManagedChannel channel) -> {
-      logPackages(client);
-
-      Duration mrt = Duration.ofSeconds(10);
-      CommandsAndPendingSetBuilder.Factory commandBuilderFactory =
-          CommandsAndPendingSetBuilder.factory(APPLICATION_ID, Clock::systemUTC, mrt);
-
-      if (parties.hasMarketDataProvider1()) {
-        logger.info("Starting automation for MarketDataProvider1.");
-        PublishingDataProvider dataProvider = new CachingCsvDataProvider();
-        DataProviderBot dataProviderBot =
-            new DataProviderBot(
-                commandBuilderFactory, parties.getMarketDataProvider1(), dataProvider);
-        wirer.wire(
-            null,
-            null,
-            null,
-            APPLICATION_ID,
-            client,
-            dataProviderBot.getTransactionFilter(),
-            dataProviderBot::calculateCommands,
-            dataProviderBot::getContractInfo);
-      }
-
-      if (parties.hasMarketDataProvider2()) {
-        logger.info("Starting automation for MarketDataProvider2.");
-        PublishingDataProvider dataProvider = new CachingCsvDataProvider();
-        DataProviderBot dataProviderBot =
-            new DataProviderBot(
-                commandBuilderFactory, parties.getMarketDataProvider2(), dataProvider);
-        wirer.wire(
-            null,
-            null,
-            null,
-            APPLICATION_ID,
-            client,
-            dataProviderBot.getTransactionFilter(),
-            dataProviderBot::calculateCommands,
-            dataProviderBot::getContractInfo);
-      }
-
-      if (parties.hasOperator()) {
-        logger.info("Starting automation for Operator.");
-        TimeUpdaterBot timeUpdaterBot =
-            new TimeUpdaterBot(
-                new GrpcLedgerApiHandle(client, commandBuilderFactory, parties.getOperator()));
-        scheduler = Executors.newScheduledThreadPool(1);
-        timeUpdaterBotExecutor = new TimeUpdaterBotExecutor(scheduler);
-        timeUpdaterBotExecutor.start(timeUpdaterBot, systemPeriodTime);
-      }
+      runBotsWithGrpcApi(client, parties, systemPeriodTime, wirer);
     };
+  }
+
+  public static void runBotsWithGrpcApi(
+      DamlLedgerClient client, AppParties parties, Duration systemPeriodTime, Wirer wirer) {
+    logPackages(client);
+
+    Duration mrt = Duration.ofSeconds(10);
+    CommandsAndPendingSetBuilder.Factory commandBuilderFactory =
+        CommandsAndPendingSetBuilder.factory(APPLICATION_ID, Clock::systemUTC, mrt);
+
+    if (parties.hasMarketDataProvider1()) {
+      logger.info("Starting automation for MarketDataProvider1.");
+      PublishingDataProvider dataProvider = new CachingCsvDataProvider();
+      DataProviderBot dataProviderBot =
+          new DataProviderBot(
+              commandBuilderFactory, parties.getMarketDataProvider1(), dataProvider);
+      wirer.wire(
+          null,
+          null,
+          null,
+          APPLICATION_ID,
+          client,
+          dataProviderBot.getTransactionFilter(),
+          dataProviderBot::calculateCommands,
+          dataProviderBot::getContractInfo);
+    }
+
+    if (parties.hasMarketDataProvider2()) {
+      logger.info("Starting automation for MarketDataProvider2.");
+      PublishingDataProvider dataProvider = new CachingCsvDataProvider();
+      DataProviderBot dataProviderBot =
+          new DataProviderBot(
+              commandBuilderFactory, parties.getMarketDataProvider2(), dataProvider);
+      wirer.wire(
+          null,
+          null,
+          null,
+          APPLICATION_ID,
+          client,
+          dataProviderBot.getTransactionFilter(),
+          dataProviderBot::calculateCommands,
+          dataProviderBot::getContractInfo);
+    }
+
+    if (parties.hasOperator()) {
+      logger.info("Starting automation for Operator.");
+      TimeUpdaterBot timeUpdaterBot =
+          new TimeUpdaterBot(
+              new GrpcLedgerApiHandle(client, commandBuilderFactory, parties.getOperator()));
+      scheduler = Executors.newScheduledThreadPool(1);
+      timeUpdaterBotExecutor = new TimeUpdaterBotExecutor(scheduler);
+      timeUpdaterBotExecutor.start(timeUpdaterBot, systemPeriodTime);
+    }
   }
 
   public static void terminateTimeUpdaterBot() {
