@@ -220,7 +220,11 @@ public class Main {
   }
 
   public static void runBotsWithJsonApi(
-      String ledgerId, AppParties parties, Duration systemPeriodTime, Wirer wirer) {
+      String ledgerId,
+      AppParties parties,
+      Duration systemPeriodTime,
+      Wirer wirer,
+      Function<CommandsAndPendingSetBuilder.Factory, LedgerApiHandle> handlerFactory) {
     Duration mrt = Duration.ofSeconds(10);
     CommandsAndPendingSetBuilder.Factory commandBuilderFactory =
         CommandsAndPendingSetBuilder.factory(APPLICATION_ID, Clock::systemUTC, mrt);
@@ -262,14 +266,7 @@ public class Main {
     if (parties.hasOperator()) {
       logger.info("Starting automation for Operator.");
       TimeUpdaterBot timeUpdaterBot =
-          new TimeUpdaterBot(
-              new JsonLedgerApiHandle(
-                  parties.getOperator(),
-                  ledgerId,
-                  APPLICATION_ID,
-                  httpResponseDeserializer,
-                  jsonSerializer,
-                  webSocketResponseDeserializer));
+          new TimeUpdaterBot(handlerFactory.apply(commandBuilderFactory));
       scheduler = Executors.newScheduledThreadPool(1);
       timeUpdaterBotExecutor = new TimeUpdaterBotExecutor(scheduler);
       timeUpdaterBotExecutor.start(timeUpdaterBot, systemPeriodTime);

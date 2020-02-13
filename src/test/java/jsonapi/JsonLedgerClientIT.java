@@ -11,7 +11,10 @@ import static org.junit.Assert.assertThat;
 
 import com.daml.ledger.javaapi.data.Party;
 import com.digitalasset.refapps.marketdataservice.Main;
+import com.digitalasset.refapps.marketdataservice.timeservice.JsonLedgerApiHandle;
+import com.digitalasset.refapps.marketdataservice.timeservice.LedgerApiHandle;
 import com.digitalasset.refapps.marketdataservice.utils.AppParties;
+import com.digitalasset.refapps.marketdataservice.utils.CommandsAndPendingSetBuilder;
 import com.digitalasset.testing.junit4.Sandbox;
 import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
 import com.digitalasset.testing.utils.ContractWithId;
@@ -23,6 +26,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import jsonapi.apache.ApacheHttpClient;
 import jsonapi.gson.GsonDeserializer;
@@ -129,8 +133,18 @@ public class JsonLedgerClientIT {
   @Test
   public void usingDataProviderBot() {
     Duration systemPeriodTime = Duration.ofSeconds(5);
+    AppParties parties = new AppParties(ALL_PARTIES);
+    Function<CommandsAndPendingSetBuilder.Factory, LedgerApiHandle> handlerFactory =
+        commandBuilderFactory ->
+            new JsonLedgerApiHandle(
+                parties.getOperator(),
+                ledgerId,
+                APPLICATION_ID,
+                httpResponseDeserializer,
+                jsonSerializer,
+                webSocketResponseDeserializer);
     Main.runBotsWithJsonApi(
-        ledgerId, new AppParties(ALL_PARTIES), systemPeriodTime, new Main.JsonWirer());
+        ledgerId, parties, systemPeriodTime, new Main.JsonWirer(), handlerFactory);
 
     // TODO: Proper test and assertion.
     //    Thread.currentThread().join();
