@@ -48,9 +48,9 @@ public class JsonLedgerApiHandle implements LedgerApiHandle {
   }
 
   @Override
-  public List<Contract> getCreatedEvents(ContractQuery filter) {
+  public List<Contract> getCreatedEvents(ContractQuery query) {
     return ledgerClient
-        .getActiveContracts()
+        .queryContracts(query)
         .getActiveContracts()
         .map(
             activeContract ->
