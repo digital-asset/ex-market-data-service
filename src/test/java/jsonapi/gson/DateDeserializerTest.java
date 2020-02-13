@@ -9,7 +9,6 @@ import static org.junit.Assert.assertEquals;
 import com.daml.ledger.javaapi.data.Date;
 import com.google.gson.Gson;
 import com.google.gson.JsonDeserializer;
-import java.lang.reflect.Type;
 import java.time.LocalDate;
 import org.junit.Test;
 
@@ -27,7 +26,7 @@ public class DateDeserializerTest extends DeserializerBaseTest<Date> {
   }
 
   @Override
-  protected Type getDeserializedClass() {
+  protected Class<Date> getDeserializedClass() {
     return Date.class;
   }
 

@@ -9,7 +9,6 @@ import static org.junit.Assert.assertEquals;
 import com.daml.ledger.javaapi.data.Timestamp;
 import com.google.gson.Gson;
 import com.google.gson.JsonSerializer;
-import java.lang.reflect.Type;
 import java.time.Instant;
 import org.junit.Test;
 
@@ -25,7 +24,7 @@ public class TimestampSerializerTest extends SerializerBaseTest<Timestamp> {
   }
 
   @Override
-  protected Type getSerializedClass() {
+  protected Class<Timestamp> getSerializedClass() {
     return Timestamp.class;
   }
 

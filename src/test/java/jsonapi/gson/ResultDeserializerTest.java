@@ -15,7 +15,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonDeserializer;
 import da.refapps.marketdataservice.roles.OperatorRole;
 import da.timeservice.timeservice.CurrentTime;
-import java.lang.reflect.Type;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
@@ -152,7 +151,7 @@ public class ResultDeserializerTest extends DeserializerBaseTest<HttpResponse.Re
   }
 
   @Override
-  protected Type getDeserializedClass() {
+  protected Class<Result> getDeserializedClass() {
     return Result.class;
   }
 

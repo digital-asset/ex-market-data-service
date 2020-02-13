@@ -9,7 +9,6 @@ import static org.junit.Assert.assertEquals;
 import com.daml.ledger.javaapi.data.Party;
 import com.google.gson.Gson;
 import com.google.gson.JsonSerializer;
-import java.lang.reflect.Type;
 import org.junit.Test;
 
 public class PartySerializerTest extends SerializerBaseTest<Party> {
@@ -24,7 +23,7 @@ public class PartySerializerTest extends SerializerBaseTest<Party> {
   }
 
   @Override
-  protected Type getSerializedClass() {
+  protected Class<Party> getSerializedClass() {
     return Party.class;
   }
 

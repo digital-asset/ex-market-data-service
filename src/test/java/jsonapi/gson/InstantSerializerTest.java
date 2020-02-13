@@ -8,7 +8,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSerializer;
-import java.lang.reflect.Type;
 import java.time.Instant;
 import org.junit.Test;
 
@@ -24,7 +23,7 @@ public class InstantSerializerTest extends SerializerBaseTest<Instant> {
   }
 
   @Override
-  protected Type getSerializedClass() {
+  protected Class<Instant> getSerializedClass() {
     return Instant.class;
   }
 

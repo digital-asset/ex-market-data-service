@@ -10,7 +10,6 @@ import com.daml.ledger.javaapi.data.Identifier;
 import com.google.gson.Gson;
 import com.google.gson.JsonDeserializer;
 import da.refapps.marketdataservice.roles.OperatorRole;
-import java.lang.reflect.Type;
 import jsonapi.events.CreatedEvent;
 import org.junit.Test;
 
@@ -39,7 +38,7 @@ public class CreatedEventDeserializerTest extends DeserializerBaseTest<CreatedEv
   }
 
   @Override
-  protected Type getDeserializedClass() {
+  protected Class<CreatedEvent> getDeserializedClass() {
     return CreatedEvent.class;
   }
 

@@ -31,7 +31,7 @@ public abstract class DeserializerBaseTest<T> {
     serializers.put(type, deserializer);
   }
 
-  protected abstract Type getDeserializedClass();
+  protected abstract Class<T> getDeserializedClass();
 
   protected abstract JsonDeserializer<T> getClassDeserializer();
 }
