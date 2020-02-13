@@ -4,9 +4,12 @@
  */
 package jsonapi.gson;
 
+import com.daml.ledger.javaapi.data.Identifier;
 import com.google.gson.Gson;
 import com.google.gson.JsonDeserializer;
+import da.refapps.marketdataservice.roles.OperatorRole;
 import java.lang.reflect.Type;
+import jsonapi.events.CreatedEvent;
 import jsonapi.http.HttpResponse;
 import jsonapi.http.HttpResponse.Result;
 import org.junit.Test;
@@ -41,6 +44,7 @@ public class ResultDeserializerTest extends DeserializerBaseTest<HttpResponse.Re
 
   @Test
   public void deserializeSearchResult() {
+    String tid = new GsonSerializer().apply(OperatorRole.TEMPLATE_ID);
     String serializedResult =
         "[ \n"
             + "   { \n"
@@ -60,9 +64,14 @@ public class ResultDeserializerTest extends DeserializerBaseTest<HttpResponse.Re
             + "      ],\n"
             + "      \"key\":\"Operator\",\n"
             + "      \"contractId\":\"#11:0\",\n"
-            + "      \"templateId\":\"230a15b6240603917c18612a7dcb83a7040ab1cf8d498bb4b523b5de03659f58:DA.TimeService.TimeService:CurrentTime\"\n"
+            + "      \"templateId\":"
+            + tid
+            + "\n"
             + "   }\n"
             + "]";
+    registerDeserializer(HttpResponse.SearchResult.class, new SearchResultDeserializer());
+    registerDeserializer(CreatedEvent.class, new CreatedEventDeserializer());
+    registerDeserializer(Identifier.class, new IdentifierDeserializer());
     Gson deserializer = createDeserializer();
     deserializer.fromJson(serializedResult, HttpResponse.Result.class);
   }
