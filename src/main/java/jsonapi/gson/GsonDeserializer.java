@@ -9,7 +9,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import jsonapi.http.HttpResponse;
 import jsonapi.http.WebSocketResponse;
-import jsonapi.json.GsonRegisteredAllDeserializers;
 import jsonapi.json.JsonDeserializer;
 
 public class GsonDeserializer {

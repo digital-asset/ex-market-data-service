@@ -10,6 +10,7 @@ import io.reactivex.Flowable;
 import jsonapi.http.Api;
 import jsonapi.http.HttpClient;
 import jsonapi.http.HttpResponse;
+import jsonapi.http.HttpResponse.SearchResult;
 import jsonapi.http.WebSocketClient;
 import jsonapi.http.WebSocketResponse;
 import jsonapi.json.JsonSerializer;
@@ -43,9 +44,10 @@ public class JsonLedgerClient {
 
   public ActiveContractSet getActiveContracts() {
     HttpResponse httpResponse = httpClient.get(api.searchContract());
-    // TODO: Return type safe result
     ActiveContractSet acs = ActiveContractSet.empty();
-    return acs.update(httpResponse.getResult());
+    // TODO: Eliminate the need for casting.
+    SearchResult searchResult = (SearchResult) httpResponse.getResult();
+    return acs.update(searchResult.getCreatedEvents());
   }
 
   public Flowable<ActiveContractSet> getActiveContracts(ContractQuery query) {
