@@ -16,33 +16,37 @@ public class ApiTest {
 
   @Test
   public void createContract() {
-    assertThat(api.createContract(), is(URI.create("http://sample.com:5678/command/create")));
+    assertThat(api.createContract(), is(URI.create("http://sample.com:5678/v1/create")));
   }
 
   @Test
   public void exercise() {
-    assertThat(api.exercise(), is(URI.create("http://sample.com:5678/command/exercise")));
+    assertThat(api.exercise(), is(URI.create("http://sample.com:5678/v1/exercise")));
   }
 
   @Test
   public void fetchContract() {
-    assertThat(api.fetchContract(), is(URI.create("http://sample.com:5678/contracts/lookup")));
+    assertThat(api.fetchContract(), is(URI.create("http://sample.com:5678/v1/fetch")));
   }
 
   @Test
   public void searchContract() {
-    assertThat(api.searchContract(), is(URI.create("http://sample.com:5678/contracts/search")));
+    assertThat(api.searchContract(), is(URI.create("http://sample.com:5678/v1/query")));
   }
 
   @Test
   public void parties() {
-    assertThat(api.parties(), is(URI.create("http://sample.com:5678/parties")));
+    assertThat(api.parties(), is(URI.create("http://sample.com:5678/v1/parties")));
   }
 
   @Test
   public void searchContractsForever() {
     assertThat(
-        api.searchContractsForever(),
-        is(URI.create("ws://sample.com:5678/contracts/searchForever")));
+        api.searchContractsForever(), is(URI.create("ws://sample.com:5678/v1/stream/query")));
+  }
+
+  @Test
+  public void fetchContractsForever() {
+    assertThat(api.fetchContractsForever(), is(URI.create("ws://sample.com:5678/v1/stream/fetch")));
   }
 }
