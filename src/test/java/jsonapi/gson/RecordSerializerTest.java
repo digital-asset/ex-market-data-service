@@ -39,10 +39,11 @@ public class RecordSerializerTest extends SerializerBaseTest<Record> {
   @Test
   public void fieldWithLabelIsSerialized() {
     Record record = new Record(new Field("apple", new Numeric(BigDecimal.ONE)));
+    registerSerializer(Numeric.class, new NumericSerializer());
 
     Gson serializer = createSerializer();
 
-    assertEquals("{\"apple\":{\"value\":1}}", serializer.toJson(record));
+    assertEquals("{\"apple\":\"1\"}", serializer.toJson(record));
   }
 
   @Test

@@ -8,13 +8,27 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSerializer;
 import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.Map;
 
 public abstract class SerializerBaseTest<T> {
 
+  private Map<Type, JsonSerializer<?>> serializers = new HashMap<>();
+
   protected Gson createSerializer() {
-    return new GsonBuilder()
-        .registerTypeAdapter(getSerializedClass(), getClassSerializer())
+    GsonBuilder builderWithDefaultSerializer =
+        new GsonBuilder().registerTypeAdapter(getSerializedClass(), getClassSerializer());
+    return serializers.entrySet().stream()
+        .reduce(
+            builderWithDefaultSerializer,
+            (builder, serializer) ->
+                builder.registerTypeAdapter(serializer.getKey(), serializer.getValue()),
+            (x, y) -> x)
         .create();
+  }
+
+  protected <U> void registerSerializer(Type type, JsonSerializer<U> serializer) {
+    serializers.put(type, serializer);
   }
 
   protected abstract Type getSerializedClass();
