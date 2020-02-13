@@ -83,7 +83,7 @@ public class JsonDeserializerTest {
   }
 
   @Test
-  public void deserializeSimplifiedExerciseHttpResponseWithoutArchivedEvent() {
+  public void deserializeExerciseHttpResponseWithoutArchivedEvent() {
     String serializedHttpResponse =
         "{ \n"
             + "   \"result\":{ \n"
