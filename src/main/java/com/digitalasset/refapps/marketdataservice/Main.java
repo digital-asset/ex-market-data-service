@@ -165,8 +165,8 @@ public class Main {
           new DataProviderBot(
               commandBuilderFactory, parties.getMarketDataProvider1(), dataProvider);
       wirer.wire(
-          null,
-          null,
+          dataProviderBot.getPartyName(),
+          dataProviderBot.getContractQuery(),
           dataProviderBot.getTransactionFilter(),
           dataProviderBot::calculateCommands,
           dataProviderBot::getContractInfo);
@@ -179,8 +179,8 @@ public class Main {
           new DataProviderBot(
               commandBuilderFactory, parties.getMarketDataProvider2(), dataProvider);
       wirer.wire(
-          null,
-          null,
+          dataProviderBot.getPartyName(),
+          dataProviderBot.getContractQuery(),
           dataProviderBot.getTransactionFilter(),
           dataProviderBot::calculateCommands,
           dataProviderBot::getContractInfo);
@@ -230,9 +230,9 @@ public class Main {
       wirer.wire(
           dataProviderBot.getPartyName(),
           dataProviderBot.getContractQuery(),
-          null,
+          dataProviderBot.getTransactionFilter(),
           dataProviderBot::calculateCommands,
-          null);
+          dataProviderBot::getContractInfo);
     }
 
     if (parties.hasMarketDataProvider2()) {
@@ -244,9 +244,9 @@ public class Main {
       wirer.wire(
           dataProviderBot.getPartyName(),
           dataProviderBot.getContractQuery(),
-          null,
+          dataProviderBot.getTransactionFilter(),
           dataProviderBot::calculateCommands,
-          null);
+          dataProviderBot::getContractInfo);
     }
 
     if (parties.hasOperator()) {
