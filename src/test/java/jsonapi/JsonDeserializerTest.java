@@ -85,6 +85,7 @@ public class JsonDeserializerTest {
     Assert.assertEquals(expectedDataStream, deserializedDataStream);
   }
 
+  // TODO split to ResultDeserializerTest and HttpResponseDeserializerTest
   @Test
   public void deserializeSimplifiedExerciseHttpResponseWithoutArchivedEvent() {
     String serializedHttpResponse =
@@ -117,6 +118,7 @@ public class JsonDeserializerTest {
         expectedCreatedEvent.getPayload(), deserializedCreatedEventHolder.event().getPayload());
   }
 
+  // TODO split to ResultDeserializerTest and HttpResponseDeserializerTest
   @Test
   public void deserializeExerciseHttpResponse() {
     String tid = new GsonSerializer().apply(OperatorRole.TEMPLATE_ID);

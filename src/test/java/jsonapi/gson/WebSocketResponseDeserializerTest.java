@@ -80,7 +80,7 @@ public class WebSocketResponseDeserializerTest {
             + "   ]\n"
             + "}";
     WebSocketResponse deserializedWebSocketResponse =
-            GsonRegisteredAllDeserializers.gson()
-                    .fromJson(serializedWebSocketResponse, WebSocketResponse.class);
+        GsonRegisteredAllDeserializers.gson()
+            .fromJson(serializedWebSocketResponse, WebSocketResponse.class);
   }
 }
