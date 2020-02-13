@@ -134,7 +134,7 @@ public class JsonLedgerClientIT {
   public void usingDataProviderBot() {
     Duration systemPeriodTime = Duration.ofSeconds(5);
     AppParties parties = new AppParties(ALL_PARTIES);
-    Function<CommandsAndPendingSetBuilder.Factory, LedgerApiHandle> handlerFactory =
+    Function<CommandsAndPendingSetBuilder.Factory, LedgerApiHandle> handleFactory =
         commandBuilderFactory ->
             new JsonLedgerApiHandle(
                 parties.getOperator(),
@@ -143,7 +143,7 @@ public class JsonLedgerClientIT {
                 httpResponseDeserializer,
                 jsonSerializer,
                 webSocketResponseDeserializer);
-    Main.runBots(parties, systemPeriodTime, new Main.JsonWirer(ledgerId), handlerFactory);
+    Main.runBots(parties, systemPeriodTime, new Main.JsonWirer(ledgerId), handleFactory);
 
     // TODO: Proper test and assertion.
     //    Thread.currentThread().join();
