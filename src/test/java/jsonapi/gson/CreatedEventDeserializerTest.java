@@ -4,19 +4,21 @@
  */
 package jsonapi.gson;
 
+import static org.junit.Assert.assertEquals;
+
 import com.daml.ledger.javaapi.data.Identifier;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializer;
 import da.refapps.marketdataservice.roles.OperatorRole;
+import java.lang.reflect.Type;
 import jsonapi.events.CreatedEvent;
-import org.junit.Assert;
 import org.junit.Test;
 
-public class CreatedEventDeserializerTest {
+public class CreatedEventDeserializerTest extends DeserializerBaseTest<CreatedEvent> {
 
   @Test
   public void deserializeCreatedEvent() {
-    String serializedCreatedEvent =
+    String json =
         "{\n"
             + "   \"payload\":{ \n"
             + "      \"operator\":\"Operator\"\n"
@@ -28,17 +30,22 @@ public class CreatedEventDeserializerTest {
             + "}";
     CreatedEvent expectedCreatedEvent =
         new CreatedEvent(OperatorRole.TEMPLATE_ID, "#14:1", new OperatorRole("Operator"));
-    Gson gson =
-        new GsonBuilder()
-            .registerTypeAdapter(Identifier.class, new IdentifierDeserializer())
-            .registerTypeAdapter(CreatedEvent.class, new CreatedEventDeserializer())
-            .create();
-    CreatedEvent deserializedCreatedEvent =
-        gson.fromJson(serializedCreatedEvent, CreatedEvent.class);
-    Assert.assertEquals(expectedCreatedEvent.getPayload(), deserializedCreatedEvent.getPayload());
-    Assert.assertEquals(
-        expectedCreatedEvent.getTemplateId(), deserializedCreatedEvent.getTemplateId());
-    Assert.assertEquals(
-        expectedCreatedEvent.getContractId(), deserializedCreatedEvent.getContractId());
+    registerDeserializer(Identifier.class, new IdentifierDeserializer());
+    registerDeserializer(CreatedEvent.class, new CreatedEventDeserializer());
+
+    Gson deserializer = createDeserializer();
+
+    CreatedEvent deserializedCreatedEvent = deserializer.fromJson(json, getDeserializedClass());
+    assertEquals(expectedCreatedEvent, deserializedCreatedEvent);
+  }
+
+  @Override
+  protected Type getDeserializedClass() {
+    return CreatedEvent.class;
+  }
+
+  @Override
+  protected JsonDeserializer<CreatedEvent> getClassDeserializer() {
+    return new CreatedEventDeserializer();
   }
 }

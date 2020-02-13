@@ -22,11 +22,11 @@ public class WebSocketResponseDeserializer implements JsonDeserializer<WebSocket
   public WebSocketResponse deserialize(
       JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext)
       throws JsonParseException {
+    JsonElement jsonEvents = jsonElement.getAsJsonObject().get("events");
     Type eventsCollection = new TypeToken<Collection<EventHolder>>() {}.getType();
-    System.err.println(jsonElement); // helpful to create tests, TODO remove
-    Collection<EventHolder> eventHolders =
-        jsonDeserializationContext.deserialize(jsonElement, eventsCollection);
-    return new WebSocketResponse(toEvents(eventHolders));
+    Collection<EventHolder> events =
+        jsonDeserializationContext.deserialize(jsonEvents, eventsCollection);
+    return new WebSocketResponse(toEvents(events));
   }
 
   private Collection<Event> toEvents(Collection<EventHolder> eventHolders) {

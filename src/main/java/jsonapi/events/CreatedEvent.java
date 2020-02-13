@@ -6,6 +6,7 @@ package jsonapi.events;
 
 import com.daml.ledger.javaapi.data.Identifier;
 import com.daml.ledger.javaapi.data.Template;
+import java.util.Objects;
 import jsonapi.ActiveContract;
 import jsonapi.ActiveContractSet;
 
@@ -41,5 +42,24 @@ public class CreatedEvent implements Event {
 
   private ActiveContract toActiveContract() {
     return new ActiveContract(getTemplateId(), getContractId(), getPayload());
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    CreatedEvent that = (CreatedEvent) o;
+    return Objects.equals(getTemplateId(), that.getTemplateId())
+        && Objects.equals(getContractId(), that.getContractId())
+        && Objects.equals(getPayload(), that.getPayload());
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(getTemplateId(), getContractId(), getPayload());
   }
 }
