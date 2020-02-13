@@ -5,13 +5,37 @@
 package jsonapi.http;
 
 import java.util.Collection;
+import jsonapi.events.CreatedEvent;
 
 @SuppressWarnings("PMD.DataClass")
 public class HttpResponse {
 
   public interface Result {}
 
-  // TODO make Result an interface with several implementations: ExerciseResult, SearchResult etc
+  public static class CreateResult implements Result {
+    private final CreatedEvent createdEvent;
+
+    public CreateResult(CreatedEvent createdEvent) {
+      this.createdEvent = createdEvent;
+    }
+
+    public CreatedEvent getCreatedEvent() {
+      return createdEvent;
+    }
+  }
+
+  public static class SearchResult implements Result {
+    private final Collection<CreatedEvent> createdEvents;
+
+    public SearchResult(Collection<CreatedEvent> createdEvents) {
+      this.createdEvents = createdEvents;
+    }
+
+    public Collection<CreatedEvent> getCreatedEvents() {
+      return createdEvents;
+    }
+  }
+
   public static class ExerciseResult implements Result {
     private final String exerciseResult;
     private final Collection<EventHolder> events;

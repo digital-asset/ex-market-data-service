@@ -7,12 +7,10 @@ package jsonapi.gson;
 import static org.junit.Assert.*;
 
 import jsonapi.http.HttpResponse;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class ResultDeserializerTest {
 
-  @Ignore
   @Test
   public void deserializeCreateResult() {
     String serializedResult =
@@ -38,7 +36,6 @@ public class ResultDeserializerTest {
     GsonRegisteredAllDeserializers.gson().fromJson(serializedResult, HttpResponse.Result.class);
   }
 
-  @Ignore
   @Test
   public void deserializeSearchResult() {
     String serializedResult =
