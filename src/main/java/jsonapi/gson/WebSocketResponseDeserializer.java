@@ -11,7 +11,9 @@ import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.Collection;
+import java.util.stream.Collectors;
 import jsonapi.events.Event;
+import jsonapi.http.EventHolder;
 import jsonapi.http.WebSocketResponse;
 
 public class WebSocketResponseDeserializer implements JsonDeserializer<WebSocketResponse> {
@@ -20,9 +22,13 @@ public class WebSocketResponseDeserializer implements JsonDeserializer<WebSocket
   public WebSocketResponse deserialize(
       JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext)
       throws JsonParseException {
-    Type eventsCollection = new TypeToken<Collection<Event>>() {}.getType();
-    Collection<Event> events =
+    Type eventsCollection = new TypeToken<Collection<EventHolder>>() {}.getType();
+    Collection<EventHolder> eventHolders =
         jsonDeserializationContext.deserialize(jsonElement, eventsCollection);
-    return new WebSocketResponse(events);
+    return new WebSocketResponse(toEvents(eventHolders));
+  }
+
+  private Collection<Event> toEvents(Collection<EventHolder> eventHolders) {
+    return eventHolders.stream().map(EventHolder::event).collect(Collectors.toList());
   }
 }

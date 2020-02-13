@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import jsonapi.apache.ApacheHttpClient;
+import jsonapi.gson.GsonRegisteredAllDeserializers;
 import jsonapi.gson.GsonSerializer;
 import jsonapi.http.Api;
 import jsonapi.http.HttpClient;
@@ -63,7 +64,7 @@ public class JsonSerializeExerciseIT {
   public final TestRule processes =
       RuleChain.outerRule(sandbox.getRule()).around(new JsonApi(sandbox::getSandboxPort));
 
-  private final Gson json = new Gson();
+  private final Gson json = new GsonRegisteredAllDeserializers().gson();
 
   private DefaultLedgerAdapter ledger;
   private HttpClient httpClient;

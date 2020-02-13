@@ -4,6 +4,8 @@
  */
 package jsonapi.gson;
 
+import static org.hamcrest.CoreMatchers.containsString;
+
 import com.daml.ledger.javaapi.data.Date;
 import com.daml.ledger.javaapi.data.ExerciseCommand;
 import com.daml.ledger.javaapi.data.Numeric;
@@ -66,10 +68,13 @@ public class GsonSerializerTest {
     //            "tag":"EnrichedCleanDirtyPrice",
     //            "value":{"rate":"0.02","couponDate":"2020-02-11","dirty":"1.0150136986",
     //                        "clean":"1.0","accrual":"0.0150136986"}}}}
+    String result = gsonSerializer.apply(exerciseCommand);
+    String templateIdPattern =
+        ".*\"templateId\":\"[a-zA-Z0-9]{64}:DA\\.RefApps\\.MarketDataService\\.DataStream:EmptyDataStream\".*";
+    Assert.assertTrue(result.matches(templateIdPattern));
     String expected =
-        "{\"templateId\":\"b4eb9b86bb78db2acde90edf0a03d96e5d65cc7a7cc422f23b6d98a286e07c09:DA.RefApps.MarketDataService.DataStream:EmptyDataStream\",\"contractId\":\"cid1\",\"choice\":\"StartDataStream\",\"argument\":{\"newObservation\":"
-            + "{\"label\":{\"market\":\"Market\",\"instrumentId\":{\"unpack\":\"ISIN 123 XYZ\"},\"maturityDate\":\"2019-05-10\"},\"time\":\"2019-05-03T09:15:30Z\",\"value\":{\"tag\":\"CleanPrice\",\"value\":{\"clean\":\"1.2\"}}}}}";
-    Assert.assertEquals(expected, gsonSerializer.apply(exerciseCommand));
+        "\"contractId\":\"cid1\",\"choice\":\"StartDataStream\",\"argument\":{\"newObservation\":{\"label\":{\"market\":\"Market\",\"instrumentId\":{\"unpack\":\"ISIN 123 XYZ\"},\"maturityDate\":\"2019-05-10\"},\"time\":\"2019-05-03T09:15:30Z\",\"value\":{\"tag\":\"CleanPrice\",\"value\":{\"clean\":\"1.2\"}}}}";
+    Assert.assertThat(result, containsString(expected));
   }
 
   @Test
