@@ -9,6 +9,7 @@ import io.reactivex.Flowable;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import jsonapi.ActiveContract;
 import jsonapi.ActiveContractSet;
 import jsonapi.ContractQuery;
 import jsonapi.JsonLedgerClient;
@@ -24,7 +25,6 @@ import jsonapi.tyrus.TyrusWebSocketClient;
 public class JsonLedgerApiHandle implements LedgerApiHandle {
   private final JsonLedgerClient ledgerClient;
   private String party;
-  private Flowable<ActiveContractSet> activeContractSet;
 
   public JsonLedgerApiHandle(
       String party,
@@ -51,23 +51,31 @@ public class JsonLedgerApiHandle implements LedgerApiHandle {
   }
 
   @Override
-  public List<Contract> getCreatedEvents(ContractQuery query) {
+  public Flowable<List<Contract>> getCreatedEvents(ContractQuery query) {
     // TODO: Every client should have its own Flowable instance, and we should have to handle this
     // at all.
-    if (activeContractSet == null) {
-      activeContractSet = ledgerClient.getActiveContracts(query).filter(acs -> !acs.isEmpty());
-    }
+//    if (activeContractSet == null) {
+//      activeContractSet =
+//          ledgerClient
+//              .getActiveContracts(query)
+//              .filter(
+//                  acs -> {
+//                    System.out.println(acs);
+//                    return !acs.isEmpty();
+//                  });
+//    }
     // TODO: Do we need to handle subscriptions, i.e. do we have to unsubscribe?
-    return activeContractSet
-        .blockingFirst()
-        .getActiveContracts()
-        .map(
-            activeContract ->
-                // TODO: Eliminate Contract type.
-                new Contract(
-                    activeContract.getContractId(),
-                    activeContract.getTemplate().create().getCreateArguments()))
-        .collect(Collectors.toList());
+    return ledgerClient
+        .getActiveContracts(query)
+        .map(ActiveContractSet::getActiveContracts)
+        .map(acsStream -> acsStream.map(this::getContract))
+        .map(xs -> xs.collect(Collectors.toList()));
+  }
+
+  private Contract getContract(ActiveContract activeContract) {
+    // TODO: Eliminate Contract type.
+    return new Contract(
+        activeContract.getContractId(), activeContract.getTemplate().create().getCreateArguments());
   }
 
   @Override

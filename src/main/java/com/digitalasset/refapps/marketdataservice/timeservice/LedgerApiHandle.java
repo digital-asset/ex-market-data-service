@@ -6,6 +6,7 @@ package com.digitalasset.refapps.marketdataservice.timeservice;
 
 import com.daml.ledger.javaapi.data.Command;
 import com.daml.ledger.javaapi.data.Record;
+import io.reactivex.Flowable;
 import java.util.List;
 import jsonapi.ContractQuery;
 
@@ -30,7 +31,7 @@ public interface LedgerApiHandle {
 
   void submitCommand(Command command);
 
-  List<Contract> getCreatedEvents(ContractQuery filter);
+  Flowable<List<Contract>> getCreatedEvents(ContractQuery filter);
 
   String getOperatingParty();
 }

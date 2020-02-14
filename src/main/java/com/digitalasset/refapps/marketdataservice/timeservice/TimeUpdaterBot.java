@@ -4,9 +4,11 @@
  */
 package com.digitalasset.refapps.marketdataservice.timeservice;
 
+import com.digitalasset.refapps.marketdataservice.timeservice.LedgerApiHandle.Contract;
 import com.google.common.collect.Iterables;
 import da.timeservice.timeservice.CurrentTime;
 import da.timeservice.timeservice.TimeManager;
+import io.reactivex.Flowable;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
@@ -21,6 +23,8 @@ public class TimeUpdaterBot {
   private final LedgerApiHandle handle;
   private final ContractQuery timeManagerFilter;
   private final ContractQuery currentTimeFilter;
+  private Flowable<List<Contract>> timeManagerEvents;
+  private Flowable<List<Contract>> currentTimeEvents;
 
   public TimeUpdaterBot(LedgerApiHandle handle) {
     this.handle = handle;
@@ -43,13 +47,21 @@ public class TimeUpdaterBot {
   }
 
   private Instant getModelCurrentTime() {
-    List<LedgerApiHandle.Contract> currentTimes = handle.getCreatedEvents(currentTimeFilter);
+    // TODO: Do we really need to handle this and in this way?
+    if (currentTimeEvents == null) {
+      currentTimeEvents = handle.getCreatedEvents(currentTimeFilter).filter(xs -> !xs.isEmpty());
+    }
+    List<LedgerApiHandle.Contract> currentTimes = currentTimeEvents.blockingFirst();
     LedgerApiHandle.Contract currentTime = Iterables.getOnlyElement(currentTimes);
     return CurrentTime.fromValue(currentTime.getArguments()).currentTime;
   }
 
   private TimeManager.ContractId getTimeManager() {
-    List<LedgerApiHandle.Contract> timeManagers = handle.getCreatedEvents(timeManagerFilter);
+    // TODO: Do we really need to handle this and in this way?
+    if (timeManagerEvents == null) {
+      timeManagerEvents = handle.getCreatedEvents(timeManagerFilter).filter(xs -> !xs.isEmpty());
+    }
+    List<LedgerApiHandle.Contract> timeManagers = timeManagerEvents.blockingFirst();
     LedgerApiHandle.Contract timeManager = Iterables.getOnlyElement(timeManagers);
     return new TimeManager.ContractId(timeManager.getContractId());
   }

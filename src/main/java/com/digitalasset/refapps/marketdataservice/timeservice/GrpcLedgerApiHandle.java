@@ -15,6 +15,7 @@ import com.daml.ledger.javaapi.data.SubmitCommandsRequest;
 import com.daml.ledger.javaapi.data.Transaction;
 import com.daml.ledger.rxjava.LedgerClient;
 import com.digitalasset.refapps.marketdataservice.utils.CommandsAndPendingSetBuilder;
+import io.reactivex.Flowable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -74,7 +75,7 @@ public class GrpcLedgerApiHandle implements LedgerApiHandle {
         .blockingGet();
   }
 
-  public List<Contract> getCreatedEvents(ContractQuery contractQuery) {
+  public Flowable<List<Contract>> getCreatedEvents(ContractQuery contractQuery) {
     FiltersByParty filter =
         createFilter(
             getOperatingParty(),
@@ -94,14 +95,14 @@ public class GrpcLedgerApiHandle implements LedgerApiHandle {
               .getTransactions(offset, filter, false)
               .filter(x -> !x.getEvents().isEmpty())
               .blockingFirst();
-      return transaction.getEvents().stream()
+      return Flowable.just(transaction.getEvents().stream()
           .filter(x -> x instanceof CreatedEvent)
           .map(x -> new Contract(x.getContractId(), ((CreatedEvent) x).getArguments()))
-          .collect(Collectors.toList());
+          .collect(Collectors.toList()));
     }
-    return activeContractSetResponse.getCreatedEvents().stream()
+    return Flowable.just(activeContractSetResponse.getCreatedEvents().stream()
         .map(event -> new Contract(event.getContractId(), event.getArguments()))
-        .collect(Collectors.toList());
+        .collect(Collectors.toList()));
   }
 
   @Override
