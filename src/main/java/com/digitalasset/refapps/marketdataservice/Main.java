@@ -140,16 +140,16 @@ public class Main {
   }
 
   public static void runBotsWithJson(
-          String ledgerId, AppParties parties, Duration systemPeriodTime) {
+      String ledgerId, AppParties parties, Duration systemPeriodTime) {
     Function<CommandsAndPendingSetBuilder.Factory, LedgerApiHandle> handleFactory =
-            commandBuilderFactory ->
-                    new JsonLedgerApiHandle(
-                            parties.getOperator(),
-                            ledgerId,
-                            APPLICATION_ID,
-                            httpResponseDeserializer,
-                            jsonSerializer,
-                            webSocketResponseDeserializer);
+        commandBuilderFactory ->
+            new JsonLedgerApiHandle(
+                parties.getOperator(),
+                ledgerId,
+                APPLICATION_ID,
+                httpResponseDeserializer,
+                jsonSerializer,
+                webSocketResponseDeserializer);
     Main.runBotsWithGrpc(parties, systemPeriodTime, new Main.JsonWirer(ledgerId), handleFactory);
   }
 
