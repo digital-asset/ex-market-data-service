@@ -58,7 +58,7 @@ public class PublishingIT {
           .dar(RELATIVE_DAR_PATH)
           .parties(OPERATOR_PARTY.getValue())
           .useWallclockTime()
-          .setupAppCallback(Main.runBots(new AppParties(ALL_PARTIES), systemPeriodTime))
+          .setupAppCallback(Main.runBotsWithGrpc(new AppParties(ALL_PARTIES), systemPeriodTime))
           .build();
 
   @ClassRule public static ExternalResource compile = sandbox.getClassRule();

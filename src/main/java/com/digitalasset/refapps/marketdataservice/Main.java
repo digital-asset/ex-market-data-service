@@ -6,16 +6,20 @@ package com.digitalasset.refapps.marketdataservice;
 
 import com.daml.ledger.javaapi.data.Command;
 import com.daml.ledger.javaapi.data.Template;
+import com.daml.ledger.javaapi.data.TransactionFilter;
 import com.daml.ledger.rxjava.DamlLedgerClient;
+import com.daml.ledger.rxjava.LedgerClient;
 import com.daml.ledger.rxjava.components.Bot;
 import com.daml.ledger.rxjava.components.LedgerViewFlowable.LedgerTestView;
 import com.daml.ledger.rxjava.components.LedgerViewFlowable.LedgerView;
 import com.daml.ledger.rxjava.components.helpers.CommandsAndPendingSet;
+import com.daml.ledger.rxjava.components.helpers.CreatedContract;
 import com.digitalasset.refapps.marketdataservice.publishing.CachingCsvDataProvider;
 import com.digitalasset.refapps.marketdataservice.publishing.DataProviderBot;
 import com.digitalasset.refapps.marketdataservice.publishing.PublishingDataProvider;
 import com.digitalasset.refapps.marketdataservice.timeservice.GrpcLedgerApiHandle;
 import com.digitalasset.refapps.marketdataservice.timeservice.JsonLedgerApiHandle;
+import com.digitalasset.refapps.marketdataservice.timeservice.LedgerApiHandle;
 import com.digitalasset.refapps.marketdataservice.timeservice.TimeUpdaterBot;
 import com.digitalasset.refapps.marketdataservice.timeservice.TimeUpdaterBotExecutor;
 import com.digitalasset.refapps.marketdataservice.utils.AppParties;
@@ -23,6 +27,7 @@ import com.digitalasset.refapps.marketdataservice.utils.CliOptions;
 import com.digitalasset.refapps.marketdataservice.utils.CommandsAndPendingSetBuilder;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.reactivex.Flowable;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Collections;
@@ -46,7 +51,6 @@ import jsonapi.http.WebSocketResponse;
 import jsonapi.json.JsonDeserializer;
 import jsonapi.tyrus.TyrusWebSocketClient;
 import org.pcollections.HashTreePMap;
-import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,60 +87,146 @@ public class Main {
 
     logPackages(client);
     AppParties appParties = new AppParties(cliOptions.getParties());
-    runBots(appParties, SYSTEM_PERIOD_TIME).accept(client, channel);
+    runBotsWithGrpc(appParties, SYSTEM_PERIOD_TIME).accept(client, channel);
 
     logger.info("Welcome to Market Data Service!");
     logger.info("Press Ctrl+C to shut down the program.");
     Thread.currentThread().join();
   }
 
-  public static BiConsumer<DamlLedgerClient, ManagedChannel> runBots(
+  public interface Wirer {
+    void wire(
+        String party,
+        ContractQuery contractQuery,
+        TransactionFilter transactionFilter,
+        Function<LedgerView<Template>, Flowable<CommandsAndPendingSet>> bot,
+        Function<CreatedContract, Template> transform);
+  }
+
+  public static class GrpcWirer implements Wirer {
+    private final LedgerClient ledgerClient;
+
+    public GrpcWirer(LedgerClient ledgerClient) {
+      this.ledgerClient = ledgerClient;
+    }
+
+    @Override
+    public void wire(
+        String party,
+        ContractQuery contractQuery,
+        TransactionFilter transactionFilter,
+        Function<LedgerView<Template>, Flowable<CommandsAndPendingSet>> bot,
+        Function<CreatedContract, Template> transform) {
+      Bot.wire(APPLICATION_ID, ledgerClient, transactionFilter, bot, transform);
+    }
+  }
+
+  public static class JsonWirer implements Wirer {
+    private final String ledgerId;
+
+    public JsonWirer(String ledgerId) {
+      this.ledgerId = ledgerId;
+    }
+
+    @Override
+    public void wire(
+        String party,
+        ContractQuery contractQuery,
+        TransactionFilter transactionFilter,
+        Function<LedgerView<Template>, Flowable<CommandsAndPendingSet>> bot,
+        Function<CreatedContract, Template> transform) {
+
+      String jwt = Jwt.createToken(ledgerId, APPLICATION_ID, Collections.singletonList(party));
+      ApacheHttpClient httpClient =
+          new ApacheHttpClient(httpResponseDeserializer, jsonSerializer, jwt);
+      TyrusWebSocketClient webSocketClient =
+          new TyrusWebSocketClient(webSocketResponseDeserializer, jsonSerializer, jwt);
+      Api api = new Api("localhost", 7575);
+
+      JsonLedgerClient ledgerClient =
+          new JsonLedgerClient(httpClient, webSocketClient, jsonSerializer, api);
+
+      ledgerClient
+          .getActiveContracts(contractQuery)
+          .map(Main::toLedgerView)
+          .flatMap(bot::apply)
+          .forEach(
+              cps ->
+                  cps.getSubmitCommandsRequest()
+                      .getCommands()
+                      .forEach(submitCommand(ledgerClient)));
+    }
+  }
+
+  public static void runBotsWithJson(
+      String ledgerId, AppParties parties, Duration systemPeriodTime) {
+    Function<CommandsAndPendingSetBuilder.Factory, LedgerApiHandle> handleFactory =
+        commandBuilderFactory ->
+            new JsonLedgerApiHandle(
+                parties.getOperator(),
+                ledgerId,
+                APPLICATION_ID,
+                httpResponseDeserializer,
+                jsonSerializer,
+                webSocketResponseDeserializer);
+    Main.runBotsWithGrpc(parties, systemPeriodTime, new Main.JsonWirer(ledgerId), handleFactory);
+  }
+
+  public static BiConsumer<DamlLedgerClient, ManagedChannel> runBotsWithGrpc(
       AppParties parties, Duration systemPeriodTime) {
     return (DamlLedgerClient client, ManagedChannel channel) -> {
-      logPackages(client);
-
-      Duration mrt = Duration.ofSeconds(10);
-      CommandsAndPendingSetBuilder.Factory commandBuilderFactory =
-          CommandsAndPendingSetBuilder.factory(APPLICATION_ID, Clock::systemUTC, mrt);
-
-      if (parties.hasMarketDataProvider1()) {
-        logger.info("Starting automation for MarketDataProvider1.");
-        PublishingDataProvider dataProvider = new CachingCsvDataProvider();
-        DataProviderBot dataProviderBot =
-            new DataProviderBot(
-                commandBuilderFactory, parties.getMarketDataProvider1(), dataProvider);
-        Bot.wire(
-            APPLICATION_ID,
-            client,
-            dataProviderBot.getTransactionFilter(),
-            dataProviderBot::calculateCommands,
-            dataProviderBot::getContractInfo);
-      }
-
-      if (parties.hasMarketDataProvider2()) {
-        logger.info("Starting automation for MarketDataProvider2.");
-        PublishingDataProvider dataProvider = new CachingCsvDataProvider();
-        DataProviderBot dataProviderBot =
-            new DataProviderBot(
-                commandBuilderFactory, parties.getMarketDataProvider2(), dataProvider);
-        Bot.wire(
-            APPLICATION_ID,
-            client,
-            dataProviderBot.getTransactionFilter(),
-            dataProviderBot::calculateCommands,
-            dataProviderBot::getContractInfo);
-      }
-
-      if (parties.hasOperator()) {
-        logger.info("Starting automation for Operator.");
-        TimeUpdaterBot timeUpdaterBot =
-            new TimeUpdaterBot(
-                new GrpcLedgerApiHandle(client, commandBuilderFactory, parties.getOperator()));
-        scheduler = Executors.newScheduledThreadPool(1);
-        timeUpdaterBotExecutor = new TimeUpdaterBotExecutor(scheduler);
-        timeUpdaterBotExecutor.start(timeUpdaterBot, systemPeriodTime);
-      }
+      Function<CommandsAndPendingSetBuilder.Factory, LedgerApiHandle> handlerFactory =
+          commandBuilderFactory ->
+              new GrpcLedgerApiHandle(client, commandBuilderFactory, parties.getOperator());
+      runBotsWithGrpc(parties, systemPeriodTime, new GrpcWirer(client), handlerFactory);
     };
+  }
+
+  public static void runBotsWithGrpc(
+      AppParties parties,
+      Duration systemPeriodTime,
+      Wirer wirer,
+      Function<CommandsAndPendingSetBuilder.Factory, LedgerApiHandle> handlerFactory) {
+    Duration mrt = Duration.ofSeconds(10);
+    CommandsAndPendingSetBuilder.Factory commandBuilderFactory =
+        CommandsAndPendingSetBuilder.factory(APPLICATION_ID, Clock::systemUTC, mrt);
+
+    if (parties.hasMarketDataProvider1()) {
+      logger.info("Starting automation for MarketDataProvider1.");
+      PublishingDataProvider dataProvider = new CachingCsvDataProvider();
+      DataProviderBot dataProviderBot =
+          new DataProviderBot(
+              commandBuilderFactory, parties.getMarketDataProvider1(), dataProvider);
+      wirer.wire(
+          dataProviderBot.getPartyName(),
+          dataProviderBot.getContractQuery(),
+          dataProviderBot.getTransactionFilter(),
+          dataProviderBot::calculateCommands,
+          dataProviderBot::getContractInfo);
+    }
+
+    if (parties.hasMarketDataProvider2()) {
+      logger.info("Starting automation for MarketDataProvider2.");
+      PublishingDataProvider dataProvider = new CachingCsvDataProvider();
+      DataProviderBot dataProviderBot =
+          new DataProviderBot(
+              commandBuilderFactory, parties.getMarketDataProvider2(), dataProvider);
+      wirer.wire(
+          dataProviderBot.getPartyName(),
+          dataProviderBot.getContractQuery(),
+          dataProviderBot.getTransactionFilter(),
+          dataProviderBot::calculateCommands,
+          dataProviderBot::getContractInfo);
+    }
+
+    if (parties.hasOperator()) {
+      logger.info("Starting automation for Operator.");
+      TimeUpdaterBot timeUpdaterBot =
+          new TimeUpdaterBot(handlerFactory.apply(commandBuilderFactory));
+      scheduler = Executors.newScheduledThreadPool(1);
+      timeUpdaterBotExecutor = new TimeUpdaterBotExecutor(scheduler);
+      timeUpdaterBotExecutor.start(timeUpdaterBot, systemPeriodTime);
+    }
   }
 
   public static void terminateTimeUpdaterBot() {
@@ -153,80 +243,6 @@ public class Main {
       scheduler.shutdownNow();
       Thread.currentThread().interrupt();
     }
-  }
-
-  public static void runBotsWithJsonApi(
-      String ledgerId, AppParties parties, Duration systemPeriodTime) {
-    Duration mrt = Duration.ofSeconds(10);
-    CommandsAndPendingSetBuilder.Factory commandBuilderFactory =
-        CommandsAndPendingSetBuilder.factory(APPLICATION_ID, Clock::systemUTC, mrt);
-
-    if (parties.hasMarketDataProvider1()) {
-      logger.info("Starting automation for MarketDataProvider1.");
-      PublishingDataProvider dataProvider = new CachingCsvDataProvider();
-      DataProviderBot dataProviderBot =
-          new DataProviderBot(
-              commandBuilderFactory, parties.getMarketDataProvider1(), dataProvider);
-      wire(
-          ledgerId,
-          dataProviderBot.getPartyName(),
-          dataProviderBot.getContractQuery(),
-          dataProviderBot::calculateCommands);
-    }
-
-    if (parties.hasMarketDataProvider2()) {
-      logger.info("Starting automation for MarketDataProvider2.");
-      PublishingDataProvider dataProvider = new CachingCsvDataProvider();
-      DataProviderBot dataProviderBot =
-          new DataProviderBot(
-              commandBuilderFactory, parties.getMarketDataProvider2(), dataProvider);
-      wire(
-          ledgerId,
-          dataProviderBot.getPartyName(),
-          dataProviderBot.getContractQuery(),
-          dataProviderBot::calculateCommands);
-    }
-
-    if (parties.hasOperator()) {
-      logger.info("Starting automation for Operator.");
-      TimeUpdaterBot timeUpdaterBot =
-          new TimeUpdaterBot(
-              new JsonLedgerApiHandle(
-                  parties.getOperator(),
-                  ledgerId,
-                  APPLICATION_ID,
-                  httpResponseDeserializer,
-                  jsonSerializer,
-                  webSocketResponseDeserializer));
-      scheduler = Executors.newScheduledThreadPool(1);
-      timeUpdaterBotExecutor = new TimeUpdaterBotExecutor(scheduler);
-      timeUpdaterBotExecutor.start(timeUpdaterBot, systemPeriodTime);
-    }
-  }
-
-  public static void wire(
-      String ledgerId,
-      String party,
-      ContractQuery contractQuery,
-      Function<LedgerView<Template>, Publisher<CommandsAndPendingSet>> bot) {
-
-    String jwt = Jwt.createToken(ledgerId, APPLICATION_ID, Collections.singletonList(party));
-    ApacheHttpClient httpClient =
-        new ApacheHttpClient(httpResponseDeserializer, jsonSerializer, jwt);
-    TyrusWebSocketClient webSocketClient =
-        new TyrusWebSocketClient(webSocketResponseDeserializer, jsonSerializer, jwt);
-    Api api = new Api("localhost", 7575);
-
-    JsonLedgerClient ledgerClient =
-        new JsonLedgerClient(httpClient, webSocketClient, jsonSerializer, api);
-
-    ledgerClient
-        .getActiveContracts(contractQuery)
-        .map(Main::toLedgerView)
-        .flatMap(bot::apply)
-        .forEach(
-            cps ->
-                cps.getSubmitCommandsRequest().getCommands().forEach(submitCommand(ledgerClient)));
   }
 
   private static Consumer<? super Command> submitCommand(JsonLedgerClient ledgerClient) {

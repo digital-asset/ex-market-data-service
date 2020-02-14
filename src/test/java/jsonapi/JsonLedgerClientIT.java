@@ -4,13 +4,13 @@
  */
 package jsonapi;
 
+import static com.digitalasset.refapps.marketdataservice.Main.runBotsWithJson;
 import static com.digitalasset.refapps.marketdataservice.utils.AppParties.ALL_PARTIES;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 import com.daml.ledger.javaapi.data.Party;
-import com.digitalasset.refapps.marketdataservice.Main;
 import com.digitalasset.refapps.marketdataservice.utils.AppParties;
 import com.digitalasset.testing.junit4.Sandbox;
 import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
@@ -129,8 +129,8 @@ public class JsonLedgerClientIT {
   @Test
   public void usingDataProviderBot() {
     Duration systemPeriodTime = Duration.ofSeconds(5);
-    Main.runBotsWithJsonApi(ledgerId, new AppParties(ALL_PARTIES), systemPeriodTime);
-
+    AppParties parties = new AppParties(ALL_PARTIES);
+    runBotsWithJson(ledgerId, parties, systemPeriodTime);
     // TODO: Proper test and assertion.
     //    Thread.currentThread().join();
   }
