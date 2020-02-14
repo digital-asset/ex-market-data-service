@@ -95,14 +95,16 @@ public class GrpcLedgerApiHandle implements LedgerApiHandle {
               .getTransactions(offset, filter, false)
               .filter(x -> !x.getEvents().isEmpty())
               .blockingFirst();
-      return Flowable.just(transaction.getEvents().stream()
-          .filter(x -> x instanceof CreatedEvent)
-          .map(x -> new Contract(x.getContractId(), ((CreatedEvent) x).getArguments()))
-          .collect(Collectors.toList()));
+      return Flowable.just(
+          transaction.getEvents().stream()
+              .filter(x -> x instanceof CreatedEvent)
+              .map(x -> new Contract(x.getContractId(), ((CreatedEvent) x).getArguments()))
+              .collect(Collectors.toList()));
     }
-    return Flowable.just(activeContractSetResponse.getCreatedEvents().stream()
-        .map(event -> new Contract(event.getContractId(), event.getArguments()))
-        .collect(Collectors.toList()));
+    return Flowable.just(
+        activeContractSetResponse.getCreatedEvents().stream()
+            .map(event -> new Contract(event.getContractId(), event.getArguments()))
+            .collect(Collectors.toList()));
   }
 
   @Override

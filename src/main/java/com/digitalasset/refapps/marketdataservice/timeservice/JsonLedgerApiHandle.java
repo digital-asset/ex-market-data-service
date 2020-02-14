@@ -54,16 +54,6 @@ public class JsonLedgerApiHandle implements LedgerApiHandle {
   public Flowable<List<Contract>> getCreatedEvents(ContractQuery query) {
     // TODO: Every client should have its own Flowable instance, and we should have to handle this
     // at all.
-//    if (activeContractSet == null) {
-//      activeContractSet =
-//          ledgerClient
-//              .getActiveContracts(query)
-//              .filter(
-//                  acs -> {
-//                    System.out.println(acs);
-//                    return !acs.isEmpty();
-//                  });
-//    }
     // TODO: Do we need to handle subscriptions, i.e. do we have to unsubscribe?
     return ledgerClient
         .getActiveContracts(query)
