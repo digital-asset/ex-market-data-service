@@ -5,7 +5,11 @@
 package jsonapi;
 
 import com.daml.ledger.javaapi.data.Identifier;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
 import jsonapi.events.Event;
 
@@ -77,6 +81,11 @@ public class ActiveContractSet {
     } else {
       return this;
     }
+  }
+
+  // TODO: Does it make sense to have an isEmpty?
+  public boolean isEmpty() {
+    return this.activeContracts.isEmpty();
   }
 
   @Override
