@@ -89,31 +89,32 @@ public class JsonDeserializerTest {
             now,
             OPERATOR,
             now);
-    String serializedDataStream = "{ \n" +
-            "   \"observation\":{ \n" +
-            "      \"label\":{ \n" +
-            "         \"market\":\"Market1\",\n" +
-            "         \"instrumentId\":{ \n" +
-            "            \"unpack\":\"InstrumentId1\"\n" +
-            "         },\n" +
-            "         \"maturityDate\":\"2020-02-08\"\n" +
-            "      },\n" +
-            "      \"time\":\"2020-01-03T10:15:30Z\",\n" +
-            "      \"value\":{ \n" +
-            "         \"tag\":\"CleanPrice\",\n" +
-            "         \"value\":{ \n" +
-            "            \"clean\":\"1\"\n" +
-            "         }\n" +
-            "      }\n" +
-            "   },\n" +
-            "   \"consumers\":[],\n" +
-            "   \"publisher\":{ \n" +
-            "      \"party\":\"Publisher1\"\n" +
-            "   },\n" +
-            "   \"published\":\"2020-01-03T10:15:30Z\",\n" +
-            "   \"operator\":\"Operator1\",\n" +
-            "   \"lastUpdated\":\"2020-01-03T10:15:30Z\"\n" +
-            "}";
+    String serializedDataStream =
+        "{ \n"
+            + "   \"observation\":{ \n"
+            + "      \"label\":{ \n"
+            + "         \"market\":\"Market1\",\n"
+            + "         \"instrumentId\":{ \n"
+            + "            \"unpack\":\"InstrumentId1\"\n"
+            + "         },\n"
+            + "         \"maturityDate\":\"2020-02-08\"\n"
+            + "      },\n"
+            + "      \"time\":\"2020-01-03T10:15:30Z\",\n"
+            + "      \"value\":{ \n"
+            + "         \"tag\":\"CleanPrice\",\n"
+            + "         \"value\":{ \n"
+            + "            \"clean\":\"1\"\n"
+            + "         }\n"
+            + "      }\n"
+            + "   },\n"
+            + "   \"consumers\":[],\n"
+            + "   \"publisher\":{ \n"
+            + "      \"party\":\"Publisher1\"\n"
+            + "   },\n"
+            + "   \"published\":\"2020-01-03T10:15:30Z\",\n"
+            + "   \"operator\":\"Operator1\",\n"
+            + "   \"lastUpdated\":\"2020-01-03T10:15:30Z\"\n"
+            + "}";
     DataStream deserializedDataStream =
         GsonRegisteredAllDeserializers.gson().fromJson(serializedDataStream, DataStream.class);
     Assert.assertEquals(expectedDataStream, deserializedDataStream);
