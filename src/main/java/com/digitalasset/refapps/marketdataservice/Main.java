@@ -135,7 +135,24 @@ public class Main {
         TransactionFilter transactionFilter,
         Function<LedgerView<Template>, Flowable<CommandsAndPendingSet>> bot,
         Function<CreatedContract, Template> transform) {
-      Main.wire(ledgerId, party, contractQuery, bot);
+
+      String jwt = Jwt.createToken(ledgerId, APPLICATION_ID, Collections.singletonList(party));
+      ApacheHttpClient httpClient =
+          new ApacheHttpClient(httpResponseDeserializer, jsonSerializer, jwt);
+      TyrusWebSocketClient webSocketClient =
+          new TyrusWebSocketClient(webSocketResponseDeserializer, jsonSerializer, jwt);
+      Api api = new Api("localhost", 7575);
+
+      JsonLedgerClient ledgerClient =
+          new JsonLedgerClient(httpClient, webSocketClient, jsonSerializer, api);
+
+      ledgerClient
+          .getActiveContracts(contractQuery)
+          .map(Main::toLedgerView)
+          .flatMap(bot::apply)
+          .forEach(
+              cps ->
+                  cps.getSubmitCommandsRequest().getCommands().forEach(submitCommand(ledgerClient)));
     }
   }
 
@@ -224,31 +241,6 @@ public class Main {
       scheduler.shutdownNow();
       Thread.currentThread().interrupt();
     }
-  }
-
-  public static void wire(
-      String ledgerId,
-      String party,
-      ContractQuery contractQuery,
-      Function<LedgerView<Template>, Flowable<CommandsAndPendingSet>> bot) {
-
-    String jwt = Jwt.createToken(ledgerId, APPLICATION_ID, Collections.singletonList(party));
-    ApacheHttpClient httpClient =
-        new ApacheHttpClient(httpResponseDeserializer, jsonSerializer, jwt);
-    TyrusWebSocketClient webSocketClient =
-        new TyrusWebSocketClient(webSocketResponseDeserializer, jsonSerializer, jwt);
-    Api api = new Api("localhost", 7575);
-
-    JsonLedgerClient ledgerClient =
-        new JsonLedgerClient(httpClient, webSocketClient, jsonSerializer, api);
-
-    ledgerClient
-        .getActiveContracts(contractQuery)
-        .map(Main::toLedgerView)
-        .flatMap(bot::apply)
-        .forEach(
-            cps ->
-                cps.getSubmitCommandsRequest().getCommands().forEach(submitCommand(ledgerClient)));
   }
 
   private static Consumer<? super Command> submitCommand(JsonLedgerClient ledgerClient) {
