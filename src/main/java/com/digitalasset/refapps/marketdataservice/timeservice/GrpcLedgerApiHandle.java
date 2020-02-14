@@ -75,7 +75,8 @@ public class GrpcLedgerApiHandle implements LedgerApiHandle {
         .blockingGet();
   }
 
-  public Flowable<List<Contract>> getCreatedEvents(ContractQuery contractQuery) {
+  @Override
+  public List<Contract> getContracts(ContractQuery contractQuery) {
     FiltersByParty filter =
         createFilter(
             getOperatingParty(),
@@ -95,16 +96,19 @@ public class GrpcLedgerApiHandle implements LedgerApiHandle {
               .getTransactions(offset, filter, false)
               .filter(x -> !x.getEvents().isEmpty())
               .blockingFirst();
-      return Flowable.just(
-          transaction.getEvents().stream()
-              .filter(x -> x instanceof CreatedEvent)
-              .map(x -> new Contract(x.getContractId(), ((CreatedEvent) x).getArguments()))
-              .collect(Collectors.toList()));
+      return transaction.getEvents().stream()
+          .filter(x -> x instanceof CreatedEvent)
+          .map(x -> new Contract(x.getContractId(), ((CreatedEvent) x).getArguments()))
+          .collect(Collectors.toList());
     }
-    return Flowable.just(
-        activeContractSetResponse.getCreatedEvents().stream()
-            .map(event -> new Contract(event.getContractId(), event.getArguments()))
-            .collect(Collectors.toList()));
+    return activeContractSetResponse.getCreatedEvents().stream()
+        .map(event -> new Contract(event.getContractId(), event.getArguments()))
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public Flowable<List<Contract>> streamContracts(ContractQuery contractQuery) {
+    return Flowable.just(getContracts(contractQuery));
   }
 
   @Override

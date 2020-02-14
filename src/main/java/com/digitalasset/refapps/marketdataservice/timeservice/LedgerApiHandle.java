@@ -31,7 +31,9 @@ public interface LedgerApiHandle {
 
   void submitCommand(Command command);
 
-  Flowable<List<Contract>> getCreatedEvents(ContractQuery filter);
+  List<Contract> getContracts(ContractQuery filter);
+
+  Flowable<List<Contract>> streamContracts(ContractQuery filter);
 
   String getOperatingParty();
 }

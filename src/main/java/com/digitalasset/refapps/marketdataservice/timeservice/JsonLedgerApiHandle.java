@@ -50,8 +50,16 @@ public class JsonLedgerApiHandle implements LedgerApiHandle {
     command.asExerciseCommand().ifPresent(ledgerClient::exerciseChoice);
   }
 
+  public List<Contract> getContracts(ContractQuery query) {
+    return ledgerClient
+        .queryContracts(query)
+        .getActiveContracts()
+        .map(this::getContract)
+        .collect(Collectors.toList());
+  }
+
   @Override
-  public Flowable<List<Contract>> getCreatedEvents(ContractQuery query) {
+  public Flowable<List<Contract>> streamContracts(ContractQuery query) {
     // TODO: Every client should have its own Flowable instance, and we should have to handle this
     // at all.
     // TODO: Do we need to handle subscriptions, i.e. do we have to unsubscribe?
