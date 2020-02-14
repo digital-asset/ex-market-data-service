@@ -57,7 +57,20 @@ public class JsonDeserializerTest {
     EmptyDataStream expectedEmptyDataStream =
         new EmptyDataStream(OPERATOR, REFERENCE, Collections.emptyList(), PUBLISHER);
     String serializedEmptyDataStream =
-        "{\"operator\":\"Operator1\",\"reference\":{\"market\":\"Market1\",\"instrumentId\":{\"unpack\":\"InstrumentId1\"},\"maturityDate\":{\"year\":2020,\"month\":2,\"day\":8}},\"consumers\":[],\"publisher\":{\"party\":\"Publisher1\"}}";
+        "{ \n"
+            + "   \"operator\":\"Operator1\",\n"
+            + "   \"reference\":{ \n"
+            + "      \"market\":\"Market1\",\n"
+            + "      \"instrumentId\":{ \n"
+            + "         \"unpack\":\"InstrumentId1\"\n"
+            + "      },\n"
+            + "      \"maturityDate\":\"2020-02-08\"\n"
+            + "   },\n"
+            + "   \"consumers\":[],\n"
+            + "   \"publisher\":{ \n"
+            + "      \"party\":\"Publisher1\"\n"
+            + "   }\n"
+            + "}";
     EmptyDataStream deserializedEmptyDataStream =
         GsonRegisteredAllDeserializers.gson()
             .fromJson(serializedEmptyDataStream, EmptyDataStream.class);
