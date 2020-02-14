@@ -34,8 +34,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import org.junit.*;
+import jsonapi.JsonApi;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExternalResource;
+import org.junit.rules.RuleChain;
+import org.junit.rules.TestRule;
 
 public class PublishingIT {
   private static final Path RELATIVE_DAR_PATH = Paths.get("target/market-data-service.dar");
@@ -58,17 +65,21 @@ public class PublishingIT {
           .dar(RELATIVE_DAR_PATH)
           .parties(OPERATOR_PARTY.getValue())
           .useWallclockTime()
-          .setupAppCallback(Main.runBotsWithGrpc(new AppParties(ALL_PARTIES), systemPeriodTime))
           .build();
 
   @ClassRule public static ExternalResource compile = sandbox.getClassRule();
-  @Rule public ExternalResource sandboxRule = sandbox.getRule();
+
+  @Rule
+  public final TestRule processes =
+      RuleChain.outerRule(sandbox.getRule()).around(new JsonApi(sandbox::getSandboxPort));
 
   private Process marketSetupAndTriggers;
   private DefaultLedgerAdapter ledgerAdapter;
 
   @Before
   public void setUp() throws Throwable {
+    Main.runBotsWithJson(
+        sandbox.getClient().getLedgerId(), new AppParties(ALL_PARTIES), systemPeriodTime);
     // Valid port is assigned only after the sandbox has been started.
     // Therefore trigger has to be configured at the point where this can be guaranteed.
     File log = new File("integration-marketSetupAndTriggers.log");

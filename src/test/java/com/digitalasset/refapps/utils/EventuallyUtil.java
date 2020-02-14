@@ -10,7 +10,7 @@ import java.time.Duration;
 import java.time.Instant;
 
 public class EventuallyUtil {
-  private static final Duration TOO_MUCH_TIME = Duration.ofMinutes(3l);
+  private static final Duration TOO_MUCH_TIME = Duration.ofMinutes(3L);
 
   public static void eventually(Runnable code) throws InterruptedException {
     Instant started = Instant.now();
