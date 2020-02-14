@@ -28,7 +28,6 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import jsonapi.JsonApi;
 import jsonapi.gson.GsonDeserializer;
 import jsonapi.gson.GsonSerializer;
 import jsonapi.http.HttpResponse;
