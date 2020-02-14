@@ -4,6 +4,7 @@
  */
 package jsonapi;
 
+import static com.digitalasset.refapps.marketdataservice.Main.runBotsWithJson;
 import static com.digitalasset.refapps.marketdataservice.utils.AppParties.ALL_PARTIES;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
@@ -134,17 +135,7 @@ public class JsonLedgerClientIT {
   public void usingDataProviderBot() {
     Duration systemPeriodTime = Duration.ofSeconds(5);
     AppParties parties = new AppParties(ALL_PARTIES);
-    Function<CommandsAndPendingSetBuilder.Factory, LedgerApiHandle> handleFactory =
-        commandBuilderFactory ->
-            new JsonLedgerApiHandle(
-                parties.getOperator(),
-                ledgerId,
-                APPLICATION_ID,
-                httpResponseDeserializer,
-                jsonSerializer,
-                webSocketResponseDeserializer);
-    Main.runBotsWithGrpc(parties, systemPeriodTime, new Main.JsonWirer(ledgerId), handleFactory);
-
+    runBotsWithJson(ledgerId, parties, systemPeriodTime);
     // TODO: Proper test and assertion.
     //    Thread.currentThread().join();
   }

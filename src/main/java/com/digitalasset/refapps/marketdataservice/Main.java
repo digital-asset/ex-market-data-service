@@ -18,6 +18,7 @@ import com.digitalasset.refapps.marketdataservice.publishing.CachingCsvDataProvi
 import com.digitalasset.refapps.marketdataservice.publishing.DataProviderBot;
 import com.digitalasset.refapps.marketdataservice.publishing.PublishingDataProvider;
 import com.digitalasset.refapps.marketdataservice.timeservice.GrpcLedgerApiHandle;
+import com.digitalasset.refapps.marketdataservice.timeservice.JsonLedgerApiHandle;
 import com.digitalasset.refapps.marketdataservice.timeservice.LedgerApiHandle;
 import com.digitalasset.refapps.marketdataservice.timeservice.TimeUpdaterBot;
 import com.digitalasset.refapps.marketdataservice.timeservice.TimeUpdaterBotExecutor;
@@ -136,6 +137,20 @@ public class Main {
         Function<CreatedContract, Template> transform) {
       Main.wire(ledgerId, party, contractQuery, bot);
     }
+  }
+
+  public static void runBotsWithJson(
+          String ledgerId, AppParties parties, Duration systemPeriodTime) {
+    Function<CommandsAndPendingSetBuilder.Factory, LedgerApiHandle> handleFactory =
+            commandBuilderFactory ->
+                    new JsonLedgerApiHandle(
+                            parties.getOperator(),
+                            ledgerId,
+                            APPLICATION_ID,
+                            httpResponseDeserializer,
+                            jsonSerializer,
+                            webSocketResponseDeserializer);
+    Main.runBotsWithGrpc(parties, systemPeriodTime, new Main.JsonWirer(ledgerId), handleFactory);
   }
 
   public static BiConsumer<DamlLedgerClient, ManagedChannel> runBotsWithGrpc(
