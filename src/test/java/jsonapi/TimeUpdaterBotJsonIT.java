@@ -2,13 +2,17 @@
  * Copyright (c) 2019, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-package com.digitalasset.refapps.marketdataservice.timeservice;
+package jsonapi;
 
 import static com.digitalasset.refapps.utils.EventuallyUtil.eventually;
 import static org.junit.Assert.assertTrue;
 
 import com.daml.ledger.javaapi.data.Party;
 import com.digitalasset.refapps.marketdataservice.extensions.RelTime;
+import com.digitalasset.refapps.marketdataservice.timeservice.JsonLedgerApiHandle;
+import com.digitalasset.refapps.marketdataservice.timeservice.LedgerApiHandle;
+import com.digitalasset.refapps.marketdataservice.timeservice.TimeUpdaterBot;
+import com.digitalasset.refapps.marketdataservice.timeservice.TimeUpdaterBotExecutor;
 import com.digitalasset.testing.junit4.Sandbox;
 import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
 import com.digitalasset.testing.utils.ContractWithId;
