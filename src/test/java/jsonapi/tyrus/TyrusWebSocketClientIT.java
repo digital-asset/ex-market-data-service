@@ -89,8 +89,7 @@ public class TyrusWebSocketClientIT {
   }
 
   @Test
-  public void getMultipleActiveContracts()
-      throws InvalidProtocolBufferException, InterruptedException {
+  public void getMultipleActiveContracts() throws InvalidProtocolBufferException {
     CurrentTime currentTime = new CurrentTime(OPERATOR, Instant.now(), Collections.emptyList());
     Party party = new Party(OPERATOR);
     ledger.createContract(party, CurrentTime.TEMPLATE_ID, currentTime.toValue());
