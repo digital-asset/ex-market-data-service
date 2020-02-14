@@ -143,7 +143,7 @@ public class JsonLedgerClientIT {
                 httpResponseDeserializer,
                 jsonSerializer,
                 webSocketResponseDeserializer);
-    Main.runBots(parties, systemPeriodTime, new Main.JsonWirer(ledgerId), handleFactory);
+    Main.runBotsWithGrpc(parties, systemPeriodTime, new Main.JsonWirer(ledgerId), handleFactory);
 
     // TODO: Proper test and assertion.
     //    Thread.currentThread().join();

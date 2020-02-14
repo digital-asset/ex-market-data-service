@@ -86,7 +86,7 @@ public class Main {
 
     logPackages(client);
     AppParties appParties = new AppParties(cliOptions.getParties());
-    runBots(appParties, SYSTEM_PERIOD_TIME).accept(client, channel);
+    runBotsWithGrpc(appParties, SYSTEM_PERIOD_TIME).accept(client, channel);
 
     logger.info("Welcome to Market Data Service!");
     logger.info("Press Ctrl+C to shut down the program.");
@@ -138,17 +138,17 @@ public class Main {
     }
   }
 
-  public static BiConsumer<DamlLedgerClient, ManagedChannel> runBots(
+  public static BiConsumer<DamlLedgerClient, ManagedChannel> runBotsWithGrpc(
       AppParties parties, Duration systemPeriodTime) {
     return (DamlLedgerClient client, ManagedChannel channel) -> {
       Function<CommandsAndPendingSetBuilder.Factory, LedgerApiHandle> handlerFactory =
           commandBuilderFactory ->
               new GrpcLedgerApiHandle(client, commandBuilderFactory, parties.getOperator());
-      runBots(parties, systemPeriodTime, new GrpcWirer(client), handlerFactory);
+      runBotsWithGrpc(parties, systemPeriodTime, new GrpcWirer(client), handlerFactory);
     };
   }
 
-  public static void runBots(
+  public static void runBotsWithGrpc(
       AppParties parties,
       Duration systemPeriodTime,
       Wirer wirer,
