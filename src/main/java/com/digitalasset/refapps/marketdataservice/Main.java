@@ -152,7 +152,9 @@ public class Main {
           .flatMap(bot::apply)
           .forEach(
               cps ->
-                  cps.getSubmitCommandsRequest().getCommands().forEach(submitCommand(ledgerClient)));
+                  cps.getSubmitCommandsRequest()
+                      .getCommands()
+                      .forEach(submitCommand(ledgerClient)));
     }
   }
 
