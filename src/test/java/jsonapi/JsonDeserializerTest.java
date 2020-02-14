@@ -77,7 +77,6 @@ public class JsonDeserializerTest {
     Assert.assertEquals(expectedEmptyDataStream, deserializedEmptyDataStream);
   }
 
-  // TODO: Test is breaking because CleanPrice is not parsed properly
   @Test
   public void deserializeDataStream() {
     Instant now = Instant.parse("2020-01-03T10:15:30.00Z");
