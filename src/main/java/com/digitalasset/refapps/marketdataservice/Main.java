@@ -169,7 +169,7 @@ public class Main {
                 httpResponseDeserializer,
                 jsonSerializer,
                 webSocketResponseDeserializer);
-    Main.runBotsWithGrpc(parties, systemPeriodTime, new Main.JsonWirer(ledgerId), handleFactory);
+    Main.runBotsWith(parties, systemPeriodTime, new Main.JsonWirer(ledgerId), handleFactory);
   }
 
   public static BiConsumer<DamlLedgerClient, ManagedChannel> runBotsWithGrpc(
@@ -178,11 +178,11 @@ public class Main {
       Function<CommandsAndPendingSetBuilder.Factory, LedgerApiHandle> handlerFactory =
           commandBuilderFactory ->
               new GrpcLedgerApiHandle(client, commandBuilderFactory, parties.getOperator());
-      runBotsWithGrpc(parties, systemPeriodTime, new GrpcWirer(client), handlerFactory);
+      runBotsWith(parties, systemPeriodTime, new GrpcWirer(client), handlerFactory);
     };
   }
 
-  public static void runBotsWithGrpc(
+  public static void runBotsWith(
       AppParties parties,
       Duration systemPeriodTime,
       Wirer wirer,
