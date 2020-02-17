@@ -64,7 +64,7 @@ public class JsonSerializeExerciseIT {
   public final TestRule processes =
       RuleChain.outerRule(sandbox.getRule()).around(new JsonApi(sandbox::getSandboxPort));
 
-  private final Gson json = new GsonRegisteredAllDeserializers().gson();
+  private final Gson json = GsonRegisteredAllDeserializers.gson();
 
   private DefaultLedgerAdapter ledger;
   private HttpClient httpClient;
