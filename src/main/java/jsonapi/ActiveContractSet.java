@@ -45,16 +45,7 @@ public class ActiveContractSet {
   }
 
   public ActiveContractSet update(Collection<? extends Event> events) {
-    return events
-        // TODO: Can this be correct?
-        .parallelStream()
-        .reduce(
-            new ActiveContractSet(),
-            (acs, event) -> event.update(acs),
-            (left, right) -> {
-              left.activeContracts.putAll(right.activeContracts);
-              return left;
-            });
+    return events.stream().reduce(this, (acs, event) -> event.update(acs), (left, right) -> left);
   }
 
   public ActiveContractSet add(ActiveContract activeContract) {
