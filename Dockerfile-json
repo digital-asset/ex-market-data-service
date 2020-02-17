@@ -8,12 +8,9 @@ FROM digitalasset/daml-sdk:${sdk_vsn}
 
 WORKDIR /home/daml
 
-#COPY --chown=daml target/market-data-service.dar /home/daml/
-
 USER daml
 
 EXPOSE 7575
 
-CMD echo ~/.daml/bin/daml json-api --ledger-host ${SANDBOX_HOST} --ledger-port ${SANDBOX_PORT} --http-port 7575 --max-inbound-message-size 4194304 --package-reload-interval 5s --application-id HTTP-JSON-API-Gateway
-CMD ~/.daml/bin/daml json-api --ledger-host ${SANDBOX_HOST} --ledger-port ${SANDBOX_PORT} --http-port 7575 --max-inbound-message-size 4194304 --package-reload-interval 5s --application-id HTTP-JSON-API-Gateway
+ENTRYPOINT ~/.daml/bin/daml json-api --ledger-host ${SANDBOX_HOST} --ledger-port ${SANDBOX_PORT} --http-port 7575 --max-inbound-message-size 4194304 --package-reload-interval 5s --application-id HTTP-JSON-API-Gateway
 
