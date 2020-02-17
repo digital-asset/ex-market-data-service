@@ -7,6 +7,7 @@ package jsonapi.gson;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import da.refapps.marketdataservice.marketdatatypes.ObservationValue;
 import da.refapps.marketdataservice.marketdatatypes.observationvalue.CleanPrice;
@@ -20,6 +21,8 @@ public class ObservationValueDeserializer implements JsonDeserializer<Observatio
       throws JsonParseException {
     // We do not properly deserialize the class hierarchy, we only want a MWE.
     // A possible way to do this properly: https://stackoverflow.com/a/22081826
-    return context.deserialize(json, CleanPrice.class);
+    JsonObject object = json.getAsJsonObject();
+    assert object.get("tag").getAsString().equals("CleanPrice");
+    return context.deserialize(object.get("value"), CleanPrice.class);
   }
 }

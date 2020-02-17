@@ -57,14 +57,26 @@ public class JsonDeserializerTest {
     EmptyDataStream expectedEmptyDataStream =
         new EmptyDataStream(OPERATOR, REFERENCE, Collections.emptyList(), PUBLISHER);
     String serializedEmptyDataStream =
-        "{\"operator\":\"Operator1\",\"reference\":{\"market\":\"Market1\",\"instrumentId\":{\"unpack\":\"InstrumentId1\"},\"maturityDate\":{\"year\":2020,\"month\":2,\"day\":8}},\"consumers\":[],\"publisher\":{\"party\":\"Publisher1\"}}";
+        "{ \n"
+            + "   \"operator\":\"Operator1\",\n"
+            + "   \"reference\":{ \n"
+            + "      \"market\":\"Market1\",\n"
+            + "      \"instrumentId\":{ \n"
+            + "         \"unpack\":\"InstrumentId1\"\n"
+            + "      },\n"
+            + "      \"maturityDate\":\"2020-02-08\"\n"
+            + "   },\n"
+            + "   \"consumers\":[],\n"
+            + "   \"publisher\":{ \n"
+            + "      \"party\":\"Publisher1\"\n"
+            + "   }\n"
+            + "}";
     EmptyDataStream deserializedEmptyDataStream =
         GsonRegisteredAllDeserializers.gson()
             .fromJson(serializedEmptyDataStream, EmptyDataStream.class);
     Assert.assertEquals(expectedEmptyDataStream, deserializedEmptyDataStream);
   }
 
-  // TODO: Test is breaking because of ambiguity in JSON response for LocalDate.
   @Test
   public void deserializeDataStream() {
     Instant now = Instant.parse("2020-01-03T10:15:30.00Z");
@@ -77,7 +89,31 @@ public class JsonDeserializerTest {
             OPERATOR,
             now);
     String serializedDataStream =
-        "{\"observation\":{\"label\":{\"market\":\"Market1\",\"instrumentId\":{\"unpack\":\"InstrumentId1\"},\"maturityDate\":{\"year\":2020,\"month\":2,\"day\":8}},\"time\":\"2020-01-03T10:15:30Z\",\"value\":{\"clean\":1}},\"consumers\":[],\"publisher\":{\"party\":\"Publisher1\"},\"published\":\"2020-01-03T10:15:30Z\",\"operator\":\"Operator1\",\"lastUpdated\":\"2020-01-03T10:15:30Z\"}";
+        "{ \n"
+            + "   \"observation\":{ \n"
+            + "      \"label\":{ \n"
+            + "         \"market\":\"Market1\",\n"
+            + "         \"instrumentId\":{ \n"
+            + "            \"unpack\":\"InstrumentId1\"\n"
+            + "         },\n"
+            + "         \"maturityDate\":\"2020-02-08\"\n"
+            + "      },\n"
+            + "      \"time\":\"2020-01-03T10:15:30Z\",\n"
+            + "      \"value\":{ \n"
+            + "         \"tag\":\"CleanPrice\",\n"
+            + "         \"value\":{ \n"
+            + "            \"clean\":\"1\"\n"
+            + "         }\n"
+            + "      }\n"
+            + "   },\n"
+            + "   \"consumers\":[],\n"
+            + "   \"publisher\":{ \n"
+            + "      \"party\":\"Publisher1\"\n"
+            + "   },\n"
+            + "   \"published\":\"2020-01-03T10:15:30Z\",\n"
+            + "   \"operator\":\"Operator1\",\n"
+            + "   \"lastUpdated\":\"2020-01-03T10:15:30Z\"\n"
+            + "}";
     DataStream deserializedDataStream =
         GsonRegisteredAllDeserializers.gson().fromJson(serializedDataStream, DataStream.class);
     Assert.assertEquals(expectedDataStream, deserializedDataStream);
