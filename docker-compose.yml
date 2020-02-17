@@ -13,6 +13,17 @@ services:
     ports:
       - "127.0.0.1:6865:6865"
 
+  ex-market-data-service-json:
+    image: digitalasset/ex-market-data-service-json:0.0.1
+    build:
+      context: .
+      dockerfile: Dockerfile-json
+    depends_on:
+      - "ex-market-data-service-sandbox"
+    environment:
+      - SANDBOX_HOST=ex-market-data-service-sandbox
+      - SANDBOX_PORT=6865
+
   ex-market-data-service-triggers:
     image: digitalasset/ex-market-data-service-triggers:0.0.1
     build:
@@ -31,6 +42,7 @@ services:
       dockerfile: Dockerfile-bots
     depends_on:
       - "ex-market-data-service-triggers"
+      - "ex-market-data-service-json"
     volumes:
       - ./data:/home/sdk/data
     environment:
