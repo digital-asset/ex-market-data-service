@@ -42,6 +42,7 @@ import org.junit.rules.ExternalResource;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 
+// TODO: Rework (possible merge) with TimeServiceIT.
 public class TimeUpdaterBotJsonIT {
 
   private static final Path RELATIVE_DAR_PATH = Paths.get("target/market-data-service.dar");
