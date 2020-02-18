@@ -4,25 +4,22 @@
  */
 package jsonapi;
 
-import static com.digitalasset.refapps.marketdataservice.utils.AppParties.ALL_PARTIES;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 import com.daml.ledger.javaapi.data.Party;
-import com.daml.ledger.rxjava.DamlLedgerClient;
-import com.digitalasset.refapps.marketdataservice.Main;
-import com.digitalasset.refapps.marketdataservice.utils.AppParties;
 import com.digitalasset.testing.junit4.Sandbox;
 import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
 import com.digitalasset.testing.utils.ContractWithId;
 import da.timeservice.timeservice.CurrentTime;
-import io.grpc.ManagedChannel;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 import jsonapi.apache.ApacheHttpClient;
 import jsonapi.gson.GsonDeserializer;
 import jsonapi.gson.GsonSerializer;
@@ -36,7 +33,6 @@ import jsonapi.json.JsonDeserializer;
 import jsonapi.tyrus.TyrusWebSocketClient;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExternalResource;
@@ -85,7 +81,6 @@ public class JsonLedgerClientIT {
     api = new Api("localhost", 7575);
   }
 
-  @Ignore
   @Test
   public void getActiveContracts() throws IOException {
     CurrentTime currentTime =
@@ -95,17 +90,14 @@ public class JsonLedgerClientIT {
 
     JsonLedgerClient ledger =
         new JsonLedgerClient(httpClient, webSocketClient, jsonSerializer, api);
-    String result = ledger.getActiveContracts();
+    ActiveContractSet result = ledger.getActiveContracts();
 
-    assertThat(result, containsString("\"status\":200"));
-    assertThat(
-        result,
-        containsString(
-            "\"payload\":{\"operator\":\"Operator\",\"currentTime\":\"2020-02-04T22:57:29Z\",\"observers\":[]}"));
-    assertThat(
-        result,
-        containsString(
-            "\"templateId\":\"b4eb9b86bb78db2acde90edf0a03d96e5d65cc7a7cc422f23b6d98a286e07c09:DA.TimeService.TimeService:CurrentTime\""));
+    List<Contract<CurrentTime>> currentTimes =
+        result
+            .getActiveContracts(CurrentTime.TEMPLATE_ID, CurrentTime.class)
+            .collect(Collectors.toList());
+    assertThat(currentTimes.size(), is(1));
+    assertThat(currentTimes.get(0).getContract(), is(currentTime));
   }
 
   @Test
@@ -128,31 +120,5 @@ public class JsonLedgerClientIT {
         result,
         containsString(
             "\"payload\":{\"operator\":\"Operator\",\"currentTime\":\"2020-02-04T22:57:29Z\",\"observers\":[\"Operator\"]}"));
-  }
-
-  @Test
-  public void usingDataProviderBot()
-      throws NoSuchFieldException, IllegalAccessException, InterruptedException {
-    String marketDataProvider1 = new AppParties(ALL_PARTIES).getMarketDataProvider1();
-    String jwt =
-        Jwt.createToken(ledgerId, APPLICATION_ID, Collections.singletonList(marketDataProvider1));
-    httpClient = new ApacheHttpClient(httpResponseDeserializer, jsonSerializer, jwt);
-    webSocketClient = new TyrusWebSocketClient(webSocketResponseDeserializer, jsonSerializer, jwt);
-    api = new Api("localhost", 7575);
-
-    JsonLedgerClient ledger =
-        new JsonLedgerClient(httpClient, webSocketClient, jsonSerializer, api);
-    Main.runBotsWithJsonApi(new AppParties(ALL_PARTIES), null)
-        .accept(ledger, getManagedChannel(sandbox.getClient()));
-
-    // TODO: Proper test and assertion.
-    //    Thread.currentThread().join();
-  }
-
-  private ManagedChannel getManagedChannel(DamlLedgerClient client)
-      throws NoSuchFieldException, IllegalAccessException {
-    Field channel = client.getClass().getDeclaredField("channel");
-    channel.setAccessible(true);
-    return (ManagedChannel) channel.get(client);
   }
 }

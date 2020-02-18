@@ -36,6 +36,9 @@ public class TimeUpdaterBotBuilder {
   }
 
   public TimeUpdaterBot build() {
-    return new TimeUpdaterBot(client, commandsAndPendingSetBuilderFactory, party, botId);
+    // TODO: Replace with JSON API
+    LedgerApiHandle ledgerApiHandle =
+        new GrpcLedgerApiHandle(client, commandsAndPendingSetBuilderFactory, party, botId);
+    return new TimeUpdaterBot(ledgerApiHandle);
   }
 }

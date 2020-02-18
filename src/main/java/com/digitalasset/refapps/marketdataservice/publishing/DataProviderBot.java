@@ -6,12 +6,7 @@ package com.digitalasset.refapps.marketdataservice.publishing;
 
 import static com.digitalasset.refapps.marketdataservice.utils.BotUtil.filterTemplates;
 
-import com.daml.ledger.javaapi.data.Filter;
-import com.daml.ledger.javaapi.data.FiltersByParty;
-import com.daml.ledger.javaapi.data.Identifier;
-import com.daml.ledger.javaapi.data.InclusiveFilter;
-import com.daml.ledger.javaapi.data.Template;
-import com.daml.ledger.javaapi.data.TransactionFilter;
+import com.daml.ledger.javaapi.data.*;
 import com.daml.ledger.rxjava.components.LedgerViewFlowable;
 import com.daml.ledger.rxjava.components.helpers.CommandsAndPendingSet;
 import com.daml.ledger.rxjava.components.helpers.CreatedContract;
@@ -28,11 +23,7 @@ import da.refapps.marketdataservice.marketdatatypes.ObservationValue;
 import da.timeservice.timeservice.CurrentTime;
 import io.reactivex.Flowable;
 import java.time.Instant;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import jsonapi.ContractQuery;
 
 /** An automation bot that publishes values on streams given by a data provider. */
@@ -40,6 +31,7 @@ public class DataProviderBot {
 
   private final CommandsAndPendingSetBuilder commandsAndPendingSetBuilder;
   private final TransactionFilter transactionFilter;
+
   private final String partyName;
   private final PublishingDataProvider publishingDataProvider;
   private final Set<Identifier> templateSet;
@@ -91,6 +83,10 @@ public class DataProviderBot {
     return TemplateUtils.contractTransformer(
             EmptyDataStream.class, DataStream.class, CurrentTime.class, DataSource.class)
         .apply(createdContract);
+  }
+
+  public String getPartyName() {
+    return partyName;
   }
 
   private void startAllEmptyDataStream(

@@ -9,9 +9,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-import com.digitalasset.refapps.marketdataservice.utils.CommandsAndPendingSetBuilder;
-import com.digitalasset.refapps.marketdataservice.utils.CommandsAndPendingSetBuilder.Factory;
-import java.time.Clock;
 import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -28,9 +25,7 @@ public class TimeUpdaterBotExecutorTest {
   @Test
   public void startSchedulesBotAtFixedRate() {
     ScheduledExecutorService executorService = mock(ScheduledExecutorService.class);
-    Factory commandsFactory =
-        CommandsAndPendingSetBuilder.factory("UnitTest", Clock::systemUTC, Duration.ZERO);
-    TimeUpdaterBot dummyBot = new TimeUpdaterBot(null, commandsFactory, null);
+    TimeUpdaterBot dummyBot = new TimeUpdaterBot(null);
 
     TimeUpdaterBotExecutor botExecutor = new TimeUpdaterBotExecutor(executorService);
     botExecutor.start(dummyBot, Duration.ofMillis(142));

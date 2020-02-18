@@ -13,7 +13,6 @@ import com.daml.ledger.javaapi.data.Identifier;
 import com.google.gson.Gson;
 import com.google.gson.JsonDeserializer;
 import da.timeservice.timeservice.CurrentTime;
-import java.lang.reflect.Type;
 import java.time.Instant;
 import jsonapi.events.CreatedEvent;
 import jsonapi.events.Event;
@@ -67,7 +66,7 @@ public class WebSocketResponseDeserializerTest extends DeserializerBaseTest<WebS
   }
 
   @Override
-  protected Type getDeserializedClass() {
+  protected Class<WebSocketResponse> getDeserializedClass() {
     return WebSocketResponse.class;
   }
 

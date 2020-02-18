@@ -4,7 +4,12 @@
  */
 package jsonapi;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+
 import com.google.common.collect.Iterables;
+import com.google.gson.Gson;
+import da.refapps.marketdataservice.datasource.DataSource;
 import da.refapps.marketdataservice.datastream.DataStream;
 import da.refapps.marketdataservice.datastream.EmptyDataStream;
 import da.refapps.marketdataservice.marketdatatypes.InstrumentId;
@@ -57,7 +62,20 @@ public class JsonDeserializerTest {
     EmptyDataStream expectedEmptyDataStream =
         new EmptyDataStream(OPERATOR, REFERENCE, Collections.emptyList(), PUBLISHER);
     String serializedEmptyDataStream =
-        "{\"operator\":\"Operator1\",\"reference\":{\"market\":\"Market1\",\"instrumentId\":{\"unpack\":\"InstrumentId1\"},\"maturityDate\":{\"year\":2020,\"month\":2,\"day\":8}},\"consumers\":[],\"publisher\":{\"party\":\"Publisher1\"}}";
+        "{ \n"
+            + "   \"operator\":\"Operator1\",\n"
+            + "   \"reference\":{ \n"
+            + "      \"market\":\"Market1\",\n"
+            + "      \"instrumentId\":{ \n"
+            + "         \"unpack\":\"InstrumentId1\"\n"
+            + "      },\n"
+            + "      \"maturityDate\":\"2020-02-08\"\n"
+            + "   },\n"
+            + "   \"consumers\":[],\n"
+            + "   \"publisher\":{ \n"
+            + "      \"party\":\"Publisher1\"\n"
+            + "   }\n"
+            + "}";
     EmptyDataStream deserializedEmptyDataStream =
         GsonRegisteredAllDeserializers.gson()
             .fromJson(serializedEmptyDataStream, EmptyDataStream.class);
@@ -76,7 +94,31 @@ public class JsonDeserializerTest {
             OPERATOR,
             now);
     String serializedDataStream =
-        "{\"observation\":{\"label\":{\"market\":\"Market1\",\"instrumentId\":{\"unpack\":\"InstrumentId1\"},\"maturityDate\":{\"year\":2020,\"month\":2,\"day\":8}},\"time\":\"2020-01-03T10:15:30Z\",\"value\":{\"clean\":1}},\"consumers\":[],\"publisher\":{\"party\":\"Publisher1\"},\"published\":\"2020-01-03T10:15:30Z\",\"operator\":\"Operator1\",\"lastUpdated\":\"2020-01-03T10:15:30Z\"}";
+        "{ \n"
+            + "   \"observation\":{ \n"
+            + "      \"label\":{ \n"
+            + "         \"market\":\"Market1\",\n"
+            + "         \"instrumentId\":{ \n"
+            + "            \"unpack\":\"InstrumentId1\"\n"
+            + "         },\n"
+            + "         \"maturityDate\":\"2020-02-08\"\n"
+            + "      },\n"
+            + "      \"time\":\"2020-01-03T10:15:30Z\",\n"
+            + "      \"value\":{ \n"
+            + "         \"tag\":\"CleanPrice\",\n"
+            + "         \"value\":{ \n"
+            + "            \"clean\":\"1\"\n"
+            + "         }\n"
+            + "      }\n"
+            + "   },\n"
+            + "   \"consumers\":[],\n"
+            + "   \"publisher\":{ \n"
+            + "      \"party\":\"Publisher1\"\n"
+            + "   },\n"
+            + "   \"published\":\"2020-01-03T10:15:30Z\",\n"
+            + "   \"operator\":\"Operator1\",\n"
+            + "   \"lastUpdated\":\"2020-01-03T10:15:30Z\"\n"
+            + "}";
     DataStream deserializedDataStream =
         GsonRegisteredAllDeserializers.gson().fromJson(serializedDataStream, DataStream.class);
     Assert.assertEquals(expectedDataStream, deserializedDataStream);
@@ -112,5 +154,39 @@ public class JsonDeserializerTest {
         (CreatedEventHolder) Iterables.getOnlyElement(result.getEvents());
     Assert.assertEquals(
         expectedCreatedEvent.getPayload(), deserializedCreatedEventHolder.event().getPayload());
+  }
+
+  @Test
+  public void deserializeDataSource() {
+    String json =
+        "{\n"
+            + "  \"observers\": [],\n"
+            + "  \"reference\": {\n"
+            + "    \"market\": \"European Bond Market\",\n"
+            + "    \"instrumentId\": {\n"
+            + "      \"unpack\": \"ISIN 123 1244\"\n"
+            + "    },\n"
+            + "    \"maturityDate\": \"2021-03-20\"\n"
+            + "  },\n"
+            + "  \"path\": \"default-1000.csv\",\n"
+            + "  \"operator\": \"Operator\",\n"
+            + "  \"owner\": \"MarketDataProvider2\"\n"
+            + "}";
+
+    Gson deserializer = GsonRegisteredAllDeserializers.gson();
+    DataSource result = deserializer.fromJson(json, DataSource.class);
+
+    assertThat(
+        result,
+        is(
+            new DataSource(
+                "MarketDataProvider2",
+                "Operator",
+                Collections.emptyList(),
+                new ObservationReference(
+                    "European Bond Market",
+                    new InstrumentId("ISIN 123 1244"),
+                    LocalDate.of(2021, 3, 20)),
+                "default-1000.csv")));
   }
 }

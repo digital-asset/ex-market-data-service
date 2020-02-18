@@ -4,10 +4,13 @@
  */
 package jsonapi;
 
+import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThat;
 
 import com.daml.ledger.javaapi.data.CreateCommand;
 import com.daml.ledger.javaapi.data.Identifier;
@@ -17,8 +20,11 @@ import io.reactivex.Flowable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Collectors;
 import jsonapi.events.ArchivedEvent;
 import jsonapi.events.CreatedEvent;
+import jsonapi.events.Event;
 import jsonapi.http.WebSocketResponse;
 import org.junit.Test;
 
@@ -118,16 +124,18 @@ public class ActiveContractSetTest {
     Identifier identifier = new Identifier("p", "m", "e");
     DummyTemplate template = new DummyTemplate();
     ActiveContractSet acs =
-        ActiveContractSet.empty().add(new ActiveContract(identifier, "#123", template));
+        ActiveContractSet.empty()
+            .add(new ActiveContract(identifier, "#123", template))
+            .add(new ActiveContract(identifier, "#ABC", template));
 
-    ActiveContractSet newAcs =
-        acs.update(
-            Arrays.asList(
-                new ArchivedEvent("#123"), new CreatedEvent(identifier, "#789", template)));
+    List<Event> events =
+        Arrays.asList(new ArchivedEvent("#123"), new CreatedEvent(identifier, "#789", template));
+    ActiveContractSet newAcs = acs.update(events);
 
-    Iterator<ActiveContract> contracts = newAcs.getActiveContracts().iterator();
-    assertEquals(contracts.next(), new ActiveContract(identifier, "#789", template));
-    assertFalse(contracts.hasNext());
+    List<ActiveContract> activeContracts = newAcs.getActiveContracts().collect(Collectors.toList());
+    assertThat(activeContracts.size(), is(2));
+    assertThat(activeContracts, hasItem(new ActiveContract(identifier, "#ABC", template)));
+    assertThat(activeContracts, hasItem(new ActiveContract(identifier, "#789", template)));
   }
 
   @Test

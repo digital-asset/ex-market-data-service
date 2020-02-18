@@ -9,7 +9,6 @@ import static org.junit.Assert.assertEquals;
 import com.daml.ledger.javaapi.data.Identifier;
 import com.google.gson.Gson;
 import com.google.gson.JsonSerializer;
-import java.lang.reflect.Type;
 import org.junit.Test;
 
 public class IdentifierSerializerTest extends SerializerBaseTest<Identifier> {
@@ -24,7 +23,7 @@ public class IdentifierSerializerTest extends SerializerBaseTest<Identifier> {
   }
 
   @Override
-  protected Type getSerializedClass() {
+  protected Class<Identifier> getSerializedClass() {
     return Identifier.class;
   }
 

@@ -54,6 +54,7 @@ public class ApacheHttpClientIT {
 
   @ClassRule public static ExternalResource startSandbox = sandbox.getClassRule();
   private final Api api = new Api("localhost", 7575);
+  private final Gson json = GsonRegisteredAllDeserializers.gson();
 
   @Rule
   public TestRule processes =
@@ -106,7 +107,6 @@ public class ApacheHttpClientIT {
   }
 
   private HttpResponse fromJson(InputStream inputStream) {
-    Gson json = GsonRegisteredAllDeserializers.gson();
     return json.fromJson(new InputStreamReader(inputStream), HttpResponse.class);
   }
 

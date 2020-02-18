@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-export _JAVA_OPTIONS="-Xmx8m -Xmx64m"
+export _JAVA_OPTIONS="-Xms8m -Xmx64m"
 
 source $(dirname "$0")/lib/startTriggers_common.sh
 

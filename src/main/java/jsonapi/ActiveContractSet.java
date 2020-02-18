@@ -29,11 +29,12 @@ public class ActiveContractSet {
     return new ActiveContractSet();
   }
 
-  public Iterable<ActiveContract> getActiveContracts() {
-    return Collections.unmodifiableCollection(activeContracts.values());
+  // TODO: Rename this method.
+  public Stream<ActiveContract> getActiveContracts() {
+    return Collections.unmodifiableCollection(activeContracts.values()).stream();
   }
 
-  public <T> Stream<Contract<T>> getContracts(Identifier identifier, Class<T> type) {
+  public <T> Stream<Contract<T>> getActiveContracts(Identifier identifier, Class<T> type) {
     return activeContracts.values().stream()
         .filter(x -> x.getIdentifier().equals(identifier))
         .map(x -> createContract(x, type));
@@ -43,17 +44,8 @@ public class ActiveContractSet {
     return new Contract<>(x.getContractId(), type.cast(x.getTemplate()));
   }
 
-  public ActiveContractSet update(Collection<Event> events) {
-    return events
-        // TODO: Can this be correct?
-        .parallelStream()
-        .reduce(
-            new ActiveContractSet(),
-            (acs, event) -> event.update(acs),
-            (left, right) -> {
-              left.activeContracts.putAll(right.activeContracts);
-              return left;
-            });
+  public ActiveContractSet update(Collection<? extends Event> events) {
+    return events.stream().reduce(this, (acs, event) -> event.update(acs), (left, right) -> left);
   }
 
   public ActiveContractSet add(ActiveContract activeContract) {
@@ -80,6 +72,11 @@ public class ActiveContractSet {
     } else {
       return this;
     }
+  }
+
+  // TODO: Does it make sense to have an isEmpty?
+  public boolean isEmpty() {
+    return this.activeContracts.isEmpty();
   }
 
   @Override

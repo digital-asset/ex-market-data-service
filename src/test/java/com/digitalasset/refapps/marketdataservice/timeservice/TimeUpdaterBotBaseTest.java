@@ -83,7 +83,7 @@ public abstract class TimeUpdaterBotBaseTest {
         .setClient(ledgerClient)
         .setCommandsAndPendingSetBuilderFactory(commandsAndPendingSetBuilderFactory)
         .setParty(operator)
-        .setBotId(botId);
+        .setBotId(TimeUpdaterBot.class.getSimpleName() + "-" + botId);
   }
 
   GetActiveContractsResponse createContractResponse(CreatedEvent event) {

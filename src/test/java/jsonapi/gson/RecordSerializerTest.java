@@ -12,7 +12,6 @@ import com.daml.ledger.javaapi.data.Record;
 import com.daml.ledger.javaapi.data.Record.Field;
 import com.google.gson.Gson;
 import com.google.gson.JsonSerializer;
-import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import org.junit.Test;
 
@@ -56,7 +55,7 @@ public class RecordSerializerTest extends SerializerBaseTest<Record> {
   }
 
   @Override
-  protected Type getSerializedClass() {
+  protected Class<Record> getSerializedClass() {
     return Record.class;
   }
 

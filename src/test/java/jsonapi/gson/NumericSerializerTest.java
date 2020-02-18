@@ -9,7 +9,6 @@ import static org.junit.Assert.assertEquals;
 import com.daml.ledger.javaapi.data.Numeric;
 import com.google.gson.Gson;
 import com.google.gson.JsonSerializer;
-import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import org.junit.Test;
 
@@ -24,7 +23,7 @@ public class NumericSerializerTest extends SerializerBaseTest<Numeric> {
   }
 
   @Override
-  protected Type getSerializedClass() {
+  protected Class<Numeric> getSerializedClass() {
     return Numeric.class;
   }
 

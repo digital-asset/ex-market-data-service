@@ -182,6 +182,9 @@
                         <exclude>**/README</exclude>
                         <exclude>src/license/*</exclude>
                         <exclude>**/*.txt</exclude>
+                        <exclude>**/*.hi</exclude>
+                        <exclude>**/*.hie</exclude>
+                        <exclude>**/*.log</exclude>
                         <exclude>**/.daml/package-database/**/*.*</exclude>
                     </excludes>
                     <mapping>

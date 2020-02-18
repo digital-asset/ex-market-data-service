@@ -4,6 +4,8 @@
  */
 package jsonapi.tyrus;
 
+import static org.hamcrest.CoreMatchers.everyItem;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -12,6 +14,7 @@ import com.digitalasset.testing.junit4.Sandbox;
 import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
 import com.google.gson.Gson;
 import com.google.protobuf.InvalidProtocolBufferException;
+import da.refapps.marketdataservice.roles.OperatorRole;
 import da.timeservice.timeservice.CurrentTime;
 import io.reactivex.Flowable;
 import java.io.InputStream;
@@ -20,6 +23,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import jsonapi.ContractQuery;
@@ -66,22 +70,37 @@ public class TyrusWebSocketClientIT {
   }
 
   @Test
-  public void getActiveContracts() throws InvalidProtocolBufferException {
+  public void queryingMultipleTemplateTypes() throws InvalidProtocolBufferException {
     CurrentTime currentTime = new CurrentTime(OPERATOR, Instant.now(), Collections.emptyList());
     Party party = new Party(OPERATOR);
     ledger.createContract(party, CurrentTime.TEMPLATE_ID, currentTime.toValue());
+    OperatorRole operatorRole = new OperatorRole(OPERATOR);
+    ledger.createContract(party, OperatorRole.TEMPLATE_ID, operatorRole.toValue());
 
-    ContractQuery query = new ContractQuery(Collections.singletonList(CurrentTime.TEMPLATE_ID));
+    ContractQuery query =
+        new ContractQuery(Arrays.asList(OperatorRole.TEMPLATE_ID, CurrentTime.TEMPLATE_ID));
 
     WebSocketClient client = new TyrusWebSocketClient(this::fromJson, new GsonSerializer(), jwt);
     Flowable<WebSocketResponse> response = client.post(api.searchContractsForever(), query);
 
-    WebSocketResponse webSocketResponse = response.blockingFirst();
-    List<Event> events = new ArrayList<>(webSocketResponse.getEvents());
-    assertThat(events.size(), is(1));
-    CreatedEvent createdEvent = (CreatedEvent) events.get(0);
+    List<ArrayList<Event>> values =
+        response
+            .map(webSocketResponse -> new ArrayList<>(webSocketResponse.getEvents()))
+            .test()
+            .awaitCount(2)
+            .values();
+
+    assertThat(values.get(0), everyItem(instanceOf(CreatedEvent.class)));
+    assertThat(values.get(0).size(), is(1));
+    CreatedEvent createdEvent = (CreatedEvent) values.get(0).get(0);
     assertThat(createdEvent.getTemplateId(), is(CurrentTime.TEMPLATE_ID));
     assertThat(createdEvent.getPayload(), is(currentTime));
+
+    assertThat(values.get(1), everyItem(instanceOf(CreatedEvent.class)));
+    assertThat(values.get(1).size(), is(1));
+    createdEvent = (CreatedEvent) values.get(1).get(0);
+    assertThat(createdEvent.getTemplateId(), is(OperatorRole.TEMPLATE_ID));
+    assertThat(createdEvent.getPayload(), is(operatorRole));
   }
 
   private WebSocketResponse fromJson(InputStream inputStream) {

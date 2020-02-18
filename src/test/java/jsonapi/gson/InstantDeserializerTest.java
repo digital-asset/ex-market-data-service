@@ -8,7 +8,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonDeserializer;
-import java.lang.reflect.Type;
 import java.time.Instant;
 import org.junit.Test;
 
@@ -25,7 +24,7 @@ public class InstantDeserializerTest extends DeserializerBaseTest<Instant> {
   }
 
   @Override
-  protected Type getDeserializedClass() {
+  protected Class<Instant> getDeserializedClass() {
     return Instant.class;
   }
 

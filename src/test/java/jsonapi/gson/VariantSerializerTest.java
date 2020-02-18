@@ -10,7 +10,6 @@ import com.daml.ledger.javaapi.data.Text;
 import com.daml.ledger.javaapi.data.Variant;
 import com.google.gson.Gson;
 import com.google.gson.JsonSerializer;
-import java.lang.reflect.Type;
 import org.junit.Test;
 
 public class VariantSerializerTest extends SerializerBaseTest<Variant> {
@@ -27,7 +26,7 @@ public class VariantSerializerTest extends SerializerBaseTest<Variant> {
   }
 
   @Override
-  protected Type getSerializedClass() {
+  protected Class<Variant> getSerializedClass() {
     return Variant.class;
   }
 
