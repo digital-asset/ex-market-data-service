@@ -70,26 +70,7 @@ public class TyrusWebSocketClientIT {
   }
 
   @Test
-  public void getActiveContracts() throws InvalidProtocolBufferException {
-    CurrentTime currentTime = new CurrentTime(OPERATOR, Instant.now(), Collections.emptyList());
-    Party party = new Party(OPERATOR);
-    ledger.createContract(party, CurrentTime.TEMPLATE_ID, currentTime.toValue());
-
-    ContractQuery query = new ContractQuery(Collections.singletonList(CurrentTime.TEMPLATE_ID));
-
-    WebSocketClient client = new TyrusWebSocketClient(this::fromJson, new GsonSerializer(), jwt);
-    Flowable<WebSocketResponse> response = client.post(api.searchContractsForever(), query);
-
-    WebSocketResponse webSocketResponse = response.blockingFirst();
-    List<Event> events = new ArrayList<>(webSocketResponse.getEvents());
-    assertThat(events.size(), is(1));
-    CreatedEvent createdEvent = (CreatedEvent) events.get(0);
-    assertThat(createdEvent.getTemplateId(), is(CurrentTime.TEMPLATE_ID));
-    assertThat(createdEvent.getPayload(), is(currentTime));
-  }
-
-  @Test
-  public void getMultipleActiveContracts() throws InvalidProtocolBufferException {
+  public void queryingMultipleTemplateTypes() throws InvalidProtocolBufferException {
     CurrentTime currentTime = new CurrentTime(OPERATOR, Instant.now(), Collections.emptyList());
     Party party = new Party(OPERATOR);
     ledger.createContract(party, CurrentTime.TEMPLATE_ID, currentTime.toValue());
