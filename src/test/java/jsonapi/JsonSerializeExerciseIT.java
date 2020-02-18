@@ -46,6 +46,12 @@ import org.junit.rules.ExternalResource;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 
+// TODO: Decide if this test is needed and act accordingly.
+// This test is meant to validate if the actual serialized JSON representations can be processed
+// by the ledger. Currently this is not extensive, and it is debated how useful it is and how costly
+// it is to make it extensive and run it.
+// JSON se/deserialization should be replaced with LF Value JSON and that would make this test and
+// usage of Gson obsolete.
 public class JsonSerializeExerciseIT {
 
   private static final Path RELATIVE_DAR_PATH = Paths.get("target/market-data-service.dar");
