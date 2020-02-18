@@ -39,6 +39,7 @@ public class JsonLedgerApiHandle implements LedgerApiHandle {
         new ApacheHttpClient(httpResponseDeserializer, jsonSerializer, jwt);
     TyrusWebSocketClient webSocketClient =
         new TyrusWebSocketClient(webSocketResponseDeserializer, jsonSerializer, jwt);
+    // TODO: Remove fixed values.
     Api api = new Api("localhost", 7575);
 
     ledgerClient = new JsonLedgerClient(httpClient, webSocketClient, jsonSerializer, api);
@@ -46,6 +47,7 @@ public class JsonLedgerApiHandle implements LedgerApiHandle {
 
   @Override
   public void submitCommand(Command command) {
+    // TODO: Eliminate the need to this conditional logic
     command.asCreateCommand().ifPresent(ledgerClient::create);
     command.asExerciseCommand().ifPresent(ledgerClient::exerciseChoice);
   }

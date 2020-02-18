@@ -11,6 +11,8 @@ import java.util.List;
 import jsonapi.ContractQuery;
 
 public interface LedgerApiHandle {
+  // TODO: Eliminate this type or redesign LedgerApiHandle into a
+  //  decent Grpc/JSON API common interface.
   class Contract {
     private String contractId;
     private Record arguments;

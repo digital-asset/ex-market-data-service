@@ -43,6 +43,7 @@ public class TimeServiceIT {
           .dar(RELATIVE_DAR_PATH)
           .parties(OPERATOR_PARTY.getValue())
           .useWallclockTime()
+          // TODO: Run with JSON API
           .setupAppCallback(Main.runBotsWithGrpc(new AppParties(ALL_PARTIES), systemPeriodTime))
           .build();
 
