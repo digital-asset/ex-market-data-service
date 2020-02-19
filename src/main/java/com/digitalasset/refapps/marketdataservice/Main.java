@@ -145,8 +145,7 @@ public class Main {
       logger.info("Starting automation for MarketDataProvider1.");
       PublishingDataProvider dataProvider = new CachingCsvDataProvider();
       DataProviderBot dataProviderBot =
-          new DataProviderBot(
-              commandBuilderFactory, parties.getMarketDataProvider1(), dataProvider);
+          new DataProviderBot(parties.getMarketDataProvider1(), dataProvider);
       wirer.wire(
           dataProviderBot.getPartyName(),
           dataProviderBot.getContractQuery(),
@@ -159,8 +158,7 @@ public class Main {
       logger.info("Starting automation for MarketDataProvider2.");
       PublishingDataProvider dataProvider = new CachingCsvDataProvider();
       DataProviderBot dataProviderBot =
-          new DataProviderBot(
-              commandBuilderFactory, parties.getMarketDataProvider2(), dataProvider);
+          new DataProviderBot(parties.getMarketDataProvider2(), dataProvider);
       wirer.wire(
           dataProviderBot.getPartyName(),
           dataProviderBot.getContractQuery(),

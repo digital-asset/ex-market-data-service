@@ -9,7 +9,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.daml.ledger.javaapi.data.Command;
 import com.daml.ledger.javaapi.data.Identifier;
-import com.digitalasset.refapps.marketdataservice.utils.CommandsAndPendingSetBuilder;
 import com.google.common.collect.Sets;
 import da.refapps.marketdataservice.datastream.DataStream;
 import da.refapps.marketdataservice.datastream.EmptyDataStream;
@@ -22,7 +21,6 @@ import da.refapps.marketdataservice.marketdatatypes.observationvalue.CleanPrice;
 import da.timeservice.timeservice.CurrentTime;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -42,9 +40,6 @@ public class DataProviderBotTest {
   private static final Publisher PUBLISHER = new Publisher("Publisher1");
   private static final ObservationValue OBSERVATION_VALUE_1 =
       new CleanPrice(new BigDecimal(BigInteger.TEN));
-
-  private final CommandsAndPendingSetBuilder.Factory cmdsBuilderFactory =
-      CommandsAndPendingSetBuilder.factory("AppId1", Clock::systemUTC, Duration.ofSeconds(2));
 
   private class TestDataProvider implements PublishingDataProvider {
     private final Optional value;
@@ -67,13 +62,12 @@ public class DataProviderBotTest {
 
   private final PublishingDataProvider publishingDataProvider =
       new TestDataProvider(Optional.of(OBSERVATION_VALUE_1));
-  private final DataProviderBot bot =
-      new DataProviderBot(cmdsBuilderFactory, PUBLISHER.party, publishingDataProvider);
+  private final DataProviderBot bot = new DataProviderBot(PUBLISHER.party, publishingDataProvider);
 
   private final PublishingDataProvider nonpublishingDataProvider =
       new TestDataProvider(Optional.empty());
   private final DataProviderBot botNonpublishing =
-      new DataProviderBot(cmdsBuilderFactory, PUBLISHER.party, nonpublishingDataProvider);
+      new DataProviderBot(PUBLISHER.party, nonpublishingDataProvider);
 
   @Test
   public void testEmptyStreamIsStarted() {
