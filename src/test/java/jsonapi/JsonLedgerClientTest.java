@@ -5,7 +5,6 @@ import jsonapi.http.Api;
 import jsonapi.http.HttpClient;
 import jsonapi.http.HttpResponse;
 import org.apache.http.HttpStatus;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -30,7 +29,7 @@ public class JsonLedgerClientTest {
     private static final String someBadRequestErrorMessage = "some bad request error message";
     private static final GsonSerializer jsonSerializer = new GsonSerializer();
     private static HttpClient httpClient = new DummyHttpClientGivingError();
-    private static Api api = new Api("localhost", 7575);
+    private static Api api = new Api(null, 0);
 
     @Rule
     public ExpectedException exceptionRule = ExpectedException.none();
