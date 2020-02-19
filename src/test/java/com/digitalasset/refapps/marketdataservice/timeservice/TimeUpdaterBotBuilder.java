@@ -4,24 +4,15 @@
  */
 package com.digitalasset.refapps.marketdataservice.timeservice;
 
-import com.daml.ledger.rxjava.LedgerClient;
-import com.digitalasset.refapps.marketdataservice.utils.CommandsAndPendingSetBuilder.Factory;
+import jsonapi.JsonLedgerClient;
 
 public class TimeUpdaterBotBuilder {
 
-  private LedgerClient client;
-  private Factory commandsAndPendingSetBuilderFactory;
+  private JsonLedgerClient jsonLedgerClient;
   private String party;
-  private String botId;
 
-  public TimeUpdaterBotBuilder setClient(LedgerClient client) {
-    this.client = client;
-    return this;
-  }
-
-  public TimeUpdaterBotBuilder setCommandsAndPendingSetBuilderFactory(
-      Factory commandsAndPendingSetBuilderFactory) {
-    this.commandsAndPendingSetBuilderFactory = commandsAndPendingSetBuilderFactory;
+  public TimeUpdaterBotBuilder setJsonLedgerClient(JsonLedgerClient jsonLedgerClient) {
+    this.jsonLedgerClient = jsonLedgerClient;
     return this;
   }
 
@@ -30,15 +21,8 @@ public class TimeUpdaterBotBuilder {
     return this;
   }
 
-  public TimeUpdaterBotBuilder setBotId(String botId) {
-    this.botId = botId;
-    return this;
-  }
-
   public TimeUpdaterBot build() {
-    // TODO: Replace with JSON API
-    LedgerApiHandle ledgerApiHandle =
-        new GrpcLedgerApiHandle(client, commandsAndPendingSetBuilderFactory, party, botId);
+    LedgerApiHandle ledgerApiHandle = new JsonLedgerApiHandle(jsonLedgerClient, party);
     return new TimeUpdaterBot(ledgerApiHandle);
   }
 }

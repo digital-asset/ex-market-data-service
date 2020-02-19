@@ -45,6 +45,12 @@ public class JsonLedgerApiHandle implements LedgerApiHandle {
     ledgerClient = new JsonLedgerClient(httpClient, webSocketClient, jsonSerializer, api);
   }
 
+  // TODO: One of these constructors should be unnecessary.
+  public JsonLedgerApiHandle(JsonLedgerClient ledgerClient, String party) {
+    this.ledgerClient = ledgerClient;
+    this.party = party;
+  }
+
   @Override
   public void submitCommand(Command command) {
     // TODO: Eliminate the need to this conditional logic
