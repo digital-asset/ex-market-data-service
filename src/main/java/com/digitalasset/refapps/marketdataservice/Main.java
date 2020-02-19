@@ -7,8 +7,6 @@ package com.digitalasset.refapps.marketdataservice;
 import com.daml.ledger.javaapi.data.Command;
 import com.daml.ledger.javaapi.data.Template;
 import com.daml.ledger.javaapi.data.TransactionFilter;
-import com.daml.ledger.rxjava.components.LedgerViewFlowable.LedgerTestView;
-import com.daml.ledger.rxjava.components.LedgerViewFlowable.LedgerView;
 import com.daml.ledger.rxjava.components.helpers.CommandsAndPendingSet;
 import com.daml.ledger.rxjava.components.helpers.CreatedContract;
 import com.digitalasset.refapps.marketdataservice.publishing.CachingCsvDataProvider;
@@ -30,7 +28,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import jsonapi.ActiveContract;
 import jsonapi.ActiveContractSet;
 import jsonapi.ContractQuery;
 import jsonapi.JsonLedgerClient;
@@ -45,7 +42,6 @@ import jsonapi.http.WebSocketResponse;
 import jsonapi.json.JsonDeserializer;
 import jsonapi.tyrus.TyrusWebSocketClient;
 import org.kohsuke.args4j.CmdLineException;
-import org.pcollections.HashTreePMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,7 +84,7 @@ public class Main {
         String party,
         ContractQuery contractQuery,
         TransactionFilter transactionFilter,
-        Function<LedgerView<Template>, Flowable<CommandsAndPendingSet>> bot,
+        Function<ActiveContractSet, Flowable<CommandsAndPendingSet>> bot,
         Function<CreatedContract, Template> transform);
   }
 
@@ -104,7 +100,7 @@ public class Main {
         String party,
         ContractQuery contractQuery,
         TransactionFilter transactionFilter,
-        Function<LedgerView<Template>, Flowable<CommandsAndPendingSet>> bot,
+        Function<ActiveContractSet, Flowable<CommandsAndPendingSet>> bot,
         Function<CreatedContract, Template> transform) {
 
       String jwt = Jwt.createToken(ledgerId, APPLICATION_ID, Collections.singletonList(party));
@@ -119,7 +115,6 @@ public class Main {
 
       ledgerClient
           .getActiveContracts(contractQuery)
-          .map(Main::toLedgerView)
           .flatMap(bot::apply)
           .forEach(
               cps ->
@@ -213,12 +208,6 @@ public class Main {
     };
   }
 
-  static LedgerView<Template> toLedgerView(ActiveContractSet activeContractSet) {
-    return activeContractSet
-        .getActiveContracts()
-        .reduce(createEmptyLedgerView(), Main::addActiveContract, (x, y) -> x);
-  }
-
   public static void waitForJsonApi(String host, int port) {
     String jsonApiUri = String.format("http://%s:%d", host, port);
     try {
@@ -226,18 +215,5 @@ public class Main {
     } catch (Exception e) {
       System.exit(1);
     }
-  }
-
-  private static LedgerTestView<Template> addActiveContract(
-      LedgerTestView<Template> emptyLedgerView, ActiveContract activeContract) {
-    return emptyLedgerView.addActiveContract(
-        activeContract.getIdentifier(),
-        activeContract.getContractId(),
-        activeContract.getTemplate());
-  }
-
-  private static LedgerTestView<Template> createEmptyLedgerView() {
-    return new LedgerTestView<>(
-        HashTreePMap.empty(), HashTreePMap.empty(), HashTreePMap.empty(), HashTreePMap.empty());
   }
 }
