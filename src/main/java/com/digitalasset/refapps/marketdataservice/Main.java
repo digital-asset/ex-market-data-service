@@ -7,7 +7,6 @@ package com.digitalasset.refapps.marketdataservice;
 import com.daml.ledger.javaapi.data.Command;
 import com.daml.ledger.javaapi.data.Template;
 import com.daml.ledger.javaapi.data.TransactionFilter;
-import com.daml.ledger.rxjava.components.helpers.CommandsAndPendingSet;
 import com.daml.ledger.rxjava.components.helpers.CreatedContract;
 import com.digitalasset.refapps.marketdataservice.publishing.CachingCsvDataProvider;
 import com.digitalasset.refapps.marketdataservice.publishing.DataProviderBot;
@@ -26,7 +25,6 @@ import java.util.Collections;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import jsonapi.ActiveContractSet;
 import jsonapi.ContractQuery;
@@ -84,7 +82,7 @@ public class Main {
         String party,
         ContractQuery contractQuery,
         TransactionFilter transactionFilter,
-        Function<ActiveContractSet, Flowable<CommandsAndPendingSet>> bot,
+        Function<ActiveContractSet, Flowable<Command>> bot,
         Function<CreatedContract, Template> transform);
   }
 
@@ -100,7 +98,7 @@ public class Main {
         String party,
         ContractQuery contractQuery,
         TransactionFilter transactionFilter,
-        Function<ActiveContractSet, Flowable<CommandsAndPendingSet>> bot,
+        Function<ActiveContractSet, Flowable<Command>> bot,
         Function<CreatedContract, Template> transform) {
 
       String jwt = Jwt.createToken(ledgerId, APPLICATION_ID, Collections.singletonList(party));
@@ -116,11 +114,7 @@ public class Main {
       ledgerClient
           .getActiveContracts(contractQuery)
           .flatMap(bot::apply)
-          .forEach(
-              cps ->
-                  cps.getSubmitCommandsRequest()
-                      .getCommands()
-                      .forEach(submitCommand(ledgerClient)));
+          .forEach(command -> submitCommand(ledgerClient, command));
     }
   }
 
@@ -157,7 +151,7 @@ public class Main {
           dataProviderBot.getPartyName(),
           dataProviderBot.getContractQuery(),
           dataProviderBot.getTransactionFilter(),
-          dataProviderBot::calculateCommands,
+          dataProviderBot::getCommands,
           dataProviderBot::getContractInfo);
     }
 
@@ -171,7 +165,7 @@ public class Main {
           dataProviderBot.getPartyName(),
           dataProviderBot.getContractQuery(),
           dataProviderBot.getTransactionFilter(),
-          dataProviderBot::calculateCommands,
+          dataProviderBot::getCommands,
           dataProviderBot::getContractInfo);
     }
 
@@ -201,11 +195,9 @@ public class Main {
     }
   }
 
-  private static Consumer<? super Command> submitCommand(JsonLedgerClient ledgerClient) {
-    return command -> {
-      command.asExerciseCommand().ifPresent(ledgerClient::exerciseChoice);
-      command.asCreateCommand().ifPresent(ledgerClient::create);
-    };
+  private static void submitCommand(JsonLedgerClient ledgerClient, Command command) {
+    command.asExerciseCommand().ifPresent(ledgerClient::exerciseChoice);
+    command.asCreateCommand().ifPresent(ledgerClient::create);
   }
 
   public static void waitForJsonApi(String host, int port) {
