@@ -7,9 +7,6 @@ package com.digitalasset.refapps.marketdataservice;
 import com.daml.ledger.javaapi.data.Command;
 import com.daml.ledger.javaapi.data.Template;
 import com.daml.ledger.javaapi.data.TransactionFilter;
-import com.daml.ledger.rxjava.DamlLedgerClient;
-import com.daml.ledger.rxjava.LedgerClient;
-import com.daml.ledger.rxjava.components.Bot;
 import com.daml.ledger.rxjava.components.LedgerViewFlowable.LedgerTestView;
 import com.daml.ledger.rxjava.components.LedgerViewFlowable.LedgerView;
 import com.daml.ledger.rxjava.components.helpers.CommandsAndPendingSet;
@@ -17,7 +14,6 @@ import com.daml.ledger.rxjava.components.helpers.CreatedContract;
 import com.digitalasset.refapps.marketdataservice.publishing.CachingCsvDataProvider;
 import com.digitalasset.refapps.marketdataservice.publishing.DataProviderBot;
 import com.digitalasset.refapps.marketdataservice.publishing.PublishingDataProvider;
-import com.digitalasset.refapps.marketdataservice.timeservice.GrpcLedgerApiHandle;
 import com.digitalasset.refapps.marketdataservice.timeservice.JsonLedgerApiHandle;
 import com.digitalasset.refapps.marketdataservice.timeservice.LedgerApiHandle;
 import com.digitalasset.refapps.marketdataservice.timeservice.TimeUpdaterBot;
@@ -25,7 +21,6 @@ import com.digitalasset.refapps.marketdataservice.timeservice.TimeUpdaterBotExec
 import com.digitalasset.refapps.marketdataservice.utils.AppParties;
 import com.digitalasset.refapps.marketdataservice.utils.CliOptions;
 import com.digitalasset.refapps.marketdataservice.utils.CommandsAndPendingSetBuilder;
-import io.grpc.ManagedChannel;
 import io.reactivex.Flowable;
 import java.time.Clock;
 import java.time.Duration;
@@ -33,7 +28,6 @@ import java.util.Collections;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import jsonapi.ActiveContract;
@@ -98,24 +92,6 @@ public class Main {
         Function<CreatedContract, Template> transform);
   }
 
-  public static class GrpcWirer implements Wirer {
-    private final LedgerClient ledgerClient;
-
-    public GrpcWirer(LedgerClient ledgerClient) {
-      this.ledgerClient = ledgerClient;
-    }
-
-    @Override
-    public void wire(
-        String party,
-        ContractQuery contractQuery,
-        TransactionFilter transactionFilter,
-        Function<LedgerView<Template>, Flowable<CommandsAndPendingSet>> bot,
-        Function<CreatedContract, Template> transform) {
-      Bot.wire(APPLICATION_ID, ledgerClient, transactionFilter, bot, transform);
-    }
-  }
-
   public static class JsonWirer implements Wirer {
     private final String ledgerId;
 
@@ -165,16 +141,6 @@ public class Main {
                 jsonSerializer,
                 webSocketResponseDeserializer);
     Main.runBotsWith(parties, systemPeriodTime, new Main.JsonWirer(ledgerId), handleFactory);
-  }
-
-  public static BiConsumer<DamlLedgerClient, ManagedChannel> runBotsWithGrpc(
-      AppParties parties, Duration systemPeriodTime) {
-    return (DamlLedgerClient client, ManagedChannel channel) -> {
-      Function<CommandsAndPendingSetBuilder.Factory, LedgerApiHandle> handlerFactory =
-          commandBuilderFactory ->
-              new GrpcLedgerApiHandle(client, commandBuilderFactory, parties.getOperator());
-      runBotsWith(parties, systemPeriodTime, new GrpcWirer(client), handlerFactory);
-    };
   }
 
   public static void runBotsWith(
@@ -273,11 +239,5 @@ public class Main {
   private static LedgerTestView<Template> createEmptyLedgerView() {
     return new LedgerTestView<>(
         HashTreePMap.empty(), HashTreePMap.empty(), HashTreePMap.empty(), HashTreePMap.empty());
-  }
-
-  private static void logPackages(DamlLedgerClient client) {
-    StringBuilder sb = new StringBuilder("Listing packages:");
-    client.getPackageClient().listPackages().forEach(id -> sb.append("\n").append(id));
-    logger.debug(sb.toString());
   }
 }
