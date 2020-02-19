@@ -9,14 +9,11 @@ import com.digitalasset.refapps.marketdataservice.publishing.CachingCsvDataProvi
 import com.digitalasset.refapps.marketdataservice.publishing.DataProviderBot;
 import com.digitalasset.refapps.marketdataservice.publishing.PublishingDataProvider;
 import com.digitalasset.refapps.marketdataservice.timeservice.JsonLedgerApiHandle;
-import com.digitalasset.refapps.marketdataservice.timeservice.LedgerApiHandle;
 import com.digitalasset.refapps.marketdataservice.timeservice.TimeUpdaterBot;
 import com.digitalasset.refapps.marketdataservice.timeservice.TimeUpdaterBotExecutor;
 import com.digitalasset.refapps.marketdataservice.utils.AppParties;
 import com.digitalasset.refapps.marketdataservice.utils.CliOptions;
-import com.digitalasset.refapps.marketdataservice.utils.CommandsAndPendingSetBuilder;
 import io.reactivex.Flowable;
-import java.time.Clock;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.concurrent.Executors;
@@ -114,26 +111,19 @@ public class Main {
 
   public static void runBotsWithJson(
       String ledgerId, AppParties parties, Duration systemPeriodTime) {
-    Function<CommandsAndPendingSetBuilder.Factory, LedgerApiHandle> handleFactory =
-        commandBuilderFactory ->
-            new JsonLedgerApiHandle(
-                parties.getOperator(),
-                ledgerId,
-                APPLICATION_ID,
-                httpResponseDeserializer,
-                jsonSerializer,
-                webSocketResponseDeserializer);
-    Main.runBotsWith(parties, systemPeriodTime, new Main.JsonWirer(ledgerId), handleFactory);
+    JsonLedgerApiHandle handle =
+        new JsonLedgerApiHandle(
+            parties.getOperator(),
+            ledgerId,
+            APPLICATION_ID,
+            httpResponseDeserializer,
+            jsonSerializer,
+            webSocketResponseDeserializer);
+    Main.runBotsWith(parties, systemPeriodTime, new Main.JsonWirer(ledgerId), handle);
   }
 
   public static void runBotsWith(
-      AppParties parties,
-      Duration systemPeriodTime,
-      Wirer wirer,
-      Function<CommandsAndPendingSetBuilder.Factory, LedgerApiHandle> handlerFactory) {
-    Duration mrt = Duration.ofSeconds(10);
-    CommandsAndPendingSetBuilder.Factory commandBuilderFactory =
-        CommandsAndPendingSetBuilder.factory(APPLICATION_ID, Clock::systemUTC, mrt);
+      AppParties parties, Duration systemPeriodTime, Wirer wirer, JsonLedgerApiHandle handle) {
 
     if (parties.hasMarketDataProvider1()) {
       logger.info("Starting automation for MarketDataProvider1.");
@@ -159,8 +149,7 @@ public class Main {
 
     if (parties.hasOperator()) {
       logger.info("Starting automation for Operator.");
-      TimeUpdaterBot timeUpdaterBot =
-          new TimeUpdaterBot(handlerFactory.apply(commandBuilderFactory));
+      TimeUpdaterBot timeUpdaterBot = new TimeUpdaterBot(handle);
       scheduler = Executors.newScheduledThreadPool(1);
       timeUpdaterBotExecutor = new TimeUpdaterBotExecutor(scheduler);
       timeUpdaterBotExecutor.start(timeUpdaterBot, systemPeriodTime);
