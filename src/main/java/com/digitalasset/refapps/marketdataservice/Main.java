@@ -50,6 +50,7 @@ import jsonapi.http.Jwt;
 import jsonapi.http.WebSocketResponse;
 import jsonapi.json.JsonDeserializer;
 import jsonapi.tyrus.TyrusWebSocketClient;
+import org.kohsuke.args4j.CmdLineException;
 import org.pcollections.HashTreePMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,7 +72,12 @@ public class Main {
 
   public static void main(String[] args) throws InterruptedException {
 
-    CliOptions cliOptions = CliOptions.parseArgs(args);
+    CliOptions cliOptions = null;
+    try {
+      cliOptions = CliOptions.parseArgs(args);
+    } catch (CmdLineException e) {
+      System.exit(1);
+    }
 
     ManagedChannel channel =
         ManagedChannelBuilder.forAddress(cliOptions.getSandboxHost(), cliOptions.getSandboxPort())
