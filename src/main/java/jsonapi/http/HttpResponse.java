@@ -59,7 +59,7 @@ public class HttpResponse {
   private final Collection<String> errors;
   private final Object warnings;
 
-  public HttpResponse(int status, Result result, Collection<String>  errors, Object warnings) {
+  public HttpResponse(int status, Result result, Collection<String> errors, Object warnings) {
     this.status = status;
     this.result = result;
     this.errors = errors;
