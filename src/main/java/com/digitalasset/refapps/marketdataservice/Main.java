@@ -5,9 +5,6 @@
 package com.digitalasset.refapps.marketdataservice;
 
 import com.daml.ledger.javaapi.data.Command;
-import com.daml.ledger.javaapi.data.Template;
-import com.daml.ledger.javaapi.data.TransactionFilter;
-import com.daml.ledger.rxjava.components.helpers.CreatedContract;
 import com.digitalasset.refapps.marketdataservice.publishing.CachingCsvDataProvider;
 import com.digitalasset.refapps.marketdataservice.publishing.DataProviderBot;
 import com.digitalasset.refapps.marketdataservice.publishing.PublishingDataProvider;
@@ -81,9 +78,7 @@ public class Main {
     void wire(
         String party,
         ContractQuery contractQuery,
-        TransactionFilter transactionFilter,
-        Function<ActiveContractSet, Flowable<Command>> bot,
-        Function<CreatedContract, Template> transform);
+        Function<ActiveContractSet, Flowable<Command>> bot);
   }
 
   public static class JsonWirer implements Wirer {
@@ -97,15 +92,14 @@ public class Main {
     public void wire(
         String party,
         ContractQuery contractQuery,
-        TransactionFilter transactionFilter,
-        Function<ActiveContractSet, Flowable<Command>> bot,
-        Function<CreatedContract, Template> transform) {
+        Function<ActiveContractSet, Flowable<Command>> bot) {
 
       String jwt = Jwt.createToken(ledgerId, APPLICATION_ID, Collections.singletonList(party));
       ApacheHttpClient httpClient =
           new ApacheHttpClient(httpResponseDeserializer, jsonSerializer, jwt);
       TyrusWebSocketClient webSocketClient =
           new TyrusWebSocketClient(webSocketResponseDeserializer, jsonSerializer, jwt);
+      // TODO: Make this configurable.
       Api api = new Api("localhost", 7575);
 
       JsonLedgerClient ledgerClient =
@@ -149,9 +143,7 @@ public class Main {
       wirer.wire(
           dataProviderBot.getPartyName(),
           dataProviderBot.getContractQuery(),
-          dataProviderBot.getTransactionFilter(),
-          dataProviderBot::getCommands,
-          dataProviderBot::getContractInfo);
+          dataProviderBot::getCommands);
     }
 
     if (parties.hasMarketDataProvider2()) {
@@ -162,9 +154,7 @@ public class Main {
       wirer.wire(
           dataProviderBot.getPartyName(),
           dataProviderBot.getContractQuery(),
-          dataProviderBot.getTransactionFilter(),
-          dataProviderBot::getCommands,
-          dataProviderBot::getContractInfo);
+          dataProviderBot::getCommands);
     }
 
     if (parties.hasOperator()) {

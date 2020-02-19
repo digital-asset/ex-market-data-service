@@ -5,16 +5,8 @@
 package com.digitalasset.refapps.marketdataservice.publishing;
 
 import com.daml.ledger.javaapi.data.Command;
-import com.daml.ledger.javaapi.data.Filter;
-import com.daml.ledger.javaapi.data.FiltersByParty;
 import com.daml.ledger.javaapi.data.Identifier;
-import com.daml.ledger.javaapi.data.InclusiveFilter;
-import com.daml.ledger.javaapi.data.Template;
-import com.daml.ledger.javaapi.data.TransactionFilter;
-import com.daml.ledger.rxjava.components.helpers.CreatedContract;
-import com.daml.ledger.rxjava.components.helpers.TemplateUtils;
 import com.google.common.collect.Sets;
-import da.refapps.marketdataservice.datasource.DataSource;
 import da.refapps.marketdataservice.datastream.DataStream;
 import da.refapps.marketdataservice.datastream.EmptyDataStream;
 import da.refapps.marketdataservice.marketdatatypes.Observation;
@@ -25,7 +17,6 @@ import io.reactivex.Flowable;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -35,8 +26,6 @@ import jsonapi.ContractQuery;
 
 /** An automation bot that publishes values on streams given by a data provider. */
 public class DataProviderBot {
-
-  private final TransactionFilter transactionFilter;
 
   private final String partyName;
   private final PublishingDataProvider publishingDataProvider;
@@ -51,8 +40,6 @@ public class DataProviderBot {
             Sets.newHashSet(
                 EmptyDataStream.TEMPLATE_ID, DataStream.TEMPLATE_ID, CurrentTime.TEMPLATE_ID),
             publishingDataProvider.getUsedTemplates());
-    Filter streamFilter = new InclusiveFilter(templateSet);
-    transactionFilter = new FiltersByParty(Collections.singletonMap(partyName, streamFilter));
   }
 
   public Flowable<Command> getCommands(ActiveContractSet activeContractSet) {
@@ -66,19 +53,8 @@ public class DataProviderBot {
     return Flowable.fromIterable(commands);
   }
 
-  public TransactionFilter getTransactionFilter() {
-    return transactionFilter;
-  }
-
   public ContractQuery getContractQuery() {
     return new ContractQuery(templateSet);
-  }
-
-  public Template getContractInfo(CreatedContract createdContract) {
-    //noinspection unchecked
-    return TemplateUtils.contractTransformer(
-            EmptyDataStream.class, DataStream.class, CurrentTime.class, DataSource.class)
-        .apply(createdContract);
   }
 
   public String getPartyName() {
