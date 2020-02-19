@@ -40,6 +40,7 @@ import jsonapi.ActiveContract;
 import jsonapi.ActiveContractSet;
 import jsonapi.ContractQuery;
 import jsonapi.JsonLedgerClient;
+import jsonapi.Utils;
 import jsonapi.apache.ApacheHttpClient;
 import jsonapi.gson.GsonDeserializer;
 import jsonapi.gson.GsonSerializer;
@@ -78,13 +79,8 @@ public class Main {
       System.exit(1);
     }
 
-    DamlLedgerClient client =
-        DamlLedgerClient.newBuilder(cliOptions.getSandboxHost(), cliOptions.getSandboxPort())
-            .build();
+    waitForJsonApi(cliOptions.getSandboxHost(), cliOptions.getSandboxPort());
 
-    waitForSandbox(cliOptions.getSandboxHost(), cliOptions.getSandboxPort(), client);
-
-    logPackages(client);
     AppParties appParties = new AppParties(cliOptions.getParties());
     runBotsWithJson(cliOptions.getLedgerId(), appParties, SYSTEM_PERIOD_TIME);
 
@@ -257,19 +253,12 @@ public class Main {
         .reduce(createEmptyLedgerView(), Main::addActiveContract, (x, y) -> x);
   }
 
-  public static void waitForSandbox(String host, int port, DamlLedgerClient client) {
-    boolean connected = false;
-    while (!connected) {
-      try {
-        client.connect();
-        connected = true;
-      } catch (Exception _ignored) {
-        logger.info(String.format("Connecting to sandbox at %s:%s", host, port));
-        try {
-          Thread.sleep(1000);
-        } catch (InterruptedException ignored) {
-        }
-      }
+  public static void waitForJsonApi(String host, int port) {
+    String jsonApiUri = String.format("http://%s:%d", host, port);
+    try {
+      Utils.waitForJsonApi(jsonApiUri);
+    } catch (Exception e) {
+      System.exit(1);
     }
   }
 
