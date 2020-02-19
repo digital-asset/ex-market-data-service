@@ -7,8 +7,8 @@ package com.digitalasset.refapps.marketdataservice.publishing;
 import static com.digitalasset.refapps.marketdataservice.assertions.Assert.assertHasSingleExercise;
 import static org.junit.Assert.assertTrue;
 
+import com.daml.ledger.javaapi.data.Command;
 import com.daml.ledger.javaapi.data.Identifier;
-import com.daml.ledger.rxjava.components.helpers.CommandsAndPendingSet;
 import com.digitalasset.refapps.marketdataservice.utils.CommandsAndPendingSetBuilder;
 import com.google.common.collect.Sets;
 import da.refapps.marketdataservice.datastream.DataStream;
@@ -27,6 +27,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import jsonapi.ActiveContract;
@@ -90,7 +91,8 @@ public class DataProviderBotTest {
                 new ActiveContract(
                     EmptyDataStream.TEMPLATE_ID, emptyDataStreamCid, emptyDataStream));
 
-    CommandsAndPendingSet result = bot.calculateCommands(activeContractSet).blockingFirst();
+    // TODO: Rework the assertions
+    List<Command> result = bot.getCommands(activeContractSet).test().values();
     assertHasSingleExercise(result, emptyDataStreamCid, "StartDataStream");
   }
 
@@ -110,7 +112,7 @@ public class DataProviderBotTest {
                 new ActiveContract(
                     EmptyDataStream.TEMPLATE_ID, emptyDataStreamCid, emptyDataStream));
 
-    assertTrue(botNonpublishing.calculateCommands(activeContractSet).isEmpty().blockingGet());
+    assertTrue(botNonpublishing.getCommands(activeContractSet).isEmpty().blockingGet());
   }
 
   @Test
@@ -133,7 +135,8 @@ public class DataProviderBotTest {
             .add(new ActiveContract(CurrentTime.TEMPLATE_ID, "cid1", currentTime))
             .add(new ActiveContract(DataStream.TEMPLATE_ID, dataStreamCid, dataStream));
 
-    CommandsAndPendingSet result = bot.calculateCommands(activeContractSet).blockingFirst();
+    // TODO: Rework the assertions
+    List<Command> result = bot.getCommands(activeContractSet).test().values();
     assertHasSingleExercise(result, dataStreamCid, "UpdateObservation");
   }
 
@@ -156,7 +159,7 @@ public class DataProviderBotTest {
             .add(new ActiveContract(CurrentTime.TEMPLATE_ID, "cid1", currentTime))
             .add(new ActiveContract(DataStream.TEMPLATE_ID, dataStreamCid, dataStream));
 
-    assertTrue(botNonpublishing.calculateCommands(activeContractSet).isEmpty().blockingGet());
+    assertTrue(botNonpublishing.getCommands(activeContractSet).isEmpty().blockingGet());
   }
 
   @Test
@@ -179,8 +182,8 @@ public class DataProviderBotTest {
             .add(new ActiveContract(CurrentTime.TEMPLATE_ID, "cid1", currentTime))
             .add(new ActiveContract(DataStream.TEMPLATE_ID, dataStreamCid, dataStream));
 
-    CommandsAndPendingSet result =
-        botNonpublishing.calculateCommands(activeContractSet).blockingFirst();
+    // TODO: Rework the assertions
+    List<Command> result = botNonpublishing.getCommands(activeContractSet).test().values();
     assertHasSingleExercise(result, dataStreamCid, "UpdateLicenses");
   }
 }
