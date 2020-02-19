@@ -4,6 +4,8 @@
  */
 package com.digitalasset.refapps.marketdataservice.timeservice;
 
+import com.digitalasset.refapps.marketdataservice.JsonLedgerApiHandle;
+import com.digitalasset.refapps.marketdataservice.LedgerApiHandle;
 import jsonapi.JsonLedgerClient;
 
 public class TimeUpdaterBotBuilder {

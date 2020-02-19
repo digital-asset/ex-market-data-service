@@ -8,9 +8,9 @@ import static com.digitalasset.refapps.utils.EventuallyUtil.eventually;
 import static org.junit.Assert.assertTrue;
 
 import com.daml.ledger.javaapi.data.Party;
+import com.digitalasset.refapps.marketdataservice.JsonLedgerApiHandle;
+import com.digitalasset.refapps.marketdataservice.LedgerApiHandle;
 import com.digitalasset.refapps.marketdataservice.extensions.RelTime;
-import com.digitalasset.refapps.marketdataservice.timeservice.JsonLedgerApiHandle;
-import com.digitalasset.refapps.marketdataservice.timeservice.LedgerApiHandle;
 import com.digitalasset.refapps.marketdataservice.timeservice.TimeUpdaterBot;
 import com.digitalasset.refapps.marketdataservice.timeservice.TimeUpdaterBotExecutor;
 import com.digitalasset.testing.junit4.Sandbox;

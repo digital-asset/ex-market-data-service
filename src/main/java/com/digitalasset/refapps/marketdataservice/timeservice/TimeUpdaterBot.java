@@ -4,7 +4,8 @@
  */
 package com.digitalasset.refapps.marketdataservice.timeservice;
 
-import com.digitalasset.refapps.marketdataservice.timeservice.LedgerApiHandle.Contract;
+import com.digitalasset.refapps.marketdataservice.LedgerApiHandle;
+import com.digitalasset.refapps.marketdataservice.LedgerApiHandle.Contract;
 import com.google.common.collect.Iterables;
 import da.timeservice.timeservice.CurrentTime;
 import da.timeservice.timeservice.TimeManager;

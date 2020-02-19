@@ -8,7 +8,6 @@ import com.daml.ledger.javaapi.data.Command;
 import com.digitalasset.refapps.marketdataservice.publishing.CachingCsvDataProvider;
 import com.digitalasset.refapps.marketdataservice.publishing.DataProviderBot;
 import com.digitalasset.refapps.marketdataservice.publishing.PublishingDataProvider;
-import com.digitalasset.refapps.marketdataservice.timeservice.JsonLedgerApiHandle;
 import com.digitalasset.refapps.marketdataservice.timeservice.TimeUpdaterBot;
 import com.digitalasset.refapps.marketdataservice.timeservice.TimeUpdaterBotExecutor;
 import com.digitalasset.refapps.marketdataservice.utils.AppParties;
