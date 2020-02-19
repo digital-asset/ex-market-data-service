@@ -23,6 +23,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Function;
+import java.util.stream.Stream;
+import jsonapi.ActiveContractSet;
+import jsonapi.Contract;
 
 public class CachingCsvDataProvider implements PublishingDataProvider {
 
@@ -45,6 +48,17 @@ public class CachingCsvDataProvider implements PublishingDataProvider {
     return Sets.newHashSet(DataSource.TEMPLATE_ID);
   }
 
+  @Override
+  public Optional<ObservationValue> getObservation(
+      ActiveContractSet activeContractSet, ObservationReference reference, Instant time) {
+    if (!cache.containsKey(reference)) {
+      initCache(activeContractSet);
+    }
+    ConcurrentLinkedQueue<ObservationTimeWithValue> dataForReference =
+        cache.getOrDefault(reference, new ConcurrentLinkedQueue<>());
+    return selectDataInActualTimeWindow(dataForReference, time);
+  }
+
   public Optional<ObservationValue> getObservation(
       LedgerView<Template> ledgerView, ObservationReference reference, Instant time) {
     if (!cache.containsKey(reference)) {
@@ -63,6 +77,13 @@ public class CachingCsvDataProvider implements PublishingDataProvider {
     }
   }
 
+  private void initCache(ActiveContractSet activeContractSet) {
+    Stream<DataSource> dataSources = getDataSources(activeContractSet);
+    dataSources.forEach(
+        dataSource -> cache.computeIfAbsent(dataSource.reference, x -> parseData(dataSource)));
+  }
+
+  @Deprecated
   private void initCache(LedgerView<Template> ledgerView) {
     Collection<DataSource> dataSources = getDataSources(ledgerView);
     for (DataSource dataSource : dataSources) {
@@ -74,6 +95,13 @@ public class CachingCsvDataProvider implements PublishingDataProvider {
     return new ConcurrentLinkedQueue<>(CsvParser.parseData(readFile.apply(dataSource.path)));
   }
 
+  private Stream<DataSource> getDataSources(ActiveContractSet activeContractSet) {
+    return activeContractSet
+        .getActiveContracts(DataSource.TEMPLATE_ID, DataSource.class)
+        .map(Contract::getContract);
+  }
+
+  @Deprecated
   private Collection<DataSource> getDataSources(LedgerView<Template> ledgerView) {
     return filterTemplates(DataSource.class, ledgerView.getContracts(DataSource.TEMPLATE_ID))
         .values();

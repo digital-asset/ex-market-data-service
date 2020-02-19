@@ -12,10 +12,15 @@ import da.refapps.marketdataservice.marketdatatypes.ObservationValue;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.Set;
+import jsonapi.ActiveContractSet;
 
 public interface PublishingDataProvider {
   Set<Identifier> getUsedTemplates();
 
+  Optional<ObservationValue> getObservation(
+      ActiveContractSet activeContractSet, ObservationReference reference, Instant time);
+
+  @Deprecated
   Optional<ObservationValue> getObservation(
       LedgerViewFlowable.LedgerView<Template> ledgerView,
       ObservationReference reference,

@@ -33,6 +33,7 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
+import jsonapi.ActiveContractSet;
 import org.junit.Test;
 
 public class DataProviderBotTest {
@@ -57,6 +58,12 @@ public class DataProviderBotTest {
     @Override
     public Set<Identifier> getUsedTemplates() {
       return Sets.newHashSet();
+    }
+
+    @Override
+    public Optional<ObservationValue> getObservation(
+        ActiveContractSet activeContractSet, ObservationReference reference, Instant time) {
+      return value;
     }
 
     @Override
