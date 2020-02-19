@@ -26,7 +26,6 @@ import com.digitalasset.refapps.marketdataservice.utils.AppParties;
 import com.digitalasset.refapps.marketdataservice.utils.CliOptions;
 import com.digitalasset.refapps.marketdataservice.utils.CommandsAndPendingSetBuilder;
 import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
 import io.reactivex.Flowable;
 import java.time.Clock;
 import java.time.Duration;
@@ -79,12 +78,6 @@ public class Main {
       System.exit(1);
     }
 
-    ManagedChannel channel =
-        ManagedChannelBuilder.forAddress(cliOptions.getSandboxHost(), cliOptions.getSandboxPort())
-            .usePlaintext()
-            .maxInboundMessageSize(Integer.MAX_VALUE)
-            .build();
-
     DamlLedgerClient client =
         DamlLedgerClient.newBuilder(cliOptions.getSandboxHost(), cliOptions.getSandboxPort())
             .build();
@@ -93,7 +86,7 @@ public class Main {
 
     logPackages(client);
     AppParties appParties = new AppParties(cliOptions.getParties());
-    runBotsWithGrpc(appParties, SYSTEM_PERIOD_TIME).accept(client, channel);
+    runBotsWithJson(cliOptions.getLedgerId(), appParties, SYSTEM_PERIOD_TIME);
 
     logger.info("Welcome to Market Data Service!");
     logger.info("Press Ctrl+C to shut down the program.");
