@@ -29,7 +29,9 @@ public class WebSocketResponseDeserializerTest {
         "{\"error\":\"Endpoints.InvalidUserInput: JsonReaderError. Cannot read JSON: <{blahblah>. \"}";
     Gson deserializer = new GsonBuilder().create();
     WebSocketResponse result = deserializer.fromJson(json, WebSocketResponse.class);
-    assertEquals("Endpoints.InvalidUserInput: JsonReaderError. Cannot read JSON: <{blahblah>. ", result.getError());
+    assertEquals(
+        "Endpoints.InvalidUserInput: JsonReaderError. Cannot read JSON: <{blahblah>. ",
+        result.getError());
   }
 
   @Test
