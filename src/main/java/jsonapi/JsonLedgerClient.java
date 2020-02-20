@@ -59,6 +59,8 @@ public class JsonLedgerClient {
   // TODO: Eliminate code duplication, fix interface
   public ActiveContractSet queryContracts(ContractQuery query) {
     HttpResponse httpResponse = httpClient.post(api.searchContract(), query);
+    if (httpResponse.getStatus() != 200)
+      throw new RuntimeException(toJson.apply(httpResponse.getErrors()));
     ActiveContractSet acs = ActiveContractSet.empty();
     // TODO: Eliminate the need for casting.
     SearchResult searchResult = (SearchResult) httpResponse.getResult();

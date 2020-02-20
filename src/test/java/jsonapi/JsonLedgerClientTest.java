@@ -51,11 +51,17 @@ public class JsonLedgerClientTest {
     ledger.exerciseChoice(null);
   }
 
-
   @Test
   public void getActiveContractsThrowsForHttpErrorAndIncludesMessage() {
     JsonLedgerClient ledger = new JsonLedgerClient(httpClient, null, jsonSerializer, api);
     exceptionRule.expectMessage(someBadRequestErrorMessage);
     ledger.getActiveContracts();
+  }
+
+  @Test
+  public void queryContractsThrowsForHttpErrorAndIncludesMessage() {
+    JsonLedgerClient ledger = new JsonLedgerClient(httpClient, null, jsonSerializer, api);
+    exceptionRule.expectMessage(someBadRequestErrorMessage);
+    ledger.queryContracts(null);
   }
 }
