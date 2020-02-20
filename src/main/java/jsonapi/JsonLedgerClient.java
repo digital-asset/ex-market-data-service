@@ -33,6 +33,8 @@ public class JsonLedgerClient {
   public String create(CreateCommand command) {
     HttpResponse httpResponse = httpClient.post(api.createContract(), command);
     // TODO: Return type safe result
+    if (httpResponse.getStatus() != 200)
+      throw new RuntimeException(toJson.apply(httpResponse.getErrors()));
     return toJson.apply(httpResponse);
   }
 
