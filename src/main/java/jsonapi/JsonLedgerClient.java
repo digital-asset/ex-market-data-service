@@ -14,7 +14,6 @@ import jsonapi.http.HttpResponse.SearchResult;
 import jsonapi.http.WebSocketClient;
 import jsonapi.http.WebSocketResponse;
 import jsonapi.json.JsonSerializer;
-import org.apache.http.HttpStatus;
 
 public class JsonLedgerClient {
 
@@ -39,7 +38,7 @@ public class JsonLedgerClient {
 
   public String exerciseChoice(ExerciseCommand command) {
     HttpResponse httpResponse = httpClient.post(api.exercise(), command);
-    if (httpResponse.getStatus() != HttpStatus.SC_OK)
+    if (httpResponse.getStatus() != 200)
       throw new RuntimeException(toJson.apply(httpResponse.getErrors()));
     // TODO: Return type safe result
     return toJson.apply(httpResponse);

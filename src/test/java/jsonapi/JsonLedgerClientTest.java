@@ -10,7 +10,6 @@ import jsonapi.gson.GsonSerializer;
 import jsonapi.http.Api;
 import jsonapi.http.HttpClient;
 import jsonapi.http.HttpResponse;
-import org.apache.http.HttpStatus;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -26,10 +25,7 @@ public class JsonLedgerClientTest {
     @Override
     public HttpResponse post(URI resource, Object body) {
       return new HttpResponse(
-          HttpStatus.SC_BAD_REQUEST,
-          null,
-          Collections.singletonList(someBadRequestErrorMessage),
-          null);
+          400, null, Collections.singletonList(someBadRequestErrorMessage), null);
     }
   }
 
