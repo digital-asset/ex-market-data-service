@@ -63,53 +63,14 @@ public class Main {
     waitForJsonApi(cliOptions.getSandboxHost(), cliOptions.getSandboxPort());
 
     AppParties appParties = new AppParties(cliOptions.getParties());
-    runBotsWithJson(cliOptions.getLedgerId(), appParties, SYSTEM_PERIOD_TIME);
+    runBots(cliOptions.getLedgerId(), appParties, SYSTEM_PERIOD_TIME);
 
     logger.info("Welcome to Market Data Service!");
     logger.info("Press Ctrl+C to shut down the program.");
     Thread.currentThread().join();
   }
 
-  public interface Wirer {
-    void wire(
-        String party,
-        ContractQuery contractQuery,
-        Function<ActiveContractSet, Flowable<Command>> bot);
-  }
-
-  public static class JsonWirer implements Wirer {
-    private final String ledgerId;
-
-    public JsonWirer(String ledgerId) {
-      this.ledgerId = ledgerId;
-    }
-
-    @Override
-    public void wire(
-        String party,
-        ContractQuery contractQuery,
-        Function<ActiveContractSet, Flowable<Command>> bot) {
-
-      String jwt = Jwt.createToken(ledgerId, APPLICATION_ID, Collections.singletonList(party));
-      ApacheHttpClient httpClient =
-          new ApacheHttpClient(httpResponseDeserializer, jsonSerializer, jwt);
-      TyrusWebSocketClient webSocketClient =
-          new TyrusWebSocketClient(webSocketResponseDeserializer, jsonSerializer, jwt);
-      // TODO: Make this configurable.
-      Api api = new Api("localhost", 7575);
-
-      JsonLedgerClient ledgerClient =
-          new JsonLedgerClient(httpClient, webSocketClient, jsonSerializer, api);
-
-      ledgerClient
-          .getActiveContracts(contractQuery)
-          .flatMap(bot::apply)
-          .forEach(command -> submitCommand(ledgerClient, command));
-    }
-  }
-
-  public static void runBotsWithJson(
-      String ledgerId, AppParties parties, Duration systemPeriodTime) {
+  public static void runBots(String ledgerId, AppParties parties, Duration systemPeriodTime) {
     JsonLedgerApiHandle handle =
         new JsonLedgerApiHandle(
             parties.getOperator(),
@@ -118,18 +79,14 @@ public class Main {
             httpResponseDeserializer,
             jsonSerializer,
             webSocketResponseDeserializer);
-    Main.runBotsWith(parties, systemPeriodTime, new Main.JsonWirer(ledgerId), handle);
-  }
-
-  public static void runBotsWith(
-      AppParties parties, Duration systemPeriodTime, Wirer wirer, JsonLedgerApiHandle handle) {
 
     if (parties.hasMarketDataProvider1()) {
       logger.info("Starting automation for MarketDataProvider1.");
       PublishingDataProvider dataProvider = new CachingCsvDataProvider();
       DataProviderBot dataProviderBot =
           new DataProviderBot(parties.getMarketDataProvider1(), dataProvider);
-      wirer.wire(
+      wire(
+          ledgerId,
           dataProviderBot.getPartyName(),
           dataProviderBot.getContractQuery(),
           dataProviderBot::getCommands);
@@ -140,7 +97,8 @@ public class Main {
       PublishingDataProvider dataProvider = new CachingCsvDataProvider();
       DataProviderBot dataProviderBot =
           new DataProviderBot(parties.getMarketDataProvider2(), dataProvider);
-      wirer.wire(
+      wire(
+          ledgerId,
           dataProviderBot.getPartyName(),
           dataProviderBot.getContractQuery(),
           dataProviderBot::getCommands);
@@ -153,6 +111,29 @@ public class Main {
       timeUpdaterBotExecutor = new TimeUpdaterBotExecutor(scheduler);
       timeUpdaterBotExecutor.start(timeUpdaterBot, systemPeriodTime);
     }
+  }
+
+  private static void wire(
+      String ledgerId,
+      String party,
+      ContractQuery contractQuery,
+      Function<ActiveContractSet, Flowable<Command>> bot) {
+
+    String jwt = Jwt.createToken(ledgerId, APPLICATION_ID, Collections.singletonList(party));
+    ApacheHttpClient httpClient =
+        new ApacheHttpClient(httpResponseDeserializer, jsonSerializer, jwt);
+    TyrusWebSocketClient webSocketClient =
+        new TyrusWebSocketClient(webSocketResponseDeserializer, jsonSerializer, jwt);
+    // TODO: Make this configurable.
+    Api api = new Api("localhost", 7575);
+
+    JsonLedgerClient ledgerClient =
+        new JsonLedgerClient(httpClient, webSocketClient, jsonSerializer, api);
+
+    ledgerClient
+        .getActiveContracts(contractQuery)
+        .flatMap(bot::apply)
+        .forEach(command -> submitCommand(ledgerClient, command));
   }
 
   public static void terminateTimeUpdaterBot() {
