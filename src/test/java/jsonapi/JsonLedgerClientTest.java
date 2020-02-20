@@ -37,7 +37,7 @@ public class JsonLedgerClientTest {
   @Rule public ExpectedException exceptionRule = ExpectedException.none();
 
   @Test
-  public void exerciseChoiceThrowsForHttpError() {
+  public void exerciseChoiceThrowsForHttpErrorAndIncludesMessage() {
     JsonLedgerClient ledger = new JsonLedgerClient(httpClient, null, jsonSerializer, api);
     exceptionRule.expectMessage(someBadRequestErrorMessage);
     ledger.exerciseChoice(null);
