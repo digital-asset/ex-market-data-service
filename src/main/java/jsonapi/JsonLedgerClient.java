@@ -48,6 +48,8 @@ public class JsonLedgerClient {
 
   public ActiveContractSet getActiveContracts() {
     HttpResponse httpResponse = httpClient.get(api.searchContract());
+    if (httpResponse.getStatus() != 200)
+      throw new RuntimeException(toJson.apply(httpResponse.getErrors()));
     ActiveContractSet acs = ActiveContractSet.empty();
     // TODO: Eliminate the need for casting.
     SearchResult searchResult = (SearchResult) httpResponse.getResult();

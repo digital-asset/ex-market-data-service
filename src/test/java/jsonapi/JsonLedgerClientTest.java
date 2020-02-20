@@ -19,17 +19,18 @@ public class JsonLedgerClientTest {
   private static class DummyHttpClientGivingError implements HttpClient {
     @Override
     public HttpResponse get(URI resource) {
-      throw new RuntimeException("not implemented");
+      return badHttpResponse;
     }
 
     @Override
     public HttpResponse post(URI resource, Object body) {
-      return new HttpResponse(
-          400, null, Collections.singletonList(someBadRequestErrorMessage), null);
+      return badHttpResponse;
     }
   }
 
   private static final String someBadRequestErrorMessage = "some bad request error message";
+  private static final HttpResponse badHttpResponse = new HttpResponse(
+          400, null, Collections.singletonList(someBadRequestErrorMessage), null);
   private static final GsonSerializer jsonSerializer = new GsonSerializer();
   private static HttpClient httpClient = new DummyHttpClientGivingError();
   private static Api api = new Api(null, 0);
@@ -48,5 +49,13 @@ public class JsonLedgerClientTest {
     JsonLedgerClient ledger = new JsonLedgerClient(httpClient, null, jsonSerializer, api);
     exceptionRule.expectMessage(someBadRequestErrorMessage);
     ledger.exerciseChoice(null);
+  }
+
+
+  @Test
+  public void getActiveContractsThrowsForHttpErrorAndIncludesMessage() {
+    JsonLedgerClient ledger = new JsonLedgerClient(httpClient, null, jsonSerializer, api);
+    exceptionRule.expectMessage(someBadRequestErrorMessage);
+    ledger.getActiveContracts();
   }
 }
