@@ -29,7 +29,7 @@ public class TimeUpdaterBotTest extends TimeUpdaterBotBaseTest {
   public void newCurrentTimeIsUpdated() {
     CreatedEvent eventManager = createTimeManager();
     CreatedEvent eventCurrentTime = createCurrentTime();
-    when(jsonLedgerClient.queryContracts(any()))
+    when(ledgerClient.queryContracts(any()))
         .thenReturn(createContractResponse(eventManager))
         .thenReturn(createContractResponse(eventCurrentTime))
         .thenReturn(createContractResponse(eventCurrentTime));
@@ -42,6 +42,6 @@ public class TimeUpdaterBotTest extends TimeUpdaterBotBaseTest {
     TimeManager.ContractId currentTimeCid =
         new TimeManager.ContractId(eventManager.getContractId());
     ExerciseCommand expectedCommand = currentTimeCid.exerciseAdvanceCurrentTime();
-    verify(jsonLedgerClient, times(1)).exerciseChoice(expectedCommand);
+    verify(ledgerClient, times(1)).exerciseChoice(expectedCommand);
   }
 }

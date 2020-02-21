@@ -22,6 +22,7 @@ import java.util.function.Function;
 import jsonapi.ActiveContractSet;
 import jsonapi.ContractQuery;
 import jsonapi.JsonLedgerClient;
+import jsonapi.LedgerClient;
 import jsonapi.Utils;
 import jsonapi.apache.ApacheHttpClient;
 import jsonapi.gson.GsonDeserializer;
@@ -127,7 +128,7 @@ public class Main {
     // TODO: Make this configurable.
     Api api = new Api("localhost", 7575);
 
-    JsonLedgerClient ledgerClient =
+    LedgerClient ledgerClient =
         new JsonLedgerClient(httpClient, webSocketClient, jsonSerializer, api);
 
     ledgerClient
@@ -152,7 +153,7 @@ public class Main {
     }
   }
 
-  private static void submitCommand(JsonLedgerClient ledgerClient, Command command) {
+  private static void submitCommand(LedgerClient ledgerClient, Command command) {
     command.asExerciseCommand().ifPresent(ledgerClient::exerciseChoice);
     command.asCreateCommand().ifPresent(ledgerClient::create);
   }

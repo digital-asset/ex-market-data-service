@@ -13,6 +13,7 @@ import jsonapi.ActiveContract;
 import jsonapi.ActiveContractSet;
 import jsonapi.ContractQuery;
 import jsonapi.JsonLedgerClient;
+import jsonapi.LedgerClient;
 import jsonapi.apache.ApacheHttpClient;
 import jsonapi.http.Api;
 import jsonapi.http.HttpResponse;
@@ -23,7 +24,7 @@ import jsonapi.json.JsonSerializer;
 import jsonapi.tyrus.TyrusWebSocketClient;
 
 public class JsonLedgerApiHandle implements LedgerApiHandle {
-  private final JsonLedgerClient ledgerClient;
+  private final LedgerClient ledgerClient;
   private String party;
 
   public JsonLedgerApiHandle(
@@ -46,7 +47,7 @@ public class JsonLedgerApiHandle implements LedgerApiHandle {
   }
 
   // TODO: One of these constructors should be unnecessary.
-  public JsonLedgerApiHandle(JsonLedgerClient ledgerClient, String party) {
+  public JsonLedgerApiHandle(LedgerClient ledgerClient, String party) {
     this.ledgerClient = ledgerClient;
     this.party = party;
   }

@@ -9,13 +9,13 @@ import da.timeservice.timeservice.TimeManager;
 import java.time.Instant;
 import java.util.Collections;
 import jsonapi.ActiveContractSet;
-import jsonapi.JsonLedgerClient;
+import jsonapi.LedgerClient;
 import jsonapi.events.CreatedEvent;
 import org.mockito.Mock;
 
 public abstract class TimeUpdaterBotBaseTest {
 
-  @Mock protected JsonLedgerClient jsonLedgerClient;
+  @Mock protected LedgerClient ledgerClient;
 
   String operator = "Dummy Operator";
 
@@ -30,7 +30,7 @@ public abstract class TimeUpdaterBotBaseTest {
   }
 
   TimeUpdaterBotBuilder newBotBuilder() {
-    return new TimeUpdaterBotBuilder().setJsonLedgerClient(jsonLedgerClient).setParty(operator);
+    return new TimeUpdaterBotBuilder().setLedgerClient(ledgerClient).setParty(operator);
   }
 
   ActiveContractSet createContractResponse(CreatedEvent event) {

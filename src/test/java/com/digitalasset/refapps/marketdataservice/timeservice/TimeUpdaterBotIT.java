@@ -39,7 +39,7 @@ public class TimeUpdaterBotIT extends TimeUpdaterBotBaseTest {
   public void componentTest() throws InterruptedException {
     CreatedEvent eventManager = createTimeManager();
     CreatedEvent eventCurrentTime = createCurrentTime();
-    when(jsonLedgerClient.queryContracts(any()))
+    when(ledgerClient.queryContracts(any()))
         .thenReturn(createContractResponse(eventManager))
         .thenReturn(createContractResponse(eventCurrentTime))
         .thenReturn(createContractResponse(eventCurrentTime));
@@ -52,6 +52,6 @@ public class TimeUpdaterBotIT extends TimeUpdaterBotBaseTest {
 
     TimeUnit.MILLISECONDS.sleep(2500);
 
-    verify(jsonLedgerClient, times(2)).exerciseChoice(any());
+    verify(ledgerClient, times(2)).exerciseChoice(any());
   }
 }

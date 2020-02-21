@@ -6,15 +6,15 @@ package com.digitalasset.refapps.marketdataservice.timeservice;
 
 import com.digitalasset.refapps.marketdataservice.JsonLedgerApiHandle;
 import com.digitalasset.refapps.marketdataservice.LedgerApiHandle;
-import jsonapi.JsonLedgerClient;
+import jsonapi.LedgerClient;
 
 public class TimeUpdaterBotBuilder {
 
-  private JsonLedgerClient jsonLedgerClient;
+  private LedgerClient ledgerClient;
   private String party;
 
-  public TimeUpdaterBotBuilder setJsonLedgerClient(JsonLedgerClient jsonLedgerClient) {
-    this.jsonLedgerClient = jsonLedgerClient;
+  public TimeUpdaterBotBuilder setLedgerClient(LedgerClient ledgerClient) {
+    this.ledgerClient = ledgerClient;
     return this;
   }
 
@@ -24,7 +24,7 @@ public class TimeUpdaterBotBuilder {
   }
 
   public TimeUpdaterBot build() {
-    LedgerApiHandle ledgerApiHandle = new JsonLedgerApiHandle(jsonLedgerClient, party);
+    LedgerApiHandle ledgerApiHandle = new JsonLedgerApiHandle(ledgerClient, party);
     return new TimeUpdaterBot(ledgerApiHandle);
   }
 }
