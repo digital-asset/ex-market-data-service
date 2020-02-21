@@ -8,8 +8,6 @@ import static com.digitalasset.refapps.utils.EventuallyUtil.eventually;
 import static org.junit.Assert.assertTrue;
 
 import com.daml.ledger.javaapi.data.Party;
-import com.digitalasset.refapps.marketdataservice.JsonLedgerApiHandle;
-import com.digitalasset.refapps.marketdataservice.LedgerApiHandle;
 import com.digitalasset.refapps.marketdataservice.extensions.RelTime;
 import com.digitalasset.refapps.marketdataservice.timeservice.TimeUpdaterBot;
 import com.digitalasset.refapps.marketdataservice.timeservice.TimeUpdaterBotExecutor;
@@ -70,17 +68,17 @@ public class TimeUpdaterBotJsonIT {
 
   private ScheduledExecutorService scheduler;
   private DefaultLedgerAdapter ledger;
-  private LedgerApiHandle apiHandle;
+  private LedgerClient ledgerClient;
 
   @Before
   public void setup() {
     ledger = sandbox.getLedgerAdapter();
     String ledgerId = sandbox.getClient().getLedgerId();
     scheduler = Executors.newScheduledThreadPool(1);
-    apiHandle =
-        new JsonLedgerApiHandle(
-            OPERATOR.getValue(),
+    ledgerClient =
+        JsonLedgerClient.create(
             ledgerId,
+            OPERATOR.getValue(),
             APPLICATION_ID,
             httpResponseDeserializer,
             jsonSerializer,
@@ -108,7 +106,7 @@ public class TimeUpdaterBotJsonIT {
     TimeManager.ContractId managerCid =
         ledger.getCreatedContractId(OPERATOR, TimeManager.TEMPLATE_ID, TimeManager.ContractId::new);
 
-    TimeUpdaterBot timeUpdaterBot = new TimeUpdaterBot(apiHandle);
+    TimeUpdaterBot timeUpdaterBot = new TimeUpdaterBot(ledgerClient);
     TimeUpdaterBotExecutor botExecutor = new TimeUpdaterBotExecutor(scheduler);
     botExecutor.start(timeUpdaterBot, Duration.ofSeconds(5));
     ledger.exerciseChoice(OPERATOR, managerCid.exerciseContinue());

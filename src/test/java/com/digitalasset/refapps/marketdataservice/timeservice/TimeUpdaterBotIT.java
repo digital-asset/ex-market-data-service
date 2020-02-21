@@ -46,7 +46,7 @@ public class TimeUpdaterBotIT extends TimeUpdaterBotBaseTest {
 
     Duration systemPeriodTime = Duration.ofMillis(1000);
 
-    TimeUpdaterBot bot = newBotBuilder().build();
+    TimeUpdaterBot bot = new TimeUpdaterBot(ledgerClient);
     TimeUpdaterBotExecutor timeUpdaterBotExecutor = new TimeUpdaterBotExecutor(scheduler);
     timeUpdaterBotExecutor.start(bot, systemPeriodTime);
 

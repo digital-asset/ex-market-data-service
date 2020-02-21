@@ -29,10 +29,6 @@ public abstract class TimeUpdaterBotBaseTest {
     return new CreatedEvent(CurrentTime.TEMPLATE_ID, "123", currentTime);
   }
 
-  TimeUpdaterBotBuilder newBotBuilder() {
-    return new TimeUpdaterBotBuilder().setLedgerClient(ledgerClient).setParty(operator);
-  }
-
   ActiveContractSet createContractResponse(CreatedEvent event) {
     return event.update(ActiveContractSet.empty());
   }

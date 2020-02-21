@@ -35,7 +35,7 @@ public class TimeUpdaterBotTest extends TimeUpdaterBotBaseTest {
         .thenReturn(createContractResponse(eventCurrentTime));
     ManualExecutorService executor = new ManualExecutorService();
 
-    TimeUpdaterBot bot = newBotBuilder().build();
+    TimeUpdaterBot bot = new TimeUpdaterBot(ledgerClient);
     executor.scheduleAtFixedRate(bot::updateModelTime, 1, 1, TimeUnit.SECONDS);
     executor.runScheduledNow();
 

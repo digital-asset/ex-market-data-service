@@ -7,13 +7,18 @@ package jsonapi;
 import com.daml.ledger.javaapi.data.CreateCommand;
 import com.daml.ledger.javaapi.data.ExerciseCommand;
 import io.reactivex.Flowable;
+import java.util.Collections;
+import jsonapi.apache.ApacheHttpClient;
 import jsonapi.http.Api;
 import jsonapi.http.HttpClient;
 import jsonapi.http.HttpResponse;
 import jsonapi.http.HttpResponse.SearchResult;
+import jsonapi.http.Jwt;
 import jsonapi.http.WebSocketClient;
 import jsonapi.http.WebSocketResponse;
+import jsonapi.json.JsonDeserializer;
 import jsonapi.json.JsonSerializer;
+import jsonapi.tyrus.TyrusWebSocketClient;
 
 public class JsonLedgerClient implements LedgerClient {
 
@@ -54,6 +59,7 @@ public class JsonLedgerClient implements LedgerClient {
   }
 
   // TODO: Eliminate code duplication, fix interface
+
   @Override
   public ActiveContractSet queryContracts(ContractQuery query) {
     HttpResponse httpResponse = httpClient.post(api.searchContract(), query);
@@ -71,5 +77,23 @@ public class JsonLedgerClient implements LedgerClient {
     return response
         .map(WebSocketResponse::getEvents)
         .scan(ActiveContractSet.empty(), ActiveContractSet::update);
+  }
+
+  public static LedgerClient create(
+      String ledgerId,
+      String party,
+      String applicationId,
+      JsonDeserializer<HttpResponse> httpResponseDeserializer,
+      JsonSerializer jsonSerializer,
+      JsonDeserializer<WebSocketResponse> webSocketResponseDeserializer) {
+    String jwt = Jwt.createToken(ledgerId, applicationId, Collections.singletonList(party));
+    ApacheHttpClient httpClient =
+        new ApacheHttpClient(httpResponseDeserializer, jsonSerializer, jwt);
+    TyrusWebSocketClient webSocketClient =
+        new TyrusWebSocketClient(webSocketResponseDeserializer, jsonSerializer, jwt);
+    // TODO: Make this configurable.
+    Api api = new Api("localhost", 7575);
+
+    return new JsonLedgerClient(httpClient, webSocketClient, jsonSerializer, api);
   }
 }

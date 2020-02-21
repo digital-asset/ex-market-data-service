@@ -14,7 +14,6 @@ import com.digitalasset.refapps.marketdataservice.utils.AppParties;
 import com.digitalasset.refapps.marketdataservice.utils.CliOptions;
 import io.reactivex.Flowable;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -24,15 +23,11 @@ import jsonapi.ContractQuery;
 import jsonapi.JsonLedgerClient;
 import jsonapi.LedgerClient;
 import jsonapi.Utils;
-import jsonapi.apache.ApacheHttpClient;
 import jsonapi.gson.GsonDeserializer;
 import jsonapi.gson.GsonSerializer;
-import jsonapi.http.Api;
 import jsonapi.http.HttpResponse;
-import jsonapi.http.Jwt;
 import jsonapi.http.WebSocketResponse;
 import jsonapi.json.JsonDeserializer;
-import jsonapi.tyrus.TyrusWebSocketClient;
 import org.kohsuke.args4j.CmdLineException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,15 +67,6 @@ public class Main {
   }
 
   public static void runBots(String ledgerId, AppParties parties, Duration systemPeriodTime) {
-    JsonLedgerApiHandle handle =
-        new JsonLedgerApiHandle(
-            parties.getOperator(),
-            ledgerId,
-            APPLICATION_ID,
-            httpResponseDeserializer,
-            jsonSerializer,
-            webSocketResponseDeserializer);
-
     if (parties.hasMarketDataProvider1()) {
       logger.info("Starting automation for MarketDataProvider1.");
       PublishingDataProvider dataProvider = new CachingCsvDataProvider();
@@ -107,7 +93,8 @@ public class Main {
 
     if (parties.hasOperator()) {
       logger.info("Starting automation for Operator.");
-      TimeUpdaterBot timeUpdaterBot = new TimeUpdaterBot(handle);
+      LedgerClient ledgerClient = createLedgerClient(ledgerId, parties.getOperator());
+      TimeUpdaterBot timeUpdaterBot = new TimeUpdaterBot(ledgerClient);
       scheduler = Executors.newScheduledThreadPool(1);
       timeUpdaterBotExecutor = new TimeUpdaterBotExecutor(scheduler);
       timeUpdaterBotExecutor.start(timeUpdaterBot, systemPeriodTime);
@@ -119,22 +106,21 @@ public class Main {
       String party,
       ContractQuery contractQuery,
       Function<ActiveContractSet, Flowable<Command>> bot) {
-
-    String jwt = Jwt.createToken(ledgerId, APPLICATION_ID, Collections.singletonList(party));
-    ApacheHttpClient httpClient =
-        new ApacheHttpClient(httpResponseDeserializer, jsonSerializer, jwt);
-    TyrusWebSocketClient webSocketClient =
-        new TyrusWebSocketClient(webSocketResponseDeserializer, jsonSerializer, jwt);
-    // TODO: Make this configurable.
-    Api api = new Api("localhost", 7575);
-
-    LedgerClient ledgerClient =
-        new JsonLedgerClient(httpClient, webSocketClient, jsonSerializer, api);
-
+    LedgerClient ledgerClient = createLedgerClient(ledgerId, party);
     ledgerClient
         .getActiveContracts(contractQuery)
         .flatMap(bot::apply)
         .forEach(command -> submitCommand(ledgerClient, command));
+  }
+
+  private static LedgerClient createLedgerClient(String ledgerId, String operator) {
+    return JsonLedgerClient.create(
+        ledgerId,
+        operator,
+        APPLICATION_ID,
+        httpResponseDeserializer,
+        jsonSerializer,
+        webSocketResponseDeserializer);
   }
 
   public static void terminateTimeUpdaterBot() {
