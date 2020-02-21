@@ -11,16 +11,25 @@ import jsonapi.events.Event;
 @SuppressWarnings("PMD.DataClass")
 public class WebSocketResponse {
 
+  // We keep them nullable references instead of using Optional for easier Gson parsing
   private final Collection<EventHolder> events;
   private final String error;
 
   public WebSocketResponse(Collection<EventHolder> events, String error) {
+    if (events == null && error == null) {
+      throw new RuntimeException(
+          "WebSocketResponse precondition failure: both events and error are null");
+    }
     this.events = events;
     this.error = error;
   }
 
   public Collection<Event> getEvents() {
-    return events.stream().map(EventHolder::event).collect(Collectors.toList());
+    if (error != null) {
+      throw new RuntimeException("Websocket: " + error);
+    } else {
+      return events.stream().map(EventHolder::event).collect(Collectors.toList());
+    }
   }
 
   public String getError() {
