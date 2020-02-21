@@ -6,7 +6,6 @@ package jsonapi.http;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
-import jsonapi.ActiveContractSet;
 import jsonapi.events.Event;
 
 @SuppressWarnings("PMD.DataClass")
@@ -21,22 +20,22 @@ public class WebSocketResponse {
     this.error = error;
   }
 
-  public Collection<Event> getEvents() {
-    return events.stream().map(EventHolder::event).collect(Collectors.toList());
+  public Collection<EventHolder> getEventHolders() {
+    return events;
   }
 
-  public String getError() {
-    return error;
-  }
-
-  public ActiveContractSet toActiveContractSet() {
+  public Collection<Event> toEvents() {
     if (error != null) {
       throw new RuntimeException(error);
     } else {
       if (events == null) {
         throw new IllegalStateException("WebSocketResponse has no error nor events");
       }
-      return ActiveContractSet.empty().update(getEvents());
+      return events.stream().map(EventHolder::event).collect(Collectors.toList());
     }
+  }
+
+  public String getError() {
+    return error;
   }
 }

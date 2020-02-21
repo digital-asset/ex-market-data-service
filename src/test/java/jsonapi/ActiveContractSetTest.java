@@ -159,7 +159,7 @@ public class ActiveContractSetTest {
                 null));
 
     Flowable<ActiveContractSet> activeContractSet =
-        response.scan(ActiveContractSet.empty(), (acs, ws) -> acs.update(ws.getEvents()));
+        response.scan(ActiveContractSet.empty(), (acs, ws) -> acs.update(ws.toEvents()));
 
     activeContractSet
         .test()

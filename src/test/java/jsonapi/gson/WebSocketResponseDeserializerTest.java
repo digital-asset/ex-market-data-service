@@ -17,6 +17,7 @@ import da.timeservice.timeservice.CurrentTime;
 import java.time.Instant;
 import jsonapi.events.CreatedEvent;
 import jsonapi.events.Event;
+import jsonapi.http.CreatedEventHolder;
 import jsonapi.http.EventHolder;
 import jsonapi.http.WebSocketResponse;
 import org.junit.Test;
@@ -74,7 +75,7 @@ public class WebSocketResponseDeserializerTest {
             .create();
 
     WebSocketResponse result = deserializer.fromJson(json, WebSocketResponse.class);
-    assertThat(result.getEvents().size(), is(1));
-    assertThat(result.getEvents(), everyItem(instanceOf(CreatedEvent.class)));
+    assertThat(result.getEventHolders().size(), is(1));
+    assertThat(result.getEventHolders(), everyItem(instanceOf(CreatedEventHolder.class)));
   }
 }

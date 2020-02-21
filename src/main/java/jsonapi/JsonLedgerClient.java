@@ -74,7 +74,7 @@ public class JsonLedgerClient {
         webSocketClient.post(api.searchContractsForever(), query);
     // TODO: Convert to events (created, archive, error)
     return response
-        .map(WebSocketResponse::getEvents)
+        .map(WebSocketResponse::toEvents)
         .scan(ActiveContractSet.empty(), ActiveContractSet::update);
   }
 }
