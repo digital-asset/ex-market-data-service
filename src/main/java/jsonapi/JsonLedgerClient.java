@@ -7,8 +7,10 @@ package jsonapi;
 import com.daml.ledger.javaapi.data.CreateCommand;
 import com.daml.ledger.javaapi.data.ExerciseCommand;
 import io.reactivex.Flowable;
+import java.util.Collection;
 import java.util.Collections;
 import jsonapi.apache.ApacheHttpClient;
+import jsonapi.events.Event;
 import jsonapi.http.Api;
 import jsonapi.http.HttpClient;
 import jsonapi.http.HttpResponse;
@@ -31,6 +33,22 @@ public class JsonLedgerClient implements LedgerClient {
     if (httpResponse.getStatus() != 200) {
       throw new RuntimeException(toJson.apply(httpResponse.getErrors()));
     }
+  }
+
+  private Collection<Event> throwOrGetEvents(WebSocketResponse webSocketResponse) {
+    webSocketResponse
+        .getError()
+        .ifPresent(
+            errors -> {
+              throw new RuntimeException(errors);
+            });
+    webSocketResponse
+        .getWarnings()
+        .ifPresent(
+            warnings -> {
+              throw new RuntimeException(warnings.toString());
+            });
+    return webSocketResponse.getEvents();
   }
 
   public JsonLedgerClient(
@@ -85,7 +103,7 @@ public class JsonLedgerClient implements LedgerClient {
         webSocketClient.post(api.searchContractsForever(), query);
     // TODO: Convert to events (created, archive, error)
     return response
-        .map(WebSocketResponse::getEvents)
+        .map(this::throwOrGetEvents)
         .scan(ActiveContractSet.empty(), ActiveContractSet::update);
   }
 
