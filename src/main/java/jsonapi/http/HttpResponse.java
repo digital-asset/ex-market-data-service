@@ -56,10 +56,10 @@ public class HttpResponse {
 
   private final int status;
   private final Result result;
-  private final Object errors;
+  private final Collection<String> errors;
   private final Object warnings;
 
-  public HttpResponse(int status, Result result, Object errors, Object warnings) {
+  public HttpResponse(int status, Result result, Collection<String> errors, Object warnings) {
     this.status = status;
     this.result = result;
     this.errors = errors;
@@ -74,7 +74,7 @@ public class HttpResponse {
     return result;
   }
 
-  public Object getErrors() {
+  public Collection<String> getErrors() {
     return errors;
   }
 

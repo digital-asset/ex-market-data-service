@@ -5,18 +5,25 @@
 package jsonapi.http;
 
 import java.util.Collection;
+import java.util.stream.Collectors;
 import jsonapi.events.Event;
 
 @SuppressWarnings("PMD.DataClass")
 public class WebSocketResponse {
 
-  private final Collection<Event> events;
+  private final Collection<EventHolder> events;
+  private final String error;
 
-  public WebSocketResponse(Collection<Event> events) {
+  public WebSocketResponse(Collection<EventHolder> events, String error) {
     this.events = events;
+    this.error = error;
   }
 
   public Collection<Event> getEvents() {
-    return events;
+    return events.stream().map(EventHolder::event).collect(Collectors.toList());
+  }
+
+  public String getError() {
+    return error;
   }
 }
