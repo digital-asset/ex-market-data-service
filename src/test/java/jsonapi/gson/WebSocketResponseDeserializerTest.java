@@ -75,7 +75,7 @@ public class WebSocketResponseDeserializerTest {
             .create();
 
     WebSocketResponse result = deserializer.fromJson(json, WebSocketResponse.class);
-    assertThat(result.getEventHolders().size(), is(1));
-    assertThat(result.getEventHolders(), everyItem(instanceOf(CreatedEventHolder.class)));
+    assertThat(result.toEvents().size(), is(1));
+    assertThat(result.toEvents(), everyItem(instanceOf(CreatedEvent.class)));
   }
 }

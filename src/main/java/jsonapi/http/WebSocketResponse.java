@@ -20,10 +20,6 @@ public class WebSocketResponse {
     this.error = error;
   }
 
-  public Collection<EventHolder> getEventHolders() {
-    return events;
-  }
-
   public Collection<Event> toEvents() {
     if (error != null) {
       throw new RuntimeException(error);
