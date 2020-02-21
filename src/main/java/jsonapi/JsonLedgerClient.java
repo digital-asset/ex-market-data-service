@@ -32,17 +32,17 @@ public class JsonLedgerClient {
 
   private Collection<Event> throwOrGetEvents(WebSocketResponse webSocketResponse) {
     webSocketResponse
-            .getError()
-            .ifPresent(
-                    errors -> {
-                      throw new RuntimeException(errors);
-                    });
+        .getError()
+        .ifPresent(
+            errors -> {
+              throw new RuntimeException(errors);
+            });
     webSocketResponse
-            .getWarnings()
-            .ifPresent(
-                    warnings -> {
-                      throw new RuntimeException(warnings.toString());
-                    });
+        .getWarnings()
+        .ifPresent(
+            warnings -> {
+              throw new RuntimeException(warnings.toString());
+            });
     return webSocketResponse.getEvents();
   }
 
