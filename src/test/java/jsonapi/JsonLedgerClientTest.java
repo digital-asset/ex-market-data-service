@@ -4,12 +4,15 @@
  */
 package jsonapi;
 
+import io.reactivex.Flowable;
 import java.net.URI;
 import java.util.Collections;
 import jsonapi.gson.GsonSerializer;
 import jsonapi.http.Api;
 import jsonapi.http.HttpClient;
 import jsonapi.http.HttpResponse;
+import jsonapi.http.WebSocketClient;
+import jsonapi.http.WebSocketResponse;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -25,6 +28,19 @@ public class JsonLedgerClientTest {
     @Override
     public HttpResponse post(URI resource, Object body) {
       return badHttpResponse;
+    }
+  }
+
+  private static class WebSocketClientGivingError implements WebSocketClient {
+    private final WebSocketResponse emulatedResponse;
+
+    public WebSocketClientGivingError(WebSocketResponse emulatedResponse) {
+      this.emulatedResponse = emulatedResponse;
+    }
+
+    @Override
+    public Flowable<WebSocketResponse> post(URI resource, Object body) {
+      return Flowable.just(emulatedResponse);
     }
   }
 
@@ -63,5 +79,25 @@ public class JsonLedgerClientTest {
     JsonLedgerClient ledger = new JsonLedgerClient(httpClient, null, jsonSerializer, api);
     exceptionRule.expectMessage(someBadRequestErrorMessage);
     ledger.queryContracts(null);
+  }
+
+  @Test
+  public void getActiveContractsThrowsForWebSocketErrorAndIncludesMessage() {
+    WebSocketClientGivingError webSocketClient =
+        new WebSocketClientGivingError(new WebSocketResponse(null, "some error", null));
+    JsonLedgerClient ledger = new JsonLedgerClient(null, webSocketClient, jsonSerializer, api);
+    exceptionRule.expectMessage("some error");
+    Flowable<ActiveContractSet> activeContracts = ledger.getActiveContracts(null);
+    activeContracts.blockingSingle();
+  }
+
+  @Test
+  public void getActiveContractsThrowsForWebSocketWarningAndIncludesMessage() {
+    WebSocketClientGivingError webSocketClient =
+            new WebSocketClientGivingError(new WebSocketResponse(null, null, "some warning"));
+    JsonLedgerClient ledger = new JsonLedgerClient(null, webSocketClient, jsonSerializer, api);
+    exceptionRule.expectMessage("some warning");
+    Flowable<ActiveContractSet> activeContracts = ledger.getActiveContracts(null);
+    activeContracts.blockingSingle();
   }
 }

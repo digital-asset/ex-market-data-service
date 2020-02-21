@@ -5,6 +5,7 @@
 package jsonapi.http;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import jsonapi.events.Event;
 
@@ -22,26 +23,16 @@ public class WebSocketResponse {
     this.warnings = warnings;
   }
 
-  public Collection<Event> toEvents() {
-    if (error != null) {
-      throw new RuntimeException(error);
-    } else {
-      if (warnings != null) {
-        throw new RuntimeException(warnings.toString());
-      } else {
-        if (events == null) {
-          throw new IllegalStateException("WebSocketResponse has no error or warnings or events");
-        }
-        return events.stream().map(EventHolder::event).collect(Collectors.toList());
-      }
-    }
+  // TODO make this optional
+  public Collection<Event> getEvents() {
+    return events.stream().map(EventHolder::event).collect(Collectors.toList());
   }
 
-  public String getError() {
-    return error;
+  public Optional<String> getError() {
+    return Optional.ofNullable(error);
   }
 
-  public Object getWarnings() {
-    return warnings;
+  public Optional<Object> getWarnings() {
+    return Optional.ofNullable(warnings);
   }
 }

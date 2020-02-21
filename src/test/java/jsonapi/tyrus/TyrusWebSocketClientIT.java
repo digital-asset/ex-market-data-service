@@ -85,7 +85,7 @@ public class TyrusWebSocketClientIT {
 
     List<ArrayList<Event>> values =
         response
-            .map(webSocketResponse -> new ArrayList<>(webSocketResponse.toEvents()))
+            .map(webSocketResponse -> new ArrayList<>(webSocketResponse.getEvents()))
             .test()
             .awaitCount(2)
             .values();
