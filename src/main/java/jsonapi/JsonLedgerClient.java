@@ -30,6 +30,22 @@ public class JsonLedgerClient {
     }
   }
 
+  private Collection<Event> throwOrGetEvents(WebSocketResponse webSocketResponse) {
+    webSocketResponse
+            .getError()
+            .ifPresent(
+                    errors -> {
+                      throw new RuntimeException(errors);
+                    });
+    webSocketResponse
+            .getWarnings()
+            .ifPresent(
+                    warnings -> {
+                      throw new RuntimeException(warnings.toString());
+                    });
+    return webSocketResponse.getEvents();
+  }
+
   public JsonLedgerClient(
       HttpClient httpClient, WebSocketClient webSocketClient, JsonSerializer toJson, Api api) {
     this.httpClient = httpClient;
@@ -69,22 +85,6 @@ public class JsonLedgerClient {
     // TODO: Eliminate the need for casting.
     SearchResult searchResult = (SearchResult) httpResponse.getResult();
     return acs.update(searchResult.getCreatedEvents());
-  }
-
-  private Collection<Event> throwOrGetEvents(WebSocketResponse webSocketResponse) {
-    webSocketResponse
-        .getError()
-        .ifPresent(
-            errors -> {
-              throw new RuntimeException(errors);
-            });
-    webSocketResponse
-        .getWarnings()
-        .ifPresent(
-            warnings -> {
-              throw new RuntimeException(warnings.toString());
-            });
-    return webSocketResponse.getEvents();
   }
 
   public Flowable<ActiveContractSet> getActiveContracts(ContractQuery query) {
