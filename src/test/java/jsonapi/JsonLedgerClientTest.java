@@ -94,7 +94,7 @@ public class JsonLedgerClientTest {
   @Test
   public void getActiveContractsThrowsForWebSocketWarningAndIncludesMessage() {
     WebSocketClientGivingError webSocketClient =
-            new WebSocketClientGivingError(new WebSocketResponse(null, null, "some warning"));
+        new WebSocketClientGivingError(new WebSocketResponse(null, null, "some warning"));
     JsonLedgerClient ledger = new JsonLedgerClient(null, webSocketClient, jsonSerializer, api);
     exceptionRule.expectMessage("some warning");
     Flowable<ActiveContractSet> activeContracts = ledger.getActiveContracts(null);
