@@ -4,44 +4,29 @@
  */
 package jsonapi.http;
 
+import static org.hamcrest.CoreMatchers.everyItem;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
+
+import jsonapi.events.CreatedEvent;
 import jsonapi.events.Event;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class WebSocketResponseTest {
-
-  @Rule public ExpectedException exceptionRule = ExpectedException.none();
-
   @Test
-  public void toEventsThrowsWithoutEventsWarningsError() {
-    exceptionRule.expect(IllegalStateException.class);
-    exceptionRule.expectMessage("no error or warnings or events");
-    new WebSocketResponse(null, null, null).getEvents();
-  }
-
-  @Test
-  public void toEventsReturnsWhenNoErrorNorWarning() {
+  public void toEvents() {
+    Collection<EventHolder> events = Collections.singletonList(new CreatedEventHolder(new CreatedEvent(null, null, null)));
     Collection<Event> actual =
-        new WebSocketResponse(Collections.emptyList(), null, null).getEvents();
-    assertTrue(actual.isEmpty());
-  }
-
-  @Test
-  public void toEventsThrowsOnError() {
-    exceptionRule.expect(RuntimeException.class);
-    exceptionRule.expectMessage("some error message");
-    new WebSocketResponse(null, "some error message", null).getEvents();
-  }
-
-  @Test
-  public void toEventsThrowsOnWarning() {
-    exceptionRule.expect(RuntimeException.class);
-    exceptionRule.expectMessage("some warning message");
-    new WebSocketResponse(null, null, "some warning message").getEvents();
+        new WebSocketResponse(events, null, null).getEvents();
+    assertEquals(1, actual.size());
+    assertThat(actual, everyItem(instanceOf(CreatedEvent.class)));
   }
 }
