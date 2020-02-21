@@ -30,7 +30,7 @@ public class WebSocketResponse {
         throw new RuntimeException(warnings.toString());
       } else {
         if (events == null) {
-          throw new IllegalStateException("WebSocketResponse has no error nor warnings nor events");
+          throw new IllegalStateException("WebSocketResponse has no error or warnings or events");
         }
         return events.stream().map(EventHolder::event).collect(Collectors.toList());
       }

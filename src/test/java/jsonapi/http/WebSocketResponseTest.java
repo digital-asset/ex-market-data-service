@@ -20,7 +20,7 @@ public class WebSocketResponseTest {
   @Test
   public void toEventsThrowsWithoutEventsWarningsError() {
     exceptionRule.expect(IllegalStateException.class);
-    exceptionRule.expectMessage("no error nor warnings nor events");
+    exceptionRule.expectMessage("no error or warnings or events");
     new WebSocketResponse(null, null, null).toEvents();
   }
 
