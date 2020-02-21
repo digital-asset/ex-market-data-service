@@ -24,7 +24,6 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import jsonapi.ContractQuery;
@@ -84,24 +83,6 @@ public class TyrusWebSocketClientIT {
     WebSocketClient client = new TyrusWebSocketClient(this::fromJson, new GsonSerializer(), jwt);
     Flowable<WebSocketResponse> response = client.post(api.searchContractsForever(), query);
 
-    /* with invalid URI, gives:
-    java.lang.RuntimeException: javax.websocket.DeploymentException: Handshake error.
-    Caused by: javax.websocket.DeploymentException: Handshake error.
-    Caused by: org.glassfish.tyrus.core.HandshakeException: Response code was not 101: 404.
-        */
-    Collection<Event> events = response.map(ws -> ws.getEvents()).blockingFirst();
-
-    /* with invalid URI, gives:
-
-
-    java.lang.IndexOutOfBoundsException: Index 0 out of bounds for length 0
-
-    	at java.base/java.util.Objects.checkIndex(Objects.java:372)
-    	at java.base/java.util.ArrayList.get(ArrayList.java:458)
-    	at io.reactivex.internal.util.VolatileSizeArrayList.get(VolatileSizeArrayList.java:124)
-    	at jsonapi.tyrus.TyrusWebSocketClientIT.queryingMultipleTemplateTypes(TyrusWebSocketClientIT.java:96)
-
-         */
     List<ArrayList<Event>> values =
         response
             .map(webSocketResponse -> new ArrayList<>(webSocketResponse.getEvents()))

@@ -52,8 +52,7 @@ public class TyrusWebSocketClient implements WebSocketClient {
 
   @Override
   public Flowable<WebSocketResponse> post(URI resource, Object body) {
-    String query = "{blahblah"; // toJson.apply(body);
-    System.err.println(query);
+    String query = toJson.apply(body);
     Flowable<WebSocketResponse> source =
         Flowable.defer(() -> createWebSocketPublisher(resource, query));
     return source.publish().autoConnect();

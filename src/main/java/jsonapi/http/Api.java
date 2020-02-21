@@ -21,7 +21,7 @@ public class Api {
   }
 
   public URI exercise() {
-    return baseHttp.resolve("/v1/execise");
+    return baseHttp.resolve("/v1/exercise");
   }
 
   public URI fetchContract() {
@@ -29,7 +29,7 @@ public class Api {
   }
 
   public URI searchContract() {
-    return baseHttp.resolve("/v1/quey");
+    return baseHttp.resolve("/v1/query");
   }
 
   public URI parties() {
