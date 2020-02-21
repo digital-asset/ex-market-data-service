@@ -4,11 +4,10 @@
  */
 package jsonapi.http;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import java.util.Collection;
 import java.util.Collections;
-import jsonapi.events.Event;
+import jsonapi.ActiveContractSet;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -18,22 +17,23 @@ public class WebSocketResponseTest {
   @Rule public ExpectedException exceptionRule = ExpectedException.none();
 
   @Test
-  public void cannotCreateWithoutEventsAndError() {
-    exceptionRule.expect(RuntimeException.class);
-    exceptionRule.expectMessage("both events and error are null");
-    new WebSocketResponse(null, null);
+  public void toActiveContractSetThrowsWithoutEventsAndError() {
+    exceptionRule.expect(IllegalStateException.class);
+    exceptionRule.expectMessage("no error nor events");
+    new WebSocketResponse(null, null).toActiveContractSet();
   }
 
   @Test
-  public void getEventsReturnsWhenNoError() {
-    Collection<Event> actual = new WebSocketResponse(Collections.emptyList(), null).getEvents();
-    assertEquals(Collections.emptyList(), actual);
+  public void toActiveContractSetReturnsWhenNoError() {
+    ActiveContractSet actual =
+        new WebSocketResponse(Collections.emptyList(), null).toActiveContractSet();
+    assertTrue(actual.isEmpty());
   }
 
   @Test
-  public void getEventsThrowsOnError() {
+  public void toActiveContractSetThrowsOnError() {
     exceptionRule.expect(RuntimeException.class);
     exceptionRule.expectMessage("some error message");
-    new WebSocketResponse(null, "some error message").getEvents();
+    new WebSocketResponse(null, "some error message").toActiveContractSet();
   }
 }
