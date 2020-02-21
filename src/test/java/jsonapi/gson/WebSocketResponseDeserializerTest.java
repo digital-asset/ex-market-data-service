@@ -19,9 +19,19 @@ import jsonapi.events.CreatedEvent;
 import jsonapi.events.Event;
 import jsonapi.http.EventHolder;
 import jsonapi.http.WebSocketResponse;
+import org.hamcrest.core.StringContains;
 import org.junit.Test;
 
 public class WebSocketResponseDeserializerTest {
+
+  @Test
+  public void deserializeWarning() {
+    String json =
+        "{\"warnings\":{\"unknownTemplateIds\":[\"230a15b6240603917c18612a7dcb83a7040ab1cf8d498bb4b523b5de03659f58:DA.RefApps.MarketDataService.Roles:OperatorRol\"]}}";
+    Gson deserializer = new GsonBuilder().create();
+    WebSocketResponse result = deserializer.fromJson(json, WebSocketResponse.class);
+    assertThat(result.getWarnings().get().toString(), StringContains.containsString("OperatorRol"));
+  }
 
   @Test
   public void deserializeError() {
@@ -31,7 +41,7 @@ public class WebSocketResponseDeserializerTest {
     WebSocketResponse result = deserializer.fromJson(json, WebSocketResponse.class);
     assertEquals(
         "Endpoints.InvalidUserInput: JsonReaderError. Cannot read JSON: <{blahblah>. ",
-        result.getError());
+        result.getError().get());
   }
 
   @Test
