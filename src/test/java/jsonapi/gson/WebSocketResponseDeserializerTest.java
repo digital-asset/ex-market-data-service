@@ -7,11 +7,12 @@ package jsonapi.gson;
 import static org.hamcrest.CoreMatchers.everyItem;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.daml.ledger.javaapi.data.Identifier;
 import com.google.gson.Gson;
-import com.google.gson.JsonDeserializer;
+import com.google.gson.GsonBuilder;
 import da.timeservice.timeservice.CurrentTime;
 import java.time.Instant;
 import jsonapi.events.CreatedEvent;
@@ -20,7 +21,18 @@ import jsonapi.http.EventHolder;
 import jsonapi.http.WebSocketResponse;
 import org.junit.Test;
 
-public class WebSocketResponseDeserializerTest extends DeserializerBaseTest<WebSocketResponse> {
+public class WebSocketResponseDeserializerTest {
+
+  @Test
+  public void deserializeError() {
+    String json =
+        "{\"error\":\"Endpoints.InvalidUserInput: JsonReaderError. Cannot read JSON: <{blahblah>. \"}";
+    Gson deserializer = new GsonBuilder().create();
+    WebSocketResponse result = deserializer.fromJson(json, WebSocketResponse.class);
+    assertEquals(
+        "Endpoints.InvalidUserInput: JsonReaderError. Cannot read JSON: <{blahblah>. ",
+        result.getError());
+  }
 
   @Test
   public void deserializeQueryResponse() {
@@ -52,26 +64,17 @@ public class WebSocketResponseDeserializerTest extends DeserializerBaseTest<WebS
             + "    }\n"
             + "  ]\n"
             + "}";
-    registerDeserializer(Identifier.class, new IdentifierDeserializer());
-    registerDeserializer(Instant.class, new InstantDeserializer());
-    registerDeserializer(Event.class, new EventDeserializer());
-    registerDeserializer(CreatedEvent.class, new CreatedEventDeserializer());
-    registerDeserializer(EventHolder.class, new EventHolderDeserializer());
+    Gson deserializer =
+        new GsonBuilder()
+            .registerTypeAdapter(Identifier.class, new IdentifierDeserializer())
+            .registerTypeAdapter(Instant.class, new InstantDeserializer())
+            .registerTypeAdapter(Event.class, new EventDeserializer())
+            .registerTypeAdapter(CreatedEvent.class, new CreatedEventDeserializer())
+            .registerTypeAdapter(EventHolder.class, new EventHolderDeserializer())
+            .create();
 
-    Gson deserializer = createDeserializer();
-
-    WebSocketResponse result = deserializer.fromJson(json, getDeserializedClass());
+    WebSocketResponse result = deserializer.fromJson(json, WebSocketResponse.class);
     assertThat(result.getEvents().size(), is(1));
     assertThat(result.getEvents(), everyItem(instanceOf(CreatedEvent.class)));
-  }
-
-  @Override
-  protected Class<WebSocketResponse> getDeserializedClass() {
-    return WebSocketResponse.class;
-  }
-
-  @Override
-  protected JsonDeserializer<WebSocketResponse> getClassDeserializer() {
-    return new WebSocketResponseDeserializer();
   }
 }
