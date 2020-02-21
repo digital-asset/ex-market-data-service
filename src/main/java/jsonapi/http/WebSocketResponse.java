@@ -5,7 +5,6 @@
 package jsonapi.http;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import jsonapi.events.Event;
@@ -24,10 +23,12 @@ public class WebSocketResponse {
     this.warnings = warnings;
   }
 
+  // TODO return Optional. Should not return empty list for null events, because events==null means
+  // some application error in this ref app (because the websocket error should have been detected
+  // and escalated). In other words, returning empty list for events==null would silently swallow an
+  // error.
   public Collection<Event> getEvents() {
-    return events == null
-        ? Collections.emptyList()
-        : events.stream().map(EventHolder::event).collect(Collectors.toList());
+    return events.stream().map(EventHolder::event).collect(Collectors.toList());
   }
 
   public Optional<String> getError() {
