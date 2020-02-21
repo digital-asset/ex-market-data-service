@@ -21,12 +21,13 @@ public class WebSocketResponseTest {
   public void toEventsThrowsWithoutEventsAndError() {
     exceptionRule.expect(IllegalStateException.class);
     exceptionRule.expectMessage("no error nor events");
-    new WebSocketResponse(null, null).toEvents();
+    new WebSocketResponse(null, null, null).toEvents();
   }
 
   @Test
   public void toEventsReturnsWhenNoError() {
-    Collection<Event> actual = new WebSocketResponse(Collections.emptyList(), null).toEvents();
+    Collection<Event> actual =
+        new WebSocketResponse(Collections.emptyList(), null, null).toEvents();
     assertTrue(actual.isEmpty());
   }
 
@@ -34,6 +35,6 @@ public class WebSocketResponseTest {
   public void toEventsThrowsOnError() {
     exceptionRule.expect(RuntimeException.class);
     exceptionRule.expectMessage("some error message");
-    new WebSocketResponse(null, "some error message").toEvents();
+    new WebSocketResponse(null, "some error message", null).toEvents();
   }
 }

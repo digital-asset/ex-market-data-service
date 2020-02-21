@@ -149,6 +149,7 @@ public class ActiveContractSetTest {
                     new CreatedEventHolder(
                         new CreatedEvent(
                             OperatorRole.TEMPLATE_ID, "#1:0", new OperatorRole("Operator1")))),
+                null,
                 null),
             new WebSocketResponse(
                 Arrays.asList(
@@ -156,6 +157,7 @@ public class ActiveContractSetTest {
                         new CreatedEvent(
                             OperatorRole.TEMPLATE_ID, "#2:0", new OperatorRole("Operator2"))),
                     new ArchivedEventHolder(new ArchivedEvent("#1:0"))),
+                null,
                 null));
 
     Flowable<ActiveContractSet> activeContractSet =

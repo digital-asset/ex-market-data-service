@@ -14,24 +14,34 @@ public class WebSocketResponse {
   // We keep them nullable references instead of using Optional for easier Gson parsing
   private final Collection<EventHolder> events;
   private final String error;
+  private final Object warnings;
 
-  public WebSocketResponse(Collection<EventHolder> events, String error) {
+  public WebSocketResponse(Collection<EventHolder> events, String error, Object warnings) {
     this.events = events;
     this.error = error;
+    this.warnings = warnings;
   }
 
   public Collection<Event> toEvents() {
     if (error != null) {
       throw new RuntimeException(error);
     } else {
-      if (events == null) {
-        throw new IllegalStateException("WebSocketResponse has no error nor events");
+      if (warnings != null) {
+        throw new RuntimeException(warnings.toString());
+      } else {
+        if (events == null) {
+          throw new IllegalStateException("WebSocketResponse has no error nor warnings nor events");
+        }
+        return events.stream().map(EventHolder::event).collect(Collectors.toList());
       }
-      return events.stream().map(EventHolder::event).collect(Collectors.toList());
     }
   }
 
   public String getError() {
     return error;
+  }
+
+  public Object getWarnings() {
+    return warnings;
   }
 }
