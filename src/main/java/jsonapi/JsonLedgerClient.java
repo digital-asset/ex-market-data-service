@@ -27,6 +27,12 @@ public class JsonLedgerClient implements LedgerClient {
   private final JsonSerializer toJson;
   private final Api api;
 
+  private void throwIfStatusIsNot200(HttpResponse httpResponse) throws RuntimeException {
+    if (httpResponse.getStatus() != 200) {
+      throw new RuntimeException(toJson.apply(httpResponse.getErrors()));
+    }
+  }
+
   public JsonLedgerClient(
       HttpClient httpClient, WebSocketClient webSocketClient, JsonSerializer toJson, Api api) {
     this.httpClient = httpClient;
@@ -38,6 +44,7 @@ public class JsonLedgerClient implements LedgerClient {
   @Override
   public String create(CreateCommand command) {
     HttpResponse httpResponse = httpClient.post(api.createContract(), command);
+    throwIfStatusIsNot200(httpResponse);
     // TODO: Return type safe result
     return toJson.apply(httpResponse);
   }
@@ -45,6 +52,7 @@ public class JsonLedgerClient implements LedgerClient {
   @Override
   public String exerciseChoice(ExerciseCommand command) {
     HttpResponse httpResponse = httpClient.post(api.exercise(), command);
+    throwIfStatusIsNot200(httpResponse);
     // TODO: Return type safe result
     return toJson.apply(httpResponse);
   }
@@ -52,6 +60,7 @@ public class JsonLedgerClient implements LedgerClient {
   @Override
   public ActiveContractSet getActiveContracts() {
     HttpResponse httpResponse = httpClient.get(api.searchContract());
+    throwIfStatusIsNot200(httpResponse);
     ActiveContractSet acs = ActiveContractSet.empty();
     // TODO: Eliminate the need for casting.
     SearchResult searchResult = (SearchResult) httpResponse.getResult();
@@ -63,6 +72,7 @@ public class JsonLedgerClient implements LedgerClient {
   @Override
   public ActiveContractSet queryContracts(ContractQuery query) {
     HttpResponse httpResponse = httpClient.post(api.searchContract(), query);
+    throwIfStatusIsNot200(httpResponse);
     ActiveContractSet acs = ActiveContractSet.empty();
     // TODO: Eliminate the need for casting.
     SearchResult searchResult = (SearchResult) httpResponse.getResult();

@@ -25,6 +25,8 @@ import java.util.stream.Collectors;
 import jsonapi.events.ArchivedEvent;
 import jsonapi.events.CreatedEvent;
 import jsonapi.events.Event;
+import jsonapi.http.ArchivedEventHolder;
+import jsonapi.http.CreatedEventHolder;
 import jsonapi.http.WebSocketResponse;
 import org.junit.Test;
 
@@ -144,13 +146,17 @@ public class ActiveContractSetTest {
         Flowable.just(
             new WebSocketResponse(
                 Collections.singletonList(
-                    new CreatedEvent(
-                        OperatorRole.TEMPLATE_ID, "#1:0", new OperatorRole("Operator1")))),
+                    new CreatedEventHolder(
+                        new CreatedEvent(
+                            OperatorRole.TEMPLATE_ID, "#1:0", new OperatorRole("Operator1")))),
+                null),
             new WebSocketResponse(
                 Arrays.asList(
-                    new CreatedEvent(
-                        OperatorRole.TEMPLATE_ID, "#2:0", new OperatorRole("Operator2")),
-                    new ArchivedEvent("#1:0"))));
+                    new CreatedEventHolder(
+                        new CreatedEvent(
+                            OperatorRole.TEMPLATE_ID, "#2:0", new OperatorRole("Operator2"))),
+                    new ArchivedEventHolder(new ArchivedEvent("#1:0"))),
+                null));
 
     Flowable<ActiveContractSet> activeContractSet =
         response.scan(ActiveContractSet.empty(), (acs, ws) -> acs.update(ws.getEvents()));

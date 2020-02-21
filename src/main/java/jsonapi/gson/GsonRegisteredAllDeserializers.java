@@ -15,7 +15,6 @@ import jsonapi.events.CreatedEvent;
 import jsonapi.events.Event;
 import jsonapi.http.EventHolder;
 import jsonapi.http.HttpResponse;
-import jsonapi.http.WebSocketResponse;
 
 public class GsonRegisteredAllDeserializers {
 
@@ -26,7 +25,6 @@ public class GsonRegisteredAllDeserializers {
         .registerTypeAdapter(Identifier.class, new IdentifierDeserializer())
         .registerTypeAdapter(Date.class, new DateDeserializer())
         .registerTypeAdapter(LocalDate.class, new LocalDateDeserializer())
-        .registerTypeAdapter(WebSocketResponse.class, new WebSocketResponseDeserializer())
         .registerTypeAdapter(Event.class, new EventDeserializer())
         .registerTypeAdapter(CreatedEvent.class, new CreatedEventDeserializer())
         .registerTypeAdapter(EventHolder.class, new EventHolderDeserializer())
