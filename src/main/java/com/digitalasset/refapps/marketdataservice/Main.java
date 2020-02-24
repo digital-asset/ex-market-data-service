@@ -20,7 +20,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import jsonapi.ActiveContractSet;
 import jsonapi.ContractQuery;
-import jsonapi.JsonLedgerClient;
 import jsonapi.LedgerClient;
 import jsonapi.Utils;
 import jsonapi.gson.GsonDeserializer;
@@ -114,7 +113,7 @@ public class Main {
   }
 
   private static LedgerClient createLedgerClient(String ledgerId, String operator) {
-    return JsonLedgerClient.create(
+    return Utils.createJsonLedgerClient(
         ledgerId,
         operator,
         APPLICATION_ID,

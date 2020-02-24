@@ -76,7 +76,7 @@ public class TimeUpdaterBotJsonIT {
     String ledgerId = sandbox.getClient().getLedgerId();
     scheduler = Executors.newScheduledThreadPool(1);
     ledgerClient =
-        JsonLedgerClient.create(
+        Utils.createJsonLedgerClient(
             ledgerId,
             OPERATOR.getValue(),
             APPLICATION_ID,
