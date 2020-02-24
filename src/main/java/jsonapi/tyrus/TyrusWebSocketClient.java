@@ -63,7 +63,7 @@ public class TyrusWebSocketClient implements WebSocketClient {
     PublishProcessor<String> broadcaster = PublishProcessor.create();
     client.connectToServer(new EmittingWebSocketEndpoint(broadcaster, query), config, resource);
     return broadcaster
-        // TODO: Either deserialize or ignore heartbeats, so that we can emit InputStreams directly.
+        // TODO: ignore heartbeats and live signals.
         .filter(this::nonHeartbeat)
         .map(this::toWebSocketResponse);
   }

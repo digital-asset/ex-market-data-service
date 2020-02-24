@@ -25,6 +25,22 @@ import org.junit.Test;
 public class WebSocketResponseDeserializerTest {
 
   @Test
+  public void deserializeHeartbeat() {
+    String json = "{\"heartbeat\":\"ping\"}";
+    Gson deserializer = new GsonBuilder().create();
+    WebSocketResponse result = deserializer.fromJson(json, WebSocketResponse.class);
+    assertThat(result.getHeartbeat().get(), StringContains.containsString("ping"));
+  }
+
+  @Test
+  public void deserializeLive() {
+    String json = "{\"live\":true}";
+    Gson deserializer = new GsonBuilder().create();
+    WebSocketResponse result = deserializer.fromJson(json, WebSocketResponse.class);
+    assertEquals(true, result.getLive().get());
+  }
+
+  @Test
   public void deserializeWarning() {
     String json =
         "{\"warnings\":{\"unknownTemplateIds\":[\"230a15b6240603917c18612a7dcb83a7040ab1cf8d498bb4b523b5de03659f58:DA.RefApps.MarketDataService.Roles:OperatorRol\"]}}";
