@@ -8,6 +8,7 @@ import com.daml.ledger.javaapi.data.CreateCommand;
 import com.daml.ledger.javaapi.data.ExerciseCommand;
 import io.reactivex.Flowable;
 import java.util.Collection;
+import java.util.Collections;
 import jsonapi.events.Event;
 import jsonapi.http.Api;
 import jsonapi.http.HttpClient;
@@ -43,7 +44,9 @@ public class JsonLedgerClient {
             warnings -> {
               throw new RuntimeException(warnings.toString());
             });
-    return webSocketResponse.getEvents();
+    if (webSocketResponse.getHeartbeat().isPresent() || webSocketResponse.getLive().isPresent())
+      return Collections.EMPTY_LIST;
+    return webSocketResponse.getEvents().get();
   }
 
   public JsonLedgerClient(
