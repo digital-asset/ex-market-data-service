@@ -88,7 +88,7 @@ public class JsonLedgerClientTest {
     JsonLedgerClient ledger = new JsonLedgerClient(null, webSocketClient, jsonSerializer, api);
     exceptionRule.expectMessage("some error");
     Flowable<ActiveContractSet> activeContracts = ledger.getActiveContracts(null);
-    activeContracts.blockingSingle();
+    activeContracts.blockingLast();
   }
 
   @Test
@@ -99,6 +99,6 @@ public class JsonLedgerClientTest {
     JsonLedgerClient ledger = new JsonLedgerClient(null, webSocketClient, jsonSerializer, api);
     exceptionRule.expectMessage("some warning");
     Flowable<ActiveContractSet> activeContracts = ledger.getActiveContracts(null);
-    activeContracts.blockingSingle();
+    activeContracts.blockingLast();
   }
 }
