@@ -21,8 +21,11 @@ import jsonapi.json.JsonDeserializer;
 import jsonapi.json.JsonSerializer;
 import org.glassfish.tyrus.client.ClientManager;
 import org.glassfish.tyrus.container.jdk.client.JdkClientContainer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TyrusWebSocketClient implements WebSocketClient {
+  private final Logger logger = LoggerFactory.getLogger(getClass().getCanonicalName());
 
   private final JsonDeserializer<WebSocketResponse> fromJson;
   private final JsonSerializer toJson;
@@ -62,17 +65,11 @@ public class TyrusWebSocketClient implements WebSocketClient {
       throws IOException, DeploymentException {
     PublishProcessor<String> broadcaster = PublishProcessor.create();
     client.connectToServer(new EmittingWebSocketEndpoint(broadcaster, query), config, resource);
-    return broadcaster
-        // TODO: ignore heartbeats and live signals.
-        .filter(this::nonHeartbeat)
-        .map(this::toWebSocketResponse);
-  }
-
-  private boolean nonHeartbeat(String message) {
-    return !message.contains("heartbeat");
+    return broadcaster.map(this::toWebSocketResponse);
   }
 
   private WebSocketResponse toWebSocketResponse(String message) {
+    logger.trace("Received WebSocketResponse: {}", message);
     InputStream json = new ByteArrayInputStream(message.getBytes());
     return fromJson.apply(json);
   }

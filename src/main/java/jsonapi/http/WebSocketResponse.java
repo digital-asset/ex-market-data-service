@@ -22,7 +22,11 @@ public class WebSocketResponse {
   private final Boolean live;
 
   public WebSocketResponse(
-      Collection<EventHolder> events, String error, Object warnings, String heartbeat, Boolean live) {
+      Collection<EventHolder> events,
+      String error,
+      Object warnings,
+      String heartbeat,
+      Boolean live) {
     this.events = events;
     this.error = error;
     this.warnings = warnings;
@@ -34,8 +38,9 @@ public class WebSocketResponse {
   // some application error in this ref app (because the websocket error should have been detected
   // and escalated). In other words, returning empty list for events==null would silently swallow an
   // error.
-  public Collection<Event> getEvents() {
-    return events.stream().map(EventHolder::event).collect(Collectors.toList());
+  public Optional<Collection<Event>> getEvents() {
+    return Optional.ofNullable(events)
+        .map(events -> events.stream().map(EventHolder::event).collect(Collectors.toList()));
   }
 
   public Optional<String> getError() {

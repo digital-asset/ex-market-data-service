@@ -20,7 +20,8 @@ public class WebSocketResponseTest {
   public void toEvents() {
     Collection<EventHolder> events =
         Collections.singletonList(new CreatedEventHolder(new CreatedEvent(null, null, null)));
-    Collection<Event> actual = new WebSocketResponse(events, null, null, null, null).getEvents();
+    Collection<Event> actual =
+        new WebSocketResponse(events, null, null, null, null).getEvents().get();
     assertEquals(1, actual.size());
     assertThat(actual, everyItem(instanceOf(CreatedEvent.class)));
   }

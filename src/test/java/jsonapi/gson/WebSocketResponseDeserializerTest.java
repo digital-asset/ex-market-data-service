@@ -15,6 +15,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import da.timeservice.timeservice.CurrentTime;
 import java.time.Instant;
+import java.util.Collection;
 import jsonapi.events.CreatedEvent;
 import jsonapi.events.Event;
 import jsonapi.http.EventHolder;
@@ -100,7 +101,8 @@ public class WebSocketResponseDeserializerTest {
             .create();
 
     WebSocketResponse result = deserializer.fromJson(json, WebSocketResponse.class);
-    assertThat(result.getEvents().size(), is(1));
-    assertThat(result.getEvents(), everyItem(instanceOf(CreatedEvent.class)));
+    Collection<Event> events = result.getEvents().get();
+    assertThat(events.size(), is(1));
+    assertThat(events, everyItem(instanceOf(CreatedEvent.class)));
   }
 }
