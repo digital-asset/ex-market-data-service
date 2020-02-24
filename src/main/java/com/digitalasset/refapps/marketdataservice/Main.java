@@ -45,7 +45,6 @@ public class Main {
   private static final JsonDeserializer<WebSocketResponse> webSocketResponseDeserializer =
       jsonDeserializer.getWebSocketResponseDeserializer();
   private static ScheduledExecutorService scheduler;
-  private static TimeUpdaterBotExecutor timeUpdaterBotExecutor;
 
   public static void main(String[] args) throws InterruptedException {
 
@@ -96,7 +95,7 @@ public class Main {
       LedgerClient ledgerClient = createLedgerClient(ledgerId, parties.getOperator());
       TimeUpdaterBot timeUpdaterBot = new TimeUpdaterBot(ledgerClient);
       scheduler = Executors.newScheduledThreadPool(1);
-      timeUpdaterBotExecutor = new TimeUpdaterBotExecutor(scheduler);
+      TimeUpdaterBotExecutor timeUpdaterBotExecutor = new TimeUpdaterBotExecutor(scheduler);
       timeUpdaterBotExecutor.start(timeUpdaterBot, systemPeriodTime);
     }
   }
