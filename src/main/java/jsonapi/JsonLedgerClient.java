@@ -45,7 +45,7 @@ public class JsonLedgerClient {
               throw new RuntimeException(warnings.toString());
             });
     if (webSocketResponse.getHeartbeat().isPresent() || webSocketResponse.getLive().isPresent())
-      return Collections.EMPTY_LIST;
+      return Collections.emptyList();
     return webSocketResponse.getEvents().get();
   }
 
