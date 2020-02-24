@@ -9,6 +9,7 @@ executors:
   mvn-executor:
     docker:
       - image: circleci/openjdk:11.0-jdk
+    resource_class: 'medium+'
   daml-executor:
     docker:
       - image: circleci/openjdk:11.0-jdk
@@ -157,20 +158,20 @@ workflows:
   build_and_test:
     jobs:
       - daml_test:
-          daml_sdk_version: "0.13.52"
+          daml_sdk_version: "0.13.54"
       - mvn_test:
-          daml_sdk_version: "0.13.52"
+          daml_sdk_version: "0.13.54"
       - blackduck_check:
-          daml_sdk_version: "0.13.52"
+          daml_sdk_version: "0.13.54"
           context: blackduck
   build_and_release:
     jobs:
       - daml_test:
           <<: *only-release-tags
-          daml_sdk_version: "0.13.52"
+          daml_sdk_version: "0.13.54"
       - mvn_test:
           <<: *only-release-tags
-          daml_sdk_version: "0.13.52"
+          daml_sdk_version: "0.13.54"
           context: blackduck
       - github_release:
           context: github-refapp-repo-context
