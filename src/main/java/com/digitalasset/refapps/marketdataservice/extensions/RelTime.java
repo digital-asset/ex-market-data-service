@@ -11,8 +11,4 @@ public class RelTime {
     long microseconds = modelPeriodTime.toMillis() * 1000;
     return new da.time.types.RelTime(microseconds);
   }
-
-  public static Duration toDuration(da.time.types.RelTime relTime) {
-    return Duration.ofNanos(relTime.microseconds * 1000);
-  }
 }
