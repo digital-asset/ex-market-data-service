@@ -48,7 +48,9 @@ public class JsonLedgerClient implements LedgerClient {
             warnings -> {
               throw new RuntimeException(warnings.toString());
             });
-    return webSocketResponse.getEvents();
+    if (webSocketResponse.getHeartbeat().isPresent() || webSocketResponse.getLive().isPresent())
+      return Collections.EMPTY_LIST;
+    return webSocketResponse.getEvents().get();
   }
 
   public JsonLedgerClient(
