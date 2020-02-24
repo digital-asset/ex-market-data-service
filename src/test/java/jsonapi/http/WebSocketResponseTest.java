@@ -11,11 +11,13 @@ import static org.junit.Assert.assertThat;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Optional;
 import jsonapi.events.CreatedEvent;
 import jsonapi.events.Event;
 import org.junit.Test;
 
 public class WebSocketResponseTest {
+
   @Test
   public void toEvents() {
     Collection<EventHolder> events =
@@ -24,5 +26,11 @@ public class WebSocketResponseTest {
         new WebSocketResponse(events, null, null, null, null).getEvents().get();
     assertEquals(1, actual.size());
     assertThat(actual, everyItem(instanceOf(CreatedEvent.class)));
+  }
+
+  @Test
+  public void toEventsDoesNotReturnAListForNonData() {
+    WebSocketResponse webSocketResponse = new WebSocketResponse(null, null, null, null, null);
+    assertEquals(Optional.empty(), webSocketResponse.getEvents());
   }
 }
