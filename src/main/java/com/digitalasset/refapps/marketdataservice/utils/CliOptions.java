@@ -20,6 +20,9 @@ public class CliOptions {
   @Option(name = "-p", usage = "Sandbox port", metaVar = "SANDBOX_PORT")
   private int sandboxPort = 6865;
 
+  @Option(name = "-ledgerId", usage = "Ledger ID", metaVar = "LEDGER_ID", required = true)
+  private String ledgerId = null;
+
   @Option(
       name = "-u",
       usage = "Parties to run the application for.",
@@ -39,7 +42,11 @@ public class CliOptions {
     return parties;
   }
 
-  public static CliOptions parseArgs(String[] args) {
+  public String getLedgerId() {
+    return ledgerId;
+  }
+
+  public static CliOptions parseArgs(String[] args) throws CmdLineException {
     CliOptions options = new CliOptions();
     CmdLineParser parser = new CmdLineParser(options);
     try {
@@ -47,7 +54,7 @@ public class CliOptions {
     } catch (CmdLineException e) {
       System.err.println("Invalid command line options");
       parser.printUsage(System.err);
-      System.exit(1);
+      throw e;
     }
     return options;
   }

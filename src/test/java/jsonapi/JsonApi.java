@@ -7,13 +7,8 @@ package jsonapi;
 import static org.junit.Assert.fail;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.function.IntSupplier;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.fluent.Request;
 import org.junit.rules.ExternalResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,29 +49,12 @@ public class JsonApi extends ExternalResource {
     waitForJsonApi();
   }
 
-  private void waitForJsonApi() throws InterruptedException {
-    Instant started = Instant.now();
-    boolean isRunning = false;
-    while (!isRunning && !hasPassedSince(started, Duration.ofSeconds(30))) {
-      log.info("Waiting for JSON API...");
-      try {
-        HttpResponse response = Request.Options("http://localhost:7575").execute().returnResponse();
-        if (response.getStatusLine().getStatusCode() < 500) {
-          isRunning = true;
-        }
-      } catch (IOException ignored) {
-      }
-      Thread.sleep(1000);
-    }
-    if (!isRunning) {
+  private static void waitForJsonApi() {
+    try {
+      Utils.waitForJsonApi("http://localhost:7575");
+    } catch (Exception e) {
       fail("Failed to start JSON API");
     }
-    log.info("JSON API available.");
-  }
-
-  private boolean hasPassedSince(Instant started, Duration timeout) {
-    Duration elapsed = Duration.between(started, Instant.now());
-    return elapsed.compareTo(timeout) > 0;
   }
 
   @Override

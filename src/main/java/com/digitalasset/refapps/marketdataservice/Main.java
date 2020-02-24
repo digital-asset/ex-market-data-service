@@ -5,42 +5,24 @@
 package com.digitalasset.refapps.marketdataservice;
 
 import com.daml.ledger.javaapi.data.Command;
-import com.daml.ledger.javaapi.data.Template;
-import com.daml.ledger.javaapi.data.TransactionFilter;
-import com.daml.ledger.rxjava.DamlLedgerClient;
-import com.daml.ledger.rxjava.LedgerClient;
-import com.daml.ledger.rxjava.components.Bot;
-import com.daml.ledger.rxjava.components.LedgerViewFlowable.LedgerTestView;
-import com.daml.ledger.rxjava.components.LedgerViewFlowable.LedgerView;
-import com.daml.ledger.rxjava.components.helpers.CommandsAndPendingSet;
-import com.daml.ledger.rxjava.components.helpers.CreatedContract;
 import com.digitalasset.refapps.marketdataservice.publishing.CachingCsvDataProvider;
 import com.digitalasset.refapps.marketdataservice.publishing.DataProviderBot;
 import com.digitalasset.refapps.marketdataservice.publishing.PublishingDataProvider;
-import com.digitalasset.refapps.marketdataservice.timeservice.GrpcLedgerApiHandle;
-import com.digitalasset.refapps.marketdataservice.timeservice.JsonLedgerApiHandle;
-import com.digitalasset.refapps.marketdataservice.timeservice.LedgerApiHandle;
 import com.digitalasset.refapps.marketdataservice.timeservice.TimeUpdaterBot;
 import com.digitalasset.refapps.marketdataservice.timeservice.TimeUpdaterBotExecutor;
 import com.digitalasset.refapps.marketdataservice.utils.AppParties;
 import com.digitalasset.refapps.marketdataservice.utils.CliOptions;
-import com.digitalasset.refapps.marketdataservice.utils.CommandsAndPendingSetBuilder;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
 import io.reactivex.Flowable;
-import java.time.Clock;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import jsonapi.ActiveContract;
 import jsonapi.ActiveContractSet;
 import jsonapi.ContractQuery;
 import jsonapi.JsonLedgerClient;
+import jsonapi.Utils;
 import jsonapi.apache.ApacheHttpClient;
 import jsonapi.gson.GsonDeserializer;
 import jsonapi.gson.GsonSerializer;
@@ -50,7 +32,7 @@ import jsonapi.http.Jwt;
 import jsonapi.http.WebSocketResponse;
 import jsonapi.json.JsonDeserializer;
 import jsonapi.tyrus.TyrusWebSocketClient;
-import org.pcollections.HashTreePMap;
+import org.kohsuke.args4j.CmdLineException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,23 +53,17 @@ public class Main {
 
   public static void main(String[] args) throws InterruptedException {
 
-    CliOptions cliOptions = CliOptions.parseArgs(args);
+    CliOptions cliOptions = null;
+    try {
+      cliOptions = CliOptions.parseArgs(args);
+    } catch (CmdLineException e) {
+      System.exit(1);
+    }
 
-    ManagedChannel channel =
-        ManagedChannelBuilder.forAddress(cliOptions.getSandboxHost(), cliOptions.getSandboxPort())
-            .usePlaintext()
-            .maxInboundMessageSize(Integer.MAX_VALUE)
-            .build();
+    waitForJsonApi(cliOptions.getSandboxHost(), cliOptions.getSandboxPort());
 
-    DamlLedgerClient client =
-        DamlLedgerClient.newBuilder(cliOptions.getSandboxHost(), cliOptions.getSandboxPort())
-            .build();
-
-    waitForSandbox(cliOptions.getSandboxHost(), cliOptions.getSandboxPort(), client);
-
-    logPackages(client);
     AppParties appParties = new AppParties(cliOptions.getParties());
-    runBotsWithGrpc(appParties, SYSTEM_PERIOD_TIME).accept(client, channel);
+    runBotsWithJson(cliOptions.getLedgerId(), appParties, SYSTEM_PERIOD_TIME);
 
     logger.info("Welcome to Market Data Service!");
     logger.info("Press Ctrl+C to shut down the program.");
@@ -98,27 +74,7 @@ public class Main {
     void wire(
         String party,
         ContractQuery contractQuery,
-        TransactionFilter transactionFilter,
-        Function<LedgerView<Template>, Flowable<CommandsAndPendingSet>> bot,
-        Function<CreatedContract, Template> transform);
-  }
-
-  public static class GrpcWirer implements Wirer {
-    private final LedgerClient ledgerClient;
-
-    public GrpcWirer(LedgerClient ledgerClient) {
-      this.ledgerClient = ledgerClient;
-    }
-
-    @Override
-    public void wire(
-        String party,
-        ContractQuery contractQuery,
-        TransactionFilter transactionFilter,
-        Function<LedgerView<Template>, Flowable<CommandsAndPendingSet>> bot,
-        Function<CreatedContract, Template> transform) {
-      Bot.wire(APPLICATION_ID, ledgerClient, transactionFilter, bot, transform);
-    }
+        Function<ActiveContractSet, Flowable<Command>> bot);
   }
 
   public static class JsonWirer implements Wirer {
@@ -132,15 +88,14 @@ public class Main {
     public void wire(
         String party,
         ContractQuery contractQuery,
-        TransactionFilter transactionFilter,
-        Function<LedgerView<Template>, Flowable<CommandsAndPendingSet>> bot,
-        Function<CreatedContract, Template> transform) {
+        Function<ActiveContractSet, Flowable<Command>> bot) {
 
       String jwt = Jwt.createToken(ledgerId, APPLICATION_ID, Collections.singletonList(party));
       ApacheHttpClient httpClient =
           new ApacheHttpClient(httpResponseDeserializer, jsonSerializer, jwt);
       TyrusWebSocketClient webSocketClient =
           new TyrusWebSocketClient(webSocketResponseDeserializer, jsonSerializer, jwt);
+      // TODO: Make this configurable.
       Api api = new Api("localhost", 7575);
 
       JsonLedgerClient ledgerClient =
@@ -148,81 +103,52 @@ public class Main {
 
       ledgerClient
           .getActiveContracts(contractQuery)
-          .map(Main::toLedgerView)
           .flatMap(bot::apply)
-          .forEach(
-              cps ->
-                  cps.getSubmitCommandsRequest()
-                      .getCommands()
-                      .forEach(submitCommand(ledgerClient)));
+          .forEach(command -> submitCommand(ledgerClient, command));
     }
   }
 
   public static void runBotsWithJson(
       String ledgerId, AppParties parties, Duration systemPeriodTime) {
-    Function<CommandsAndPendingSetBuilder.Factory, LedgerApiHandle> handleFactory =
-        commandBuilderFactory ->
-            new JsonLedgerApiHandle(
-                parties.getOperator(),
-                ledgerId,
-                APPLICATION_ID,
-                httpResponseDeserializer,
-                jsonSerializer,
-                webSocketResponseDeserializer);
-    Main.runBotsWith(parties, systemPeriodTime, new Main.JsonWirer(ledgerId), handleFactory);
-  }
-
-  public static BiConsumer<DamlLedgerClient, ManagedChannel> runBotsWithGrpc(
-      AppParties parties, Duration systemPeriodTime) {
-    return (DamlLedgerClient client, ManagedChannel channel) -> {
-      Function<CommandsAndPendingSetBuilder.Factory, LedgerApiHandle> handlerFactory =
-          commandBuilderFactory ->
-              new GrpcLedgerApiHandle(client, commandBuilderFactory, parties.getOperator());
-      runBotsWith(parties, systemPeriodTime, new GrpcWirer(client), handlerFactory);
-    };
+    JsonLedgerApiHandle handle =
+        new JsonLedgerApiHandle(
+            parties.getOperator(),
+            ledgerId,
+            APPLICATION_ID,
+            httpResponseDeserializer,
+            jsonSerializer,
+            webSocketResponseDeserializer);
+    Main.runBotsWith(parties, systemPeriodTime, new Main.JsonWirer(ledgerId), handle);
   }
 
   public static void runBotsWith(
-      AppParties parties,
-      Duration systemPeriodTime,
-      Wirer wirer,
-      Function<CommandsAndPendingSetBuilder.Factory, LedgerApiHandle> handlerFactory) {
-    Duration mrt = Duration.ofSeconds(10);
-    CommandsAndPendingSetBuilder.Factory commandBuilderFactory =
-        CommandsAndPendingSetBuilder.factory(APPLICATION_ID, Clock::systemUTC, mrt);
+      AppParties parties, Duration systemPeriodTime, Wirer wirer, JsonLedgerApiHandle handle) {
 
     if (parties.hasMarketDataProvider1()) {
       logger.info("Starting automation for MarketDataProvider1.");
       PublishingDataProvider dataProvider = new CachingCsvDataProvider();
       DataProviderBot dataProviderBot =
-          new DataProviderBot(
-              commandBuilderFactory, parties.getMarketDataProvider1(), dataProvider);
+          new DataProviderBot(parties.getMarketDataProvider1(), dataProvider);
       wirer.wire(
           dataProviderBot.getPartyName(),
           dataProviderBot.getContractQuery(),
-          dataProviderBot.getTransactionFilter(),
-          dataProviderBot::calculateCommands,
-          dataProviderBot::getContractInfo);
+          dataProviderBot::getCommands);
     }
 
     if (parties.hasMarketDataProvider2()) {
       logger.info("Starting automation for MarketDataProvider2.");
       PublishingDataProvider dataProvider = new CachingCsvDataProvider();
       DataProviderBot dataProviderBot =
-          new DataProviderBot(
-              commandBuilderFactory, parties.getMarketDataProvider2(), dataProvider);
+          new DataProviderBot(parties.getMarketDataProvider2(), dataProvider);
       wirer.wire(
           dataProviderBot.getPartyName(),
           dataProviderBot.getContractQuery(),
-          dataProviderBot.getTransactionFilter(),
-          dataProviderBot::calculateCommands,
-          dataProviderBot::getContractInfo);
+          dataProviderBot::getCommands);
     }
 
     if (parties.hasOperator()) {
       logger.info("Starting automation for Operator.");
-      TimeUpdaterBot timeUpdaterBot =
-          new TimeUpdaterBot(handlerFactory.apply(commandBuilderFactory));
+      TimeUpdaterBot timeUpdaterBot = new TimeUpdaterBot(handle);
       scheduler = Executors.newScheduledThreadPool(1);
       timeUpdaterBotExecutor = new TimeUpdaterBotExecutor(scheduler);
       timeUpdaterBotExecutor.start(timeUpdaterBot, systemPeriodTime);
@@ -245,51 +171,17 @@ public class Main {
     }
   }
 
-  private static Consumer<? super Command> submitCommand(JsonLedgerClient ledgerClient) {
-    return command -> {
-      command.asExerciseCommand().ifPresent(ledgerClient::exerciseChoice);
-      command.asCreateCommand().ifPresent(ledgerClient::create);
-    };
+  private static void submitCommand(JsonLedgerClient ledgerClient, Command command) {
+    command.asExerciseCommand().ifPresent(ledgerClient::exerciseChoice);
+    command.asCreateCommand().ifPresent(ledgerClient::create);
   }
 
-  static LedgerView<Template> toLedgerView(ActiveContractSet activeContractSet) {
-    return activeContractSet
-        .getActiveContracts()
-        .reduce(createEmptyLedgerView(), Main::addActiveContract, (x, y) -> x);
-  }
-
-  public static void waitForSandbox(String host, int port, DamlLedgerClient client) {
-    boolean connected = false;
-    while (!connected) {
-      try {
-        client.connect();
-        connected = true;
-      } catch (Exception _ignored) {
-        logger.info(String.format("Connecting to sandbox at %s:%s", host, port));
-        try {
-          Thread.sleep(1000);
-        } catch (InterruptedException ignored) {
-        }
-      }
+  public static void waitForJsonApi(String host, int port) {
+    String jsonApiUri = String.format("http://%s:%d", host, port);
+    try {
+      Utils.waitForJsonApi(jsonApiUri);
+    } catch (Exception e) {
+      System.exit(1);
     }
-  }
-
-  private static LedgerTestView<Template> addActiveContract(
-      LedgerTestView<Template> emptyLedgerView, ActiveContract activeContract) {
-    return emptyLedgerView.addActiveContract(
-        activeContract.getIdentifier(),
-        activeContract.getContractId(),
-        activeContract.getTemplate());
-  }
-
-  private static LedgerTestView<Template> createEmptyLedgerView() {
-    return new LedgerTestView<>(
-        HashTreePMap.empty(), HashTreePMap.empty(), HashTreePMap.empty(), HashTreePMap.empty());
-  }
-
-  private static void logPackages(DamlLedgerClient client) {
-    StringBuilder sb = new StringBuilder("Listing packages:");
-    client.getPackageClient().listPackages().forEach(id -> sb.append("\n").append(id));
-    logger.debug(sb.toString());
   }
 }

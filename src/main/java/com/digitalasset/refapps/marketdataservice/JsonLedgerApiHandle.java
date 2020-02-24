@@ -2,7 +2,7 @@
  * Copyright (c) 2019, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-package com.digitalasset.refapps.marketdataservice.timeservice;
+package com.digitalasset.refapps.marketdataservice;
 
 import com.daml.ledger.javaapi.data.Command;
 import io.reactivex.Flowable;
@@ -43,6 +43,12 @@ public class JsonLedgerApiHandle implements LedgerApiHandle {
     Api api = new Api("localhost", 7575);
 
     ledgerClient = new JsonLedgerClient(httpClient, webSocketClient, jsonSerializer, api);
+  }
+
+  // TODO: One of these constructors should be unnecessary.
+  public JsonLedgerApiHandle(JsonLedgerClient ledgerClient, String party) {
+    this.ledgerClient = ledgerClient;
+    this.party = party;
   }
 
   @Override
