@@ -13,7 +13,7 @@ import jsonapi.json.JsonDeserializer;
 
 public class GsonDeserializer {
 
-  private Gson gson = GsonRegisteredAllDeserializers.gson();
+  private final Gson gson = GsonRegisteredAllDeserializers.gson();
 
   private final JsonDeserializer<HttpResponse> httpResponseJsonDeserializer =
       s -> gson.fromJson(toReader(s), HttpResponse.class);

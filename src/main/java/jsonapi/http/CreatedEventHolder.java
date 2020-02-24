@@ -7,7 +7,7 @@ package jsonapi.http;
 import jsonapi.events.CreatedEvent;
 
 public class CreatedEventHolder implements EventHolder {
-  private CreatedEvent created;
+  private final CreatedEvent created;
 
   public CreatedEventHolder(CreatedEvent created) {
     this.created = created;

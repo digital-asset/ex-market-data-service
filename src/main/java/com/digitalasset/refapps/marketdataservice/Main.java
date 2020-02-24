@@ -106,6 +106,7 @@ public class Main {
       ContractQuery contractQuery,
       Function<ActiveContractSet, Flowable<Command>> bot) {
     LedgerClient ledgerClient = createLedgerClient(ledgerId, party);
+    //noinspection ResultOfMethodCallIgnored
     ledgerClient
         .getActiveContracts(contractQuery)
         .flatMap(bot::apply)

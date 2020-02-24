@@ -24,7 +24,7 @@ public class EventHolderDeserializer implements JsonDeserializer<EventHolder> {
     return jsonDeserializationContext.deserialize(eventHolder, dispatch(eventHolder));
   }
 
-  private static Class dispatch(JsonObject eventHolder) {
+  private static Class<? extends EventHolder> dispatch(JsonObject eventHolder) {
     if (eventHolder.has("archived")) return ArchivedEventHolder.class;
     else if (eventHolder.has("created")) return CreatedEventHolder.class;
     else throw new IllegalStateException("Unsupported event type. Json content: " + eventHolder);
