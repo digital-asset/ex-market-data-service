@@ -24,12 +24,15 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
+import jsonapi.JsonApi;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExternalResource;
+import org.junit.rules.RuleChain;
+import org.junit.rules.TestRule;
 
 public class TimeServiceIT {
   private static final Path RELATIVE_DAR_PATH = Paths.get("./target/market-data-service.dar");
@@ -43,12 +46,13 @@ public class TimeServiceIT {
           .dar(RELATIVE_DAR_PATH)
           .parties(OPERATOR_PARTY.getValue())
           .useWallclockTime()
-          // TODO: Run with JSON API
-          .setupAppCallback(Main.runBotsWithGrpc(new AppParties(ALL_PARTIES), systemPeriodTime))
           .build();
 
   @ClassRule public static ExternalResource compile = sandbox.getClassRule();
-  @Rule public ExternalResource sandboxRule = sandbox.getRule();
+
+  @Rule
+  public final TestRule processes =
+      RuleChain.outerRule(sandbox.getRule()).around(new JsonApi(sandbox::getSandboxPort));
 
   private DamlScript script;
   private DefaultLedgerAdapter ledgerAdapter;
@@ -56,6 +60,8 @@ public class TimeServiceIT {
 
   @Before
   public void setUp() throws Throwable {
+    Main.runBotsWithJson(
+        sandbox.getClient().getLedgerId(), new AppParties(ALL_PARTIES), systemPeriodTime);
     // Valid port is assigned only after the sandbox has been started.
     // Therefore trigger has to be configured at the point where this can be guaranteed.
     script =
@@ -89,7 +95,7 @@ public class TimeServiceIT {
   }
 
   private void changeModelPeriodTime(Duration newModelPeriodTime)
-      throws InvalidProtocolBufferException, InterruptedException {
+      throws InvalidProtocolBufferException {
     ledgerAdapter.exerciseChoice(
         OPERATOR_PARTY,
         timeManager.contractId.exerciseSetModelPeriodTime(

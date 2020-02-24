@@ -10,15 +10,13 @@ import static org.junit.Assert.assertTrue;
 
 import com.daml.ledger.javaapi.data.Command;
 import com.daml.ledger.javaapi.data.ExerciseCommand;
-import com.daml.ledger.rxjava.components.helpers.CommandsAndPendingSet;
 import java.util.List;
 import java.util.Optional;
 
 public class Assert {
 
   public static void assertHasSingleExercise(
-      CommandsAndPendingSet cmds, String cid, String choiceName) {
-    List<Command> actualCommands = cmds.getSubmitCommandsRequest().getCommands();
+      List<Command> actualCommands, String cid, String choiceName) {
     assertEquals(1, actualCommands.size());
     actualCommands.forEach(
         cmd -> {

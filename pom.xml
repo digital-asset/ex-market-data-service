@@ -33,6 +33,18 @@
             <groupId>com.daml.ledger</groupId>
             <artifactId>bindings-rxjava</artifactId>
             <version>${daml-sdk.version}</version>
+            <!-- Cannot remove as test library needs as provided dependency. Reduced scoped. -->
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.daml.ledger</groupId>
+            <artifactId>bindings-java</artifactId>
+            <version>${daml-sdk.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.reactivex.rxjava2</groupId>
+            <artifactId>rxjava</artifactId>
+            <version>2.2.17</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
