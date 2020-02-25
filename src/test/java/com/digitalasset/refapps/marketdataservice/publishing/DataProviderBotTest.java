@@ -4,10 +4,8 @@
  */
 package com.digitalasset.refapps.marketdataservice.publishing;
 
-import static com.digitalasset.refapps.marketdataservice.assertions.Assert.assertHasSingleExercise;
-import static org.junit.Assert.assertTrue;
-
 import com.daml.ledger.javaapi.data.Command;
+import com.daml.ledger.javaapi.data.ExerciseCommand;
 import com.daml.ledger.javaapi.data.Identifier;
 import com.google.common.collect.Sets;
 import da.refapps.marketdataservice.datastream.DataStream;
@@ -19,13 +17,13 @@ import da.refapps.marketdataservice.marketdatatypes.ObservationValue;
 import da.refapps.marketdataservice.marketdatatypes.Publisher;
 import da.refapps.marketdataservice.marketdatatypes.observationvalue.CleanPrice;
 import da.timeservice.timeservice.CurrentTime;
+import io.reactivex.Flowable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import jsonapi.ActiveContract;
@@ -85,9 +83,11 @@ public class DataProviderBotTest {
                 new ActiveContract(
                     EmptyDataStream.TEMPLATE_ID, emptyDataStreamCid, emptyDataStream));
 
-    // TODO: Rework the assertions
-    List<Command> result = bot.getCommands(activeContractSet).test().values();
-    assertHasSingleExercise(result, emptyDataStreamCid, "StartDataStream");
+    Observation observation =
+        new Observation(REFERENCE, currentTime.currentTime, OBSERVATION_VALUE_1);
+    ExerciseCommand expectedCommand =
+        new EmptyDataStream.ContractId(emptyDataStreamCid).exerciseStartDataStream(observation);
+    bot.getCommands(activeContractSet).test().assertValue(expectedCommand);
   }
 
   @Test
@@ -105,8 +105,9 @@ public class DataProviderBotTest {
             .add(
                 new ActiveContract(
                     EmptyDataStream.TEMPLATE_ID, emptyDataStreamCid, emptyDataStream));
+    Flowable<Command> commands = botNonpublishing.getCommands(activeContractSet);
 
-    assertTrue(botNonpublishing.getCommands(activeContractSet).isEmpty().blockingGet());
+    commands.test().assertNoValues();
   }
 
   @Test
@@ -128,10 +129,12 @@ public class DataProviderBotTest {
         ActiveContractSet.empty()
             .add(new ActiveContract(CurrentTime.TEMPLATE_ID, "cid1", currentTime))
             .add(new ActiveContract(DataStream.TEMPLATE_ID, dataStreamCid, dataStream));
+    Flowable<Command> commands = bot.getCommands(activeContractSet);
 
-    // TODO: Rework the assertions
-    List<Command> result = bot.getCommands(activeContractSet).test().values();
-    assertHasSingleExercise(result, dataStreamCid, "UpdateObservation");
+    ExerciseCommand expectedCommand =
+        new DataStream.ContractId(dataStreamCid)
+            .exerciseUpdateObservation(currentTime.currentTime, OBSERVATION_VALUE_1);
+    commands.test().assertValue(expectedCommand);
   }
 
   @Test
@@ -152,8 +155,9 @@ public class DataProviderBotTest {
         ActiveContractSet.empty()
             .add(new ActiveContract(CurrentTime.TEMPLATE_ID, "cid1", currentTime))
             .add(new ActiveContract(DataStream.TEMPLATE_ID, dataStreamCid, dataStream));
+    Flowable<Command> commands = bot.getCommands(activeContractSet);
 
-    assertTrue(botNonpublishing.getCommands(activeContractSet).isEmpty().blockingGet());
+    commands.test().assertNoValues();
   }
 
   @Test
@@ -175,9 +179,10 @@ public class DataProviderBotTest {
         ActiveContractSet.empty()
             .add(new ActiveContract(CurrentTime.TEMPLATE_ID, "cid1", currentTime))
             .add(new ActiveContract(DataStream.TEMPLATE_ID, dataStreamCid, dataStream));
+    Flowable<Command> commands = botNonpublishing.getCommands(activeContractSet);
 
-    // TODO: Rework the assertions
-    List<Command> result = botNonpublishing.getCommands(activeContractSet).test().values();
-    assertHasSingleExercise(result, dataStreamCid, "UpdateLicenses");
+    ExerciseCommand expectedCommand =
+        new DataStream.ContractId(dataStreamCid).exerciseUpdateLicenses();
+    commands.test().assertValue(expectedCommand);
   }
 }

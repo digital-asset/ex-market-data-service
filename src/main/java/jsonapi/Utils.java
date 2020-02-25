@@ -7,6 +7,14 @@ package jsonapi;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
+import jsonapi.apache.ApacheHttpClient;
+import jsonapi.http.Api;
+import jsonapi.http.Jwt;
+import jsonapi.http.WebSocketResponse;
+import jsonapi.json.JsonDeserializer;
+import jsonapi.json.JsonSerializer;
+import jsonapi.tyrus.TyrusWebSocketClient;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.slf4j.Logger;
@@ -45,5 +53,23 @@ public class Utils {
   private static boolean hasPassedSince(Instant started, Duration timeout) {
     Duration elapsed = Duration.between(started, Instant.now());
     return elapsed.compareTo(timeout) > 0;
+  }
+
+  public static LedgerClient createJsonLedgerClient(
+      String ledgerId,
+      String party,
+      String applicationId,
+      JsonDeserializer<jsonapi.http.HttpResponse> httpResponseDeserializer,
+      JsonSerializer jsonSerializer,
+      JsonDeserializer<WebSocketResponse> webSocketResponseDeserializer) {
+    String jwt = Jwt.createToken(ledgerId, applicationId, Collections.singletonList(party));
+    ApacheHttpClient httpClient =
+        new ApacheHttpClient(httpResponseDeserializer, jsonSerializer, jwt);
+    TyrusWebSocketClient webSocketClient =
+        new TyrusWebSocketClient(webSocketResponseDeserializer, jsonSerializer, jwt);
+    // TODO: Make this configurable.
+    Api api = new Api("localhost", 7575);
+
+    return new JsonLedgerClient(httpClient, webSocketClient, jsonSerializer, api);
   }
 }

@@ -18,7 +18,7 @@ import jsonapi.http.WebSocketClient;
 import jsonapi.http.WebSocketResponse;
 import jsonapi.json.JsonSerializer;
 
-public class JsonLedgerClient {
+public class JsonLedgerClient implements LedgerClient {
 
   private final HttpClient httpClient;
   private final WebSocketClient webSocketClient;
@@ -57,6 +57,7 @@ public class JsonLedgerClient {
     this.api = api;
   }
 
+  @Override
   public String create(CreateCommand command) {
     HttpResponse httpResponse = httpClient.post(api.createContract(), command);
     throwIfStatusIsNot200(httpResponse);
@@ -64,6 +65,7 @@ public class JsonLedgerClient {
     return toJson.apply(httpResponse);
   }
 
+  @Override
   public String exerciseChoice(ExerciseCommand command) {
     HttpResponse httpResponse = httpClient.post(api.exercise(), command);
     throwIfStatusIsNot200(httpResponse);
@@ -71,6 +73,7 @@ public class JsonLedgerClient {
     return toJson.apply(httpResponse);
   }
 
+  @Override
   public ActiveContractSet getActiveContracts() {
     HttpResponse httpResponse = httpClient.get(api.searchContract());
     throwIfStatusIsNot200(httpResponse);
@@ -81,6 +84,8 @@ public class JsonLedgerClient {
   }
 
   // TODO: Eliminate code duplication, fix interface
+
+  @Override
   public ActiveContractSet queryContracts(ContractQuery query) {
     HttpResponse httpResponse = httpClient.post(api.searchContract(), query);
     throwIfStatusIsNot200(httpResponse);
@@ -90,10 +95,10 @@ public class JsonLedgerClient {
     return acs.update(searchResult.getCreatedEvents());
   }
 
+  @Override
   public Flowable<ActiveContractSet> getActiveContracts(ContractQuery query) {
     Flowable<WebSocketResponse> response =
         webSocketClient.post(api.searchContractsForever(), query);
-    // TODO: Convert to events (created, archive, error)
     return response
         .map(this::throwOrGetEvents)
         .scan(ActiveContractSet.empty(), ActiveContractSet::update);

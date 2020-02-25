@@ -24,7 +24,7 @@ public class EventDeserializer implements JsonDeserializer<Event> {
     return jsonDeserializationContext.deserialize(event, dispatch(event));
   }
 
-  private static Class dispatch(JsonObject event) {
+  private static Class<? extends Event> dispatch(JsonObject event) {
     if (event.size() == 2 && event.has("contractId") && event.has("templateId"))
       return ArchivedEvent.class;
     else if (event.has("payload")) return CreatedEvent.class;

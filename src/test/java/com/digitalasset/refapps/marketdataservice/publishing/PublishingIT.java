@@ -78,8 +78,7 @@ public class PublishingIT {
 
   @Before
   public void setUp() throws Throwable {
-    Main.runBotsWithJson(
-        sandbox.getClient().getLedgerId(), new AppParties(ALL_PARTIES), systemPeriodTime);
+    Main.runBots(sandbox.getClient().getLedgerId(), new AppParties(ALL_PARTIES), systemPeriodTime);
     // Valid port is assigned only after the sandbox has been started.
     // Therefore trigger has to be configured at the point where this can be guaranteed.
     File log = new File("integration-marketSetupAndTriggers.log");

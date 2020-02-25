@@ -4,18 +4,20 @@
  */
 package com.digitalasset.refapps.marketdataservice.timeservice;
 
+import com.daml.ledger.javaapi.data.Identifier;
 import da.timeservice.timeservice.CurrentTime;
 import da.timeservice.timeservice.TimeManager;
 import java.time.Instant;
 import java.util.Collections;
 import jsonapi.ActiveContractSet;
-import jsonapi.JsonLedgerClient;
+import jsonapi.ContractQuery;
+import jsonapi.LedgerClient;
 import jsonapi.events.CreatedEvent;
 import org.mockito.Mock;
 
 public abstract class TimeUpdaterBotBaseTest {
 
-  @Mock protected JsonLedgerClient jsonLedgerClient;
+  @Mock protected LedgerClient ledgerClient;
 
   String operator = "Dummy Operator";
 
@@ -29,11 +31,11 @@ public abstract class TimeUpdaterBotBaseTest {
     return new CreatedEvent(CurrentTime.TEMPLATE_ID, "123", currentTime);
   }
 
-  TimeUpdaterBotBuilder newBotBuilder() {
-    return new TimeUpdaterBotBuilder().setJsonLedgerClient(jsonLedgerClient).setParty(operator);
-  }
-
   ActiveContractSet createContractResponse(CreatedEvent event) {
     return event.update(ActiveContractSet.empty());
+  }
+
+  protected ContractQuery queryFor(Identifier templateId) {
+    return new ContractQuery(Collections.singletonList(templateId));
   }
 }

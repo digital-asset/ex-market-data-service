@@ -11,8 +11,8 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.StringArrayOptionHandler;
 
-// Valid use case for a DataClass.
-@SuppressWarnings("PMD.DataClass")
+// Valid use case for a DataClass. CLI parser requires non-fields for options.
+@SuppressWarnings({"PMD.DataClass", "FieldCanBeLocal", "CanBeFinal"})
 public class CliOptions {
   @Option(name = "-s", usage = "Sandbox host", metaVar = "SANDBOX_HOST")
   private String sandboxHost = "localhost";

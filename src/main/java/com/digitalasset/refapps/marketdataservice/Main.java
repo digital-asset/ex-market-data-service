@@ -14,24 +14,19 @@ import com.digitalasset.refapps.marketdataservice.utils.AppParties;
 import com.digitalasset.refapps.marketdataservice.utils.CliOptions;
 import io.reactivex.Flowable;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import jsonapi.ActiveContractSet;
 import jsonapi.ContractQuery;
-import jsonapi.JsonLedgerClient;
+import jsonapi.LedgerClient;
 import jsonapi.Utils;
-import jsonapi.apache.ApacheHttpClient;
 import jsonapi.gson.GsonDeserializer;
 import jsonapi.gson.GsonSerializer;
-import jsonapi.http.Api;
 import jsonapi.http.HttpResponse;
-import jsonapi.http.Jwt;
 import jsonapi.http.WebSocketResponse;
 import jsonapi.json.JsonDeserializer;
-import jsonapi.tyrus.TyrusWebSocketClient;
 import org.kohsuke.args4j.CmdLineException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +44,6 @@ public class Main {
   private static final JsonDeserializer<WebSocketResponse> webSocketResponseDeserializer =
       jsonDeserializer.getWebSocketResponseDeserializer();
   private static ScheduledExecutorService scheduler;
-  private static TimeUpdaterBotExecutor timeUpdaterBotExecutor;
 
   public static void main(String[] args) throws InterruptedException {
 
@@ -63,73 +57,21 @@ public class Main {
     waitForJsonApi(cliOptions.getSandboxHost(), cliOptions.getSandboxPort());
 
     AppParties appParties = new AppParties(cliOptions.getParties());
-    runBotsWithJson(cliOptions.getLedgerId(), appParties, SYSTEM_PERIOD_TIME);
+    runBots(cliOptions.getLedgerId(), appParties, SYSTEM_PERIOD_TIME);
 
     logger.info("Welcome to Market Data Service!");
     logger.info("Press Ctrl+C to shut down the program.");
     Thread.currentThread().join();
   }
 
-  public interface Wirer {
-    void wire(
-        String party,
-        ContractQuery contractQuery,
-        Function<ActiveContractSet, Flowable<Command>> bot);
-  }
-
-  public static class JsonWirer implements Wirer {
-    private final String ledgerId;
-
-    public JsonWirer(String ledgerId) {
-      this.ledgerId = ledgerId;
-    }
-
-    @Override
-    public void wire(
-        String party,
-        ContractQuery contractQuery,
-        Function<ActiveContractSet, Flowable<Command>> bot) {
-
-      String jwt = Jwt.createToken(ledgerId, APPLICATION_ID, Collections.singletonList(party));
-      ApacheHttpClient httpClient =
-          new ApacheHttpClient(httpResponseDeserializer, jsonSerializer, jwt);
-      TyrusWebSocketClient webSocketClient =
-          new TyrusWebSocketClient(webSocketResponseDeserializer, jsonSerializer, jwt);
-      // TODO: Make this configurable.
-      Api api = new Api("localhost", 7575);
-
-      JsonLedgerClient ledgerClient =
-          new JsonLedgerClient(httpClient, webSocketClient, jsonSerializer, api);
-
-      ledgerClient
-          .getActiveContracts(contractQuery)
-          .flatMap(bot::apply)
-          .forEach(command -> submitCommand(ledgerClient, command));
-    }
-  }
-
-  public static void runBotsWithJson(
-      String ledgerId, AppParties parties, Duration systemPeriodTime) {
-    JsonLedgerApiHandle handle =
-        new JsonLedgerApiHandle(
-            parties.getOperator(),
-            ledgerId,
-            APPLICATION_ID,
-            httpResponseDeserializer,
-            jsonSerializer,
-            webSocketResponseDeserializer);
-    Main.runBotsWith(parties, systemPeriodTime, new Main.JsonWirer(ledgerId), handle);
-  }
-
-  public static void runBotsWith(
-      AppParties parties, Duration systemPeriodTime, Wirer wirer, JsonLedgerApiHandle handle) {
-
+  public static void runBots(String ledgerId, AppParties parties, Duration systemPeriodTime) {
     if (parties.hasMarketDataProvider1()) {
       logger.info("Starting automation for MarketDataProvider1.");
       PublishingDataProvider dataProvider = new CachingCsvDataProvider();
       DataProviderBot dataProviderBot =
           new DataProviderBot(parties.getMarketDataProvider1(), dataProvider);
-      wirer.wire(
+      wire(
+          ledgerId,
           dataProviderBot.getPartyName(),
           dataProviderBot.getContractQuery(),
           dataProviderBot::getCommands);
@@ -140,7 +82,8 @@ public class Main {
       PublishingDataProvider dataProvider = new CachingCsvDataProvider();
       DataProviderBot dataProviderBot =
           new DataProviderBot(parties.getMarketDataProvider2(), dataProvider);
-      wirer.wire(
+      wire(
+          ledgerId,
           dataProviderBot.getPartyName(),
           dataProviderBot.getContractQuery(),
           dataProviderBot::getCommands);
@@ -148,11 +91,35 @@ public class Main {
 
     if (parties.hasOperator()) {
       logger.info("Starting automation for Operator.");
-      TimeUpdaterBot timeUpdaterBot = new TimeUpdaterBot(handle);
+      LedgerClient ledgerClient = createLedgerClient(ledgerId, parties.getOperator());
+      TimeUpdaterBot timeUpdaterBot = new TimeUpdaterBot(ledgerClient);
       scheduler = Executors.newScheduledThreadPool(1);
-      timeUpdaterBotExecutor = new TimeUpdaterBotExecutor(scheduler);
+      TimeUpdaterBotExecutor timeUpdaterBotExecutor = new TimeUpdaterBotExecutor(scheduler);
       timeUpdaterBotExecutor.start(timeUpdaterBot, systemPeriodTime);
     }
+  }
+
+  private static void wire(
+      String ledgerId,
+      String party,
+      ContractQuery contractQuery,
+      Function<ActiveContractSet, Flowable<Command>> bot) {
+    LedgerClient ledgerClient = createLedgerClient(ledgerId, party);
+    //noinspection ResultOfMethodCallIgnored
+    ledgerClient
+        .getActiveContracts(contractQuery)
+        .flatMap(bot::apply)
+        .forEach(command -> submitCommand(ledgerClient, command));
+  }
+
+  private static LedgerClient createLedgerClient(String ledgerId, String operator) {
+    return Utils.createJsonLedgerClient(
+        ledgerId,
+        operator,
+        APPLICATION_ID,
+        httpResponseDeserializer,
+        jsonSerializer,
+        webSocketResponseDeserializer);
   }
 
   public static void terminateTimeUpdaterBot() {
@@ -171,7 +138,7 @@ public class Main {
     }
   }
 
-  private static void submitCommand(JsonLedgerClient ledgerClient, Command command) {
+  private static void submitCommand(LedgerClient ledgerClient, Command command) {
     command.asExerciseCommand().ifPresent(ledgerClient::exerciseChoice);
     command.asCreateCommand().ifPresent(ledgerClient::create);
   }

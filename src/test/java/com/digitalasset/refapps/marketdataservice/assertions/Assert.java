@@ -8,24 +8,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.daml.ledger.javaapi.data.Command;
-import com.daml.ledger.javaapi.data.ExerciseCommand;
-import java.util.List;
 import java.util.Optional;
 
 public class Assert {
-
-  public static void assertHasSingleExercise(
-      List<Command> actualCommands, String cid, String choiceName) {
-    assertEquals(1, actualCommands.size());
-    actualCommands.forEach(
-        cmd -> {
-          Optional<ExerciseCommand> exerciseCommand = cmd.asExerciseCommand();
-          assertTrue(exerciseCommand.isPresent());
-          assertEquals(cid, exerciseCommand.get().getContractId());
-          assertEquals(choiceName, exerciseCommand.get().getChoice());
-        });
-  }
 
   @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
   public static <T> void assertOptionalValue(T expectedValue, Optional<T> actual) {
