@@ -52,8 +52,8 @@ template EmptyDataStream
               isExpired <- checkIsExpired operator dataLicense.licenseData
               let expirationErr = "Cannot start data stream: license is expired, reference: " <>
                                     show newObservation.label <>
-                                    ", license ID: " <>
-                                    show dataLicenseId
+                                    ", license: " <>
+                                    show dataLicense
               assertMsg expirationErr $ not isExpired
               exercise dataLicenseId RegisteredDataLicense_BeginStreaming
               case oldPublicationIdOpt of
