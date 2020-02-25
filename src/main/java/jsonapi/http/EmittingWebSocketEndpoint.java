@@ -5,7 +5,6 @@
 package jsonapi.http;
 
 import io.reactivex.FlowableSubscriber;
-import java.io.IOException;
 import javax.websocket.CloseReason;
 import javax.websocket.EndpointConfig;
 import javax.websocket.MessageHandler.Whole;
@@ -16,25 +15,17 @@ import org.slf4j.LoggerFactory;
 public class EmittingWebSocketEndpoint extends javax.websocket.Endpoint {
   private final Logger log = LoggerFactory.getLogger(getClass());
 
-  private final String query;
   private final FlowableSubscriber<String> subscriber;
 
-  public EmittingWebSocketEndpoint(FlowableSubscriber<String> subscriber, String query) {
+  public EmittingWebSocketEndpoint(FlowableSubscriber<String> subscriber) {
     this.subscriber = subscriber;
-    this.query = query;
   }
 
   @Override
   public void onOpen(Session session, EndpointConfig endpointConfig) {
     log.debug("Connected.");
-    try {
-      Whole<String> messageHandler = new MessageHandler();
-      session.addMessageHandler(messageHandler);
-      // TODO: Factor out initial message sending.
-      session.getBasicRemote().sendText(query, true);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    Whole<String> messageHandler = new MessageHandler();
+    session.addMessageHandler(messageHandler);
   }
 
   @Override

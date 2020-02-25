@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 import javax.websocket.ClientEndpointConfig;
 import javax.websocket.DeploymentException;
+import javax.websocket.Session;
 import jsonapi.http.EmittingWebSocketEndpoint;
 import jsonapi.http.WebSocketClient;
 import jsonapi.http.WebSocketResponse;
@@ -63,7 +64,9 @@ public class TyrusWebSocketClient implements WebSocketClient {
   private Flowable<WebSocketResponse> createWebSocketPublisher(URI resource, String query)
       throws IOException, DeploymentException {
     PublishProcessor<String> broadcaster = PublishProcessor.create();
-    client.connectToServer(new EmittingWebSocketEndpoint(broadcaster, query), config, resource);
+    Session session =
+        client.connectToServer(new EmittingWebSocketEndpoint(broadcaster), config, resource);
+    session.getBasicRemote().sendText(query, true);
     return broadcaster.map(this::toWebSocketResponse);
   }
 
