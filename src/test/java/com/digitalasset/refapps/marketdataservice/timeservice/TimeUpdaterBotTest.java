@@ -4,15 +4,12 @@
  */
 package com.digitalasset.refapps.marketdataservice.timeservice;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.daml.ledger.javaapi.data.ExerciseCommand;
-import com.digitalasset.refapps.utils.ManualExecutorService;
+import da.timeservice.timeservice.CurrentTime;
 import da.timeservice.timeservice.TimeManager;
-import java.util.concurrent.TimeUnit;
 import jsonapi.events.CreatedEvent;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,27 +18,21 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class TimeUpdaterBotTest extends TimeUpdaterBotBaseTest {
 
-  public TimeUpdaterBotTest() {
-    this.operator = "John Doe";
-  }
-
   @Test
-  public void newCurrentTimeIsUpdated() {
+  public void updateModelTimeAdvancesCurrentTime() {
     CreatedEvent eventManager = createTimeManager();
     CreatedEvent eventCurrentTime = createCurrentTime();
-    when(ledgerClient.queryContracts(any()))
-        .thenReturn(createContractResponse(eventManager))
-        .thenReturn(createContractResponse(eventCurrentTime))
+    when(ledgerClient.queryContracts(queryFor(TimeManager.TEMPLATE_ID)))
+        .thenReturn(createContractResponse(eventManager));
+    when(ledgerClient.queryContracts(queryFor(CurrentTime.TEMPLATE_ID)))
         .thenReturn(createContractResponse(eventCurrentTime));
-    ManualExecutorService executor = new ManualExecutorService();
 
     TimeUpdaterBot bot = new TimeUpdaterBot(ledgerClient);
-    executor.scheduleAtFixedRate(bot::updateModelTime, 1, 1, TimeUnit.SECONDS);
-    executor.runScheduledNow();
+    bot.updateModelTime();
 
-    TimeManager.ContractId currentTimeCid =
+    TimeManager.ContractId timeManagerCid =
         new TimeManager.ContractId(eventManager.getContractId());
-    ExerciseCommand expectedCommand = currentTimeCid.exerciseAdvanceCurrentTime();
-    verify(ledgerClient, times(1)).exerciseChoice(expectedCommand);
+    ExerciseCommand expectedCommand = timeManagerCid.exerciseAdvanceCurrentTime();
+    verify(ledgerClient).exerciseChoice(expectedCommand);
   }
 }

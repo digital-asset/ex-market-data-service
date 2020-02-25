@@ -4,11 +4,13 @@
  */
 package com.digitalasset.refapps.marketdataservice.timeservice;
 
+import com.daml.ledger.javaapi.data.Identifier;
 import da.timeservice.timeservice.CurrentTime;
 import da.timeservice.timeservice.TimeManager;
 import java.time.Instant;
 import java.util.Collections;
 import jsonapi.ActiveContractSet;
+import jsonapi.ContractQuery;
 import jsonapi.LedgerClient;
 import jsonapi.events.CreatedEvent;
 import org.mockito.Mock;
@@ -31,5 +33,9 @@ public abstract class TimeUpdaterBotBaseTest {
 
   ActiveContractSet createContractResponse(CreatedEvent event) {
     return event.update(ActiveContractSet.empty());
+  }
+
+  protected ContractQuery queryFor(Identifier templateId) {
+    return new ContractQuery(Collections.singletonList(templateId));
   }
 }
