@@ -24,4 +24,12 @@ public class CliOptionsTest {
     CliOptions cliOptions = CliOptions.parseArgs(args);
     assertThat(cliOptions.getLedgerId(), is("sample-ledger"));
   }
+
+  @Test
+  public void jsonApiOptionsCanBeSpecified() throws CmdLineException {
+    String[] args = {"-ledgerId", "", "-jsonHost", "sample-api", "-jsonPort", "4849"};
+    CliOptions cliOptions = CliOptions.parseArgs(args);
+    assertThat(cliOptions.getJsonApiHost(), is("sample-api"));
+    assertThat(cliOptions.getJsonApiPort(), is(4849));
+  }
 }

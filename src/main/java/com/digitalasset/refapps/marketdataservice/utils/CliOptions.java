@@ -23,6 +23,12 @@ public class CliOptions {
   @Option(name = "-ledgerId", usage = "Ledger ID", metaVar = "LEDGER_ID", required = true)
   private String ledgerId = null;
 
+  @Option(name = "-jsonHost", usage = "JSON API host", metaVar = "JSON_API_HOST")
+  private String jsonApiHost = "localhost";
+
+  @Option(name = "-jsonPort", usage = "JSON API port", metaVar = "JSON_API_PORT")
+  private int jsonApiPort = 7575;
+
   @Option(
       name = "-u",
       usage = "Parties to run the application for.",
@@ -44,6 +50,14 @@ public class CliOptions {
 
   public String getLedgerId() {
     return ledgerId;
+  }
+
+  public String getJsonApiHost() {
+    return jsonApiHost;
+  }
+
+  public int getJsonApiPort() {
+    return jsonApiPort;
   }
 
   public static CliOptions parseArgs(String[] args) throws CmdLineException {
