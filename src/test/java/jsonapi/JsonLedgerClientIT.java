@@ -89,7 +89,7 @@ public class JsonLedgerClientIT {
             OPERATOR.getValue(), Instant.parse("2020-02-04T22:57:29Z"), Collections.emptyList());
     ledger.createContract(OPERATOR, CurrentTime.TEMPLATE_ID, currentTime.toValue());
 
-    LedgerClient ledger = new JsonLedgerClient(httpClient, webSocketClient, jsonSerializer, api);
+    LedgerClient ledger = new JsonLedgerClient(httpClient, webSocketClient, api);
     ActiveContractSet result = ledger.getActiveContracts();
 
     List<Contract<CurrentTime>> currentTimes =
@@ -109,8 +109,7 @@ public class JsonLedgerClientIT {
     ContractWithId<CurrentTime.ContractId> currentTimeWithId =
         ledger.getMatchedContract(OPERATOR, CurrentTime.TEMPLATE_ID, CurrentTime.ContractId::new);
 
-    LedgerClient ledgerClient =
-        new JsonLedgerClient(httpClient, webSocketClient, jsonSerializer, api);
+    LedgerClient ledgerClient = new JsonLedgerClient(httpClient, webSocketClient, api);
     ledgerClient.exerciseChoice(
         currentTimeWithId.contractId.exerciseCurrentTime_AddObserver(OPERATOR.getValue()));
 

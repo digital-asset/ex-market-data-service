@@ -99,8 +99,7 @@ public class JsonSerializeExerciseIT {
     setupTimeContracts(startTime, modelPeriodTime);
     ContractWithId<TimeManager.ContractId> timeManagerWithId =
         ledger.getMatchedContract(OPERATOR, TimeManager.TEMPLATE_ID, TimeManager.ContractId::new);
-    LedgerClient ledgerClient =
-        new JsonLedgerClient(httpClient, webSocketClient, new GsonSerializer(), api);
+    LedgerClient ledgerClient = new JsonLedgerClient(httpClient, webSocketClient, api);
     ledgerClient.exerciseChoice(timeManagerWithId.contractId.exerciseAdvanceCurrentTime());
     getNextCurrentTime();
     CurrentTime currentTime = getNextCurrentTime();

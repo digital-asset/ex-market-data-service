@@ -55,28 +55,28 @@ public class JsonLedgerClientTest {
 
   @Test
   public void createThrowsForHttpErrorAndIncludesMessage() {
-    JsonLedgerClient ledger = new JsonLedgerClient(httpClient, null, jsonSerializer, api);
+    JsonLedgerClient ledger = new JsonLedgerClient(httpClient, null, api);
     exceptionRule.expectMessage(someBadRequestErrorMessage);
     ledger.create(null);
   }
 
   @Test
   public void exerciseChoiceThrowsForHttpErrorAndIncludesMessage() {
-    JsonLedgerClient ledger = new JsonLedgerClient(httpClient, null, jsonSerializer, api);
+    JsonLedgerClient ledger = new JsonLedgerClient(httpClient, null, api);
     exceptionRule.expectMessage(someBadRequestErrorMessage);
     ledger.exerciseChoice(null);
   }
 
   @Test
   public void getActiveContractsThrowsForHttpErrorAndIncludesMessage() {
-    JsonLedgerClient ledger = new JsonLedgerClient(httpClient, null, jsonSerializer, api);
+    JsonLedgerClient ledger = new JsonLedgerClient(httpClient, null, api);
     exceptionRule.expectMessage(someBadRequestErrorMessage);
     ledger.getActiveContracts();
   }
 
   @Test
   public void queryContractsThrowsForHttpErrorAndIncludesMessage() {
-    JsonLedgerClient ledger = new JsonLedgerClient(httpClient, null, jsonSerializer, api);
+    JsonLedgerClient ledger = new JsonLedgerClient(httpClient, null, api);
     exceptionRule.expectMessage(someBadRequestErrorMessage);
     ledger.queryContracts(null);
   }
@@ -85,7 +85,7 @@ public class JsonLedgerClientTest {
   public void getActiveContractsThrowsForWebSocketErrorAndIncludesMessage() {
     WebSocketClientGivingError webSocketClient =
         new WebSocketClientGivingError(new WebSocketResponse(null, "some error", null, null, null));
-    JsonLedgerClient ledger = new JsonLedgerClient(null, webSocketClient, jsonSerializer, api);
+    JsonLedgerClient ledger = new JsonLedgerClient(null, webSocketClient, api);
     exceptionRule.expectMessage("some error");
     Flowable<ActiveContractSet> activeContracts = ledger.getActiveContracts(null);
     activeContracts.blockingLast();
@@ -96,7 +96,7 @@ public class JsonLedgerClientTest {
     WebSocketClientGivingError webSocketClient =
         new WebSocketClientGivingError(
             new WebSocketResponse(null, null, "some warning", null, null));
-    JsonLedgerClient ledger = new JsonLedgerClient(null, webSocketClient, jsonSerializer, api);
+    JsonLedgerClient ledger = new JsonLedgerClient(null, webSocketClient, api);
     exceptionRule.expectMessage("some warning");
     Flowable<ActiveContractSet> activeContracts = ledger.getActiveContracts(null);
     activeContracts.blockingLast();

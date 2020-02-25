@@ -68,6 +68,6 @@ public class Utils {
     // TODO: Make this configurable.
     Api api = new Api("localhost", 7575);
 
-    return new JsonLedgerClient(httpClient, webSocketClient, jsonSerializer, api);
+    return new JsonLedgerClient(httpClient, webSocketClient, api);
   }
 }
