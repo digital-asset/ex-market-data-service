@@ -70,7 +70,8 @@ public class JsonConverterTest {
         jsonConverter.fromResponseWithSingletonList(responseWithSingletonList);
     assertEquals(
         currentTime,
-        new CurrentTime("Operator", Instant.parse("2020-02-04T22:57:29Z"), Collections.EMPTY_LIST));
+        new CurrentTime(
+            "Operator", Instant.parse("2020-02-04T22:57:29Z"), Collections.emptyList()));
     assertEquals(
         jsonConverter.to(currentTime),
         "{\"operator\":\"Operator\",\"currentTime\":\"2020-02-04T22:57:29Z\",\"observers\":[]}");
