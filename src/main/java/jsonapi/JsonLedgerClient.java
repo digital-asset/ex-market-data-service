@@ -58,19 +58,15 @@ public class JsonLedgerClient implements LedgerClient {
   }
 
   @Override
-  public String create(CreateCommand command) {
+  public void create(CreateCommand command) {
     HttpResponse httpResponse = httpClient.post(api.createContract(), command);
     throwIfStatusIsNot200(httpResponse);
-    // TODO: Make void
-    return toJson.apply(httpResponse);
   }
 
   @Override
-  public String exerciseChoice(ExerciseCommand command) {
+  public void exerciseChoice(ExerciseCommand command) {
     HttpResponse httpResponse = httpClient.post(api.exercise(), command);
     throwIfStatusIsNot200(httpResponse);
-    // TODO: Make void
-    return toJson.apply(httpResponse);
   }
 
   @Override

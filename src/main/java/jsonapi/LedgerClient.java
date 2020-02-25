@@ -10,9 +10,9 @@ import io.reactivex.Flowable;
 
 public interface LedgerClient {
 
-  String create(CreateCommand command);
+  void create(CreateCommand command);
 
-  String exerciseChoice(ExerciseCommand command);
+  void exerciseChoice(ExerciseCommand command);
 
   // TODO: Can we remove?
   ActiveContractSet getActiveContracts();

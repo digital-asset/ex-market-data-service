@@ -4,7 +4,7 @@
  */
 package jsonapi;
 
-import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -13,6 +13,7 @@ import com.digitalasset.testing.junit4.Sandbox;
 import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
 import com.digitalasset.testing.utils.ContractWithId;
 import da.timeservice.timeservice.CurrentTime;
+import da.timeservice.timeservice.CurrentTime.ContractId;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -108,15 +109,14 @@ public class JsonLedgerClientIT {
     ContractWithId<CurrentTime.ContractId> currentTimeWithId =
         ledger.getMatchedContract(OPERATOR, CurrentTime.TEMPLATE_ID, CurrentTime.ContractId::new);
 
-    LedgerClient ledger = new JsonLedgerClient(httpClient, webSocketClient, jsonSerializer, api);
-    String result =
-        ledger.exerciseChoice(
-            currentTimeWithId.contractId.exerciseCurrentTime_AddObserver(OPERATOR.getValue()));
+    LedgerClient ledgerClient =
+        new JsonLedgerClient(httpClient, webSocketClient, jsonSerializer, api);
+    ledgerClient.exerciseChoice(
+        currentTimeWithId.contractId.exerciseCurrentTime_AddObserver(OPERATOR.getValue()));
 
-    assertThat(result, containsString("\"status\":200"));
-    assertThat(
-        result,
-        containsString(
-            "\"payload\":{\"operator\":\"Operator\",\"currentTime\":\"2020-02-04T22:57:29Z\",\"observers\":[\"Operator\"]}"));
+    ContractWithId<ContractId> contract =
+        ledger.getMatchedContract(OPERATOR, CurrentTime.TEMPLATE_ID, ContractId::new);
+    CurrentTime updatedTime = CurrentTime.fromValue(contract.record);
+    assertThat(updatedTime.observers, hasItem(OPERATOR.getValue()));
   }
 }
