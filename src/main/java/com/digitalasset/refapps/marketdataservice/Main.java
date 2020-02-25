@@ -24,6 +24,7 @@ import jsonapi.LedgerClient;
 import jsonapi.Utils;
 import jsonapi.gson.GsonDeserializer;
 import jsonapi.gson.GsonSerializer;
+import jsonapi.http.Api;
 import jsonapi.http.HttpResponse;
 import jsonapi.http.WebSocketResponse;
 import jsonapi.json.JsonDeserializer;
@@ -55,17 +56,27 @@ public class Main {
     }
 
     // TODO: Don't we need to wait for Sandbox?
-    waitForJsonApi(cliOptions.getSandboxHost(), cliOptions.getSandboxPort());
+    waitForJsonApi(cliOptions.getJsonApiHost(), cliOptions.getJsonApiPort());
 
     AppParties appParties = new AppParties(cliOptions.getParties());
-    runBots(cliOptions.getLedgerId(), appParties, SYSTEM_PERIOD_TIME);
+    runBots(
+        cliOptions.getLedgerId(),
+        cliOptions.getJsonApiHost(),
+        cliOptions.getJsonApiPort(),
+        appParties,
+        SYSTEM_PERIOD_TIME);
 
     logger.info("Welcome to Market Data Service!");
     logger.info("Press Ctrl+C to shut down the program.");
     Thread.currentThread().join();
   }
 
-  public static void runBots(String ledgerId, AppParties parties, Duration systemPeriodTime) {
+  public static void runBots(
+      String ledgerId,
+      String jsonApiHost,
+      int jsonApiPort,
+      AppParties parties,
+      Duration systemPeriodTime) {
     if (parties.hasMarketDataProvider1()) {
       logger.info("Starting automation for MarketDataProvider1.");
       PublishingDataProvider dataProvider = new CachingCsvDataProvider();
@@ -73,6 +84,8 @@ public class Main {
           new DataProviderBot(parties.getMarketDataProvider1(), dataProvider);
       wire(
           ledgerId,
+          jsonApiHost,
+          jsonApiPort,
           dataProviderBot.getPartyName(),
           dataProviderBot.getContractQuery(),
           dataProviderBot::getCommands);
@@ -85,6 +98,8 @@ public class Main {
           new DataProviderBot(parties.getMarketDataProvider2(), dataProvider);
       wire(
           ledgerId,
+          jsonApiHost,
+          jsonApiPort,
           dataProviderBot.getPartyName(),
           dataProviderBot.getContractQuery(),
           dataProviderBot::getCommands);
@@ -92,7 +107,8 @@ public class Main {
 
     if (parties.hasOperator()) {
       logger.info("Starting automation for Operator.");
-      LedgerClient ledgerClient = createLedgerClient(ledgerId, parties.getOperator());
+      LedgerClient ledgerClient =
+          createLedgerClient(ledgerId, jsonApiHost, jsonApiPort, parties.getOperator());
       TimeUpdaterBot timeUpdaterBot = new TimeUpdaterBot(ledgerClient);
       scheduler = Executors.newScheduledThreadPool(1);
       TimeUpdaterBotExecutor timeUpdaterBotExecutor = new TimeUpdaterBotExecutor(scheduler);
@@ -102,11 +118,13 @@ public class Main {
 
   private static void wire(
       String ledgerId,
+      String jsonApiHost,
+      int jsonApiPort,
       String party,
       ContractQuery contractQuery,
       // TODO: Don't we need a Flowable<Collection<Command>>?
       Function<ActiveContractSet, Flowable<Command>> bot) {
-    LedgerClient ledgerClient = createLedgerClient(ledgerId, party);
+    LedgerClient ledgerClient = createLedgerClient(ledgerId, jsonApiHost, jsonApiPort, party);
     //noinspection ResultOfMethodCallIgnored
     ledgerClient
         .getActiveContracts(contractQuery)
@@ -114,14 +132,17 @@ public class Main {
         .forEach(command -> submitCommand(ledgerClient, command));
   }
 
-  private static LedgerClient createLedgerClient(String ledgerId, String operator) {
+  private static LedgerClient createLedgerClient(
+      String ledgerId, String jsonApiHost, int jsonApiPort, String operator) {
+    Api api = new Api(jsonApiHost, jsonApiPort);
     return Utils.createJsonLedgerClient(
         ledgerId,
         operator,
         APPLICATION_ID,
         httpResponseDeserializer,
         jsonSerializer,
-        webSocketResponseDeserializer);
+        webSocketResponseDeserializer,
+        api);
   }
 
   public static void terminateTimeUpdaterBot() {

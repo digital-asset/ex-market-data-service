@@ -28,6 +28,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import jsonapi.gson.GsonDeserializer;
 import jsonapi.gson.GsonSerializer;
+import jsonapi.http.Api;
 import jsonapi.http.HttpResponse;
 import jsonapi.http.WebSocketResponse;
 import jsonapi.json.JsonDeserializer;
@@ -75,6 +76,7 @@ public class TimeUpdaterBotJsonIT {
     ledger = sandbox.getLedgerAdapter();
     String ledgerId = sandbox.getClient().getLedgerId();
     scheduler = Executors.newScheduledThreadPool(1);
+    Api api = new Api("localhost", 7575);
     ledgerClient =
         Utils.createJsonLedgerClient(
             ledgerId,
@@ -82,7 +84,7 @@ public class TimeUpdaterBotJsonIT {
             APPLICATION_ID,
             httpResponseDeserializer,
             jsonSerializer,
-            webSocketResponseDeserializer);
+            webSocketResponseDeserializer, api);
   }
 
   @After

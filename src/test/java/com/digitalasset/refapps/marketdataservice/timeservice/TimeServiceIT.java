@@ -60,7 +60,12 @@ public class TimeServiceIT {
 
   @Before
   public void setUp() throws Throwable {
-    Main.runBots(sandbox.getClient().getLedgerId(), new AppParties(ALL_PARTIES), systemPeriodTime);
+    Main.runBots(
+        sandbox.getClient().getLedgerId(),
+        "localhost",
+        7575,
+        new AppParties(ALL_PARTIES),
+        systemPeriodTime);
     // Valid port is assigned only after the sandbox has been started.
     // Therefore trigger has to be configured at the point where this can be guaranteed.
     script =
