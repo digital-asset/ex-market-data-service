@@ -61,7 +61,7 @@ public class JsonLedgerClient implements LedgerClient {
   public String create(CreateCommand command) {
     HttpResponse httpResponse = httpClient.post(api.createContract(), command);
     throwIfStatusIsNot200(httpResponse);
-    // TODO: Return type safe result
+    // TODO: Make void
     return toJson.apply(httpResponse);
   }
 
@@ -69,7 +69,7 @@ public class JsonLedgerClient implements LedgerClient {
   public String exerciseChoice(ExerciseCommand command) {
     HttpResponse httpResponse = httpClient.post(api.exercise(), command);
     throwIfStatusIsNot200(httpResponse);
-    // TODO: Return type safe result
+    // TODO: Make void
     return toJson.apply(httpResponse);
   }
 
@@ -78,19 +78,16 @@ public class JsonLedgerClient implements LedgerClient {
     HttpResponse httpResponse = httpClient.get(api.searchContract());
     throwIfStatusIsNot200(httpResponse);
     ActiveContractSet acs = ActiveContractSet.empty();
-    // TODO: Eliminate the need for casting.
     SearchResult searchResult = (SearchResult) httpResponse.getResult();
     return acs.update(searchResult.getCreatedEvents());
   }
 
   // TODO: Eliminate code duplication, fix interface
-
   @Override
   public ActiveContractSet queryContracts(ContractQuery query) {
     HttpResponse httpResponse = httpClient.post(api.searchContract(), query);
     throwIfStatusIsNot200(httpResponse);
     ActiveContractSet acs = ActiveContractSet.empty();
-    // TODO: Eliminate the need for casting.
     SearchResult searchResult = (SearchResult) httpResponse.getResult();
     return acs.update(searchResult.getCreatedEvents());
   }

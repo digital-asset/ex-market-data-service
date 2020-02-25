@@ -17,7 +17,7 @@ public class RecordSerializer implements JsonSerializer<Record> {
   @Override
   public JsonElement serialize(Record record, Type type, JsonSerializationContext context) {
     JsonObject json = new JsonObject();
-    // TODO: Implement properly.
+    // TODO: Document the shortcomings of this implementation. Optionally handle errors.
     for (Field field : record.getFields()) {
       field.getLabel().ifPresent(label -> json.add(label, context.serialize(field.getValue())));
     }

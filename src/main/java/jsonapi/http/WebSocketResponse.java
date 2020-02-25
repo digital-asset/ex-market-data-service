@@ -34,7 +34,7 @@ public class WebSocketResponse {
     this.live = live;
   }
 
-  // TODO return Optional. Should not return empty list for null events, because events==null means
+  // Should not return empty list for null events, because events==null means
   // some application error in this ref app (because the websocket error should have been detected
   // and escalated). In other words, returning empty list for events==null would silently swallow an
   // error.

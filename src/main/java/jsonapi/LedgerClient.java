@@ -14,6 +14,7 @@ public interface LedgerClient {
 
   String exerciseChoice(ExerciseCommand command);
 
+  // TODO: Can we remove?
   ActiveContractSet getActiveContracts();
 
   ActiveContractSet queryContracts(ContractQuery query);

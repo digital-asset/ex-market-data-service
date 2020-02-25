@@ -23,7 +23,7 @@ import java.util.Collections;
 import java.util.Map;
 import org.junit.Test;
 
-// TODO migrate to interface we agreed on
+// TODO(RichardK): Remove this
 class CurrentTimeJsonConverter {
 
   private Gson gson;

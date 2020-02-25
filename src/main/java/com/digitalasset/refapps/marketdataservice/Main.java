@@ -54,6 +54,7 @@ public class Main {
       System.exit(1);
     }
 
+    // TODO: Don't we need to wait for Sandbox?
     waitForJsonApi(cliOptions.getSandboxHost(), cliOptions.getSandboxPort());
 
     AppParties appParties = new AppParties(cliOptions.getParties());
@@ -103,6 +104,7 @@ public class Main {
       String ledgerId,
       String party,
       ContractQuery contractQuery,
+      // TODO: Don't we need a Flowable<Collection<Command>>?
       Function<ActiveContractSet, Flowable<Command>> bot) {
     LedgerClient ledgerClient = createLedgerClient(ledgerId, party);
     //noinspection ResultOfMethodCallIgnored

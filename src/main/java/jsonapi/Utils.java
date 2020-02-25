@@ -20,11 +20,9 @@ import org.apache.http.client.fluent.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// TODO: Rename
 public class Utils {
   private static final Logger log = LoggerFactory.getLogger("JsonAPI Util");
 
-  // TODO: Remove Apache dependency
   public static void waitForJsonApi(String uri) throws Exception {
     Instant started = Instant.now();
     boolean isRunning = false;

@@ -29,7 +29,7 @@ public class ActiveContractSet {
     return new ActiveContractSet();
   }
 
-  // TODO: Rename this method.
+  // TODO: Remove this method
   public Stream<ActiveContract> getActiveContracts() {
     return Collections.unmodifiableCollection(activeContracts.values()).stream();
   }
@@ -74,7 +74,6 @@ public class ActiveContractSet {
     }
   }
 
-  // TODO: Does it make sense to have an isEmpty?
   public boolean isEmpty() {
     return this.activeContracts.isEmpty();
   }

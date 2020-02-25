@@ -41,7 +41,6 @@ public class TyrusWebSocketClient implements WebSocketClient {
     this.client = ClientManager.createClient(JdkClientContainer.class.getName());
   }
 
-  // TODO: Visible only for testing. Likely should refactor.
   TyrusWebSocketClient(
       JsonDeserializer<WebSocketResponse> fromJson,
       JsonSerializer toJson,
