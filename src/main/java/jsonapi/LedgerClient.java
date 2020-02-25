@@ -14,9 +14,6 @@ public interface LedgerClient {
 
   void exerciseChoice(ExerciseCommand command);
 
-  // TODO: Can we remove?
-  ActiveContractSet getActiveContracts();
-
   ActiveContractSet queryContracts(ContractQuery query);
 
   Flowable<ActiveContractSet> getActiveContracts(ContractQuery query);

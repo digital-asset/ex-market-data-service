@@ -68,13 +68,6 @@ public class JsonLedgerClientTest {
   }
 
   @Test
-  public void getActiveContractsThrowsForHttpErrorAndIncludesMessage() {
-    JsonLedgerClient ledger = new JsonLedgerClient(httpClient, null, api);
-    exceptionRule.expectMessage(someBadRequestErrorMessage);
-    ledger.getActiveContracts();
-  }
-
-  @Test
   public void queryContractsThrowsForHttpErrorAndIncludesMessage() {
     JsonLedgerClient ledger = new JsonLedgerClient(httpClient, null, api);
     exceptionRule.expectMessage(someBadRequestErrorMessage);

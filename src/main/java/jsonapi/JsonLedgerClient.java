@@ -67,16 +67,6 @@ public class JsonLedgerClient implements LedgerClient {
   }
 
   @Override
-  public ActiveContractSet getActiveContracts() {
-    HttpResponse httpResponse = httpClient.get(api.searchContract());
-    throwIfStatusIsNot200(httpResponse);
-    ActiveContractSet acs = ActiveContractSet.empty();
-    SearchResult searchResult = (SearchResult) httpResponse.getResult();
-    return acs.update(searchResult.getCreatedEvents());
-  }
-
-  // TODO: Eliminate code duplication, fix interface
-  @Override
   public ActiveContractSet queryContracts(ContractQuery query) {
     HttpResponse httpResponse = httpClient.post(api.searchContract(), query);
     throwIfStatusIsNot200(httpResponse);

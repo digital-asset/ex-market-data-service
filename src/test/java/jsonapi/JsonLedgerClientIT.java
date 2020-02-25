@@ -83,14 +83,16 @@ public class JsonLedgerClientIT {
   }
 
   @Test
-  public void getActiveContracts() throws IOException {
+  public void queryContracts() throws IOException {
     CurrentTime currentTime =
         new CurrentTime(
             OPERATOR.getValue(), Instant.parse("2020-02-04T22:57:29Z"), Collections.emptyList());
     ledger.createContract(OPERATOR, CurrentTime.TEMPLATE_ID, currentTime.toValue());
 
-    LedgerClient ledger = new JsonLedgerClient(httpClient, webSocketClient, api);
-    ActiveContractSet result = ledger.getActiveContracts();
+    LedgerClient ledgerClient = new JsonLedgerClient(httpClient, webSocketClient, api);
+    ActiveContractSet result =
+        ledgerClient.queryContracts(
+            new ContractQuery(Collections.singletonList(CurrentTime.TEMPLATE_ID)));
 
     List<Contract<CurrentTime>> currentTimes =
         result
