@@ -70,8 +70,8 @@ publicationRule transformObservation party activeContracts _ _ () = do
 
     let (nonFreshStreams, freshStreams) =
           partition (\(_, s) -> observationHasChanged s.observation newObservation) ownDataStreams
-    forA_ nonFreshStreams (\(sCid, emptyDataStream) -> do
-      debug ("Updating observation on stream: " <> (show emptyDataStream))
+    forA_ nonFreshStreams (\(sCid, dataStream) -> do
+      debug ("Updating observation on stream: " <> (show dataStream))
       dedupExercise sCid UpdateObservation with time = newObservation.time, newValue = newObservation.value)
     forA_ freshStreams (\(sCid, freshStream) ->
       whenSome mbCurrentTime $ \(_, currentTime) ->
