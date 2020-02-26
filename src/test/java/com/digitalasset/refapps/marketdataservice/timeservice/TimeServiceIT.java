@@ -17,6 +17,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import da.timeservice.timeservice.CurrentTime;
 import da.timeservice.timeservice.TimeConfiguration;
 import da.timeservice.timeservice.TimeManager;
+import da.timeservice.timeservice.TimeManager.ContractId;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -96,50 +97,28 @@ public class TimeServiceIT {
 
   @Test
   public void updateTime() throws InterruptedException, InvalidProtocolBufferException {
-    CurrentTime currentTime =
-        new CurrentTime(
-            OPERATOR.getValue(), Instant.parse("1955-11-12T10:04:00Z"), Collections.emptyList());
-    ledger.createContract(OPERATOR, CurrentTime.TEMPLATE_ID, currentTime.toValue());
+    Instant initialTime = Instant.parse("1955-11-12T10:04:00Z");
     Duration modelPeriodTime = Duration.ofHours(2);
-    ledger.createContract(
-        OPERATOR,
-        TimeConfiguration.TEMPLATE_ID,
-        new TimeConfiguration(OPERATOR.getValue(), false, RelTime.fromDuration(modelPeriodTime))
-            .toValue());
-    ledger.createContract(
-        OPERATOR, TimeManager.TEMPLATE_ID, new TimeManager(OPERATOR.getValue()).toValue());
-    TimeManager.ContractId managerCid =
-        ledger.getCreatedContractId(OPERATOR, TimeManager.TEMPLATE_ID, TimeManager.ContractId::new);
+    TimeManager.ContractId managerCid = setupTimeServiceContracts(initialTime, modelPeriodTime);
 
     TimeUpdaterBot timeUpdaterBot = new TimeUpdaterBot(ledgerClient);
     TimeUpdaterBotExecutor botExecutor = new TimeUpdaterBotExecutor(scheduler);
-    botExecutor.start(timeUpdaterBot, Duration.ofSeconds(5));
+    botExecutor.start(timeUpdaterBot, Duration.ofSeconds(1));
     ledger.exerciseChoice(OPERATOR, managerCid.exerciseContinue());
 
     eventually(
         () -> {
           Instant updatedTime = getCurrentTimeInstant();
-          assertThat(updatedTime, is(currentTime.currentTime.plus(modelPeriodTime)));
+          assertThat(updatedTime, is(initialTime.plus(modelPeriodTime)));
         });
   }
 
   @Test
   public void modelPeriodTimeCanBeChanged()
       throws InvalidProtocolBufferException, InterruptedException {
-    CurrentTime currentTime =
-        new CurrentTime(
-            OPERATOR.getValue(), Instant.parse("1955-11-12T10:04:00Z"), Collections.emptyList());
-    ledger.createContract(OPERATOR, CurrentTime.TEMPLATE_ID, currentTime.toValue());
+    Instant initialTime = Instant.parse("1955-11-12T10:04:00Z");
     Duration modelPeriodTime = Duration.ofHours(2);
-    ledger.createContract(
-        OPERATOR,
-        TimeConfiguration.TEMPLATE_ID,
-        new TimeConfiguration(OPERATOR.getValue(), false, RelTime.fromDuration(modelPeriodTime))
-            .toValue());
-    ledger.createContract(
-        OPERATOR, TimeManager.TEMPLATE_ID, new TimeManager(OPERATOR.getValue()).toValue());
-    TimeManager.ContractId managerCid =
-        ledger.getCreatedContractId(OPERATOR, TimeManager.TEMPLATE_ID, TimeManager.ContractId::new);
+    TimeManager.ContractId managerCid = setupTimeServiceContracts(initialTime, modelPeriodTime);
 
     TimeUpdaterBot timeUpdaterBot = new TimeUpdaterBot(ledgerClient);
     TimeUpdaterBotExecutor botExecutor = new TimeUpdaterBotExecutor(scheduler);
@@ -155,6 +134,21 @@ public class TimeServiceIT {
           Instant y = getCurrentTimeInstant();
           assertThat(y, is(x.plus(newModelPeriodTime)));
         });
+  }
+
+  private ContractId setupTimeServiceContracts(Instant initialTime, Duration modelPeriodTime)
+      throws InvalidProtocolBufferException {
+    CurrentTime currentTime =
+        new CurrentTime(OPERATOR.getValue(), initialTime, Collections.emptyList());
+    ledger.createContract(OPERATOR, CurrentTime.TEMPLATE_ID, currentTime.toValue());
+    ledger.createContract(
+        OPERATOR,
+        TimeConfiguration.TEMPLATE_ID,
+        new TimeConfiguration(OPERATOR.getValue(), false, RelTime.fromDuration(modelPeriodTime))
+            .toValue());
+    ledger.createContract(
+        OPERATOR, TimeManager.TEMPLATE_ID, new TimeManager(OPERATOR.getValue()).toValue());
+    return ledger.getCreatedContractId(OPERATOR, TimeManager.TEMPLATE_ID, ContractId::new);
   }
 
   private Instant getCurrentTimeInstant() {
