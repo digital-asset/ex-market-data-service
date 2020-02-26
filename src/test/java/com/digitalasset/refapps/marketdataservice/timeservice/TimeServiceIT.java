@@ -17,7 +17,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import da.timeservice.timeservice.CurrentTime;
 import da.timeservice.timeservice.TimeConfiguration;
 import da.timeservice.timeservice.TimeManager;
-import da.timeservice.timeservice.TimeManager.ContractId;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -43,7 +42,6 @@ import org.junit.rules.ExternalResource;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 
-// TODO: Rework (possible merge) with TimeServiceIT.
 public class TimeServiceIT {
 
   private static final Path RELATIVE_DAR_PATH = Paths.get("target/market-data-service.dar");
@@ -95,21 +93,40 @@ public class TimeServiceIT {
     scheduler.shutdown();
   }
 
-  @Test
-  public void updateTime() throws InterruptedException, InvalidProtocolBufferException {
-    Instant initialTime = Instant.parse("1955-11-12T10:04:00Z");
-    Duration modelPeriodTime = Duration.ofHours(2);
-    TimeManager.ContractId managerCid = setupTimeServiceContracts(initialTime, modelPeriodTime);
+  private Instant getCurrentTimeInstant() {
+    ContractWithId<CurrentTime.ContractId> currentTimeCid =
+        ledger.getMatchedContract(OPERATOR, CurrentTime.TEMPLATE_ID, CurrentTime.ContractId::new);
+    return CurrentTime.fromValue(currentTimeCid.record).currentTime;
+  }
 
-    TimeUpdaterBot timeUpdaterBot = new TimeUpdaterBot(ledgerClient);
-    TimeUpdaterBotExecutor botExecutor = new TimeUpdaterBotExecutor(scheduler);
-    botExecutor.start(timeUpdaterBot, Duration.ofSeconds(1));
-    ledger.exerciseChoice(OPERATOR, managerCid.exerciseContinue());
+  private TimeManager.ContractId setupTimeServiceContracts(
+      Instant initialTime, Duration modelPeriodTime) throws InvalidProtocolBufferException {
+    CurrentTime currentTime =
+        new CurrentTime(OPERATOR.getValue(), initialTime, Collections.emptyList());
+    TimeConfiguration timeConfiguration =
+        new TimeConfiguration(OPERATOR.getValue(), false, RelTime.fromDuration(modelPeriodTime));
+    TimeManager timeManager = new TimeManager(OPERATOR.getValue());
+    ledger.createContract(OPERATOR, CurrentTime.TEMPLATE_ID, currentTime.toValue());
+    ledger.createContract(OPERATOR, TimeConfiguration.TEMPLATE_ID, timeConfiguration.toValue());
+    ledger.createContract(OPERATOR, TimeManager.TEMPLATE_ID, timeManager.toValue());
+    return ledger.getCreatedContractId(
+        OPERATOR, TimeManager.TEMPLATE_ID, TimeManager.ContractId::new);
+  }
 
+  private void changeModelPeriodTime(
+      TimeManager.ContractId timeManagerCid, Duration newModelPeriodTime)
+      throws InvalidProtocolBufferException {
+    ledger.exerciseChoice(
+        OPERATOR,
+        timeManagerCid.exerciseSetModelPeriodTime(RelTime.fromDuration(newModelPeriodTime)));
+  }
+
+  private void verifyModelPeriodTime(Duration newModelPeriodTime) throws InterruptedException {
     eventually(
         () -> {
-          Instant updatedTime = getCurrentTimeInstant();
-          assertThat(updatedTime, is(initialTime.plus(modelPeriodTime)));
+          Instant time1 = getCurrentTimeInstant();
+          Instant time2 = getCurrentTimeInstant();
+          assertThat(time2, is(time1.plus(newModelPeriodTime)));
         });
   }
 
@@ -128,40 +145,20 @@ public class TimeServiceIT {
     Duration newModelPeriodTime = modelPeriodTime.plusHours(3);
     changeModelPeriodTime(managerCid, newModelPeriodTime);
 
-    eventually(
-        () -> {
-          Instant x = getCurrentTimeInstant();
-          Instant y = getCurrentTimeInstant();
-          assertThat(y, is(x.plus(newModelPeriodTime)));
-        });
+    verifyModelPeriodTime(newModelPeriodTime);
   }
 
-  private ContractId setupTimeServiceContracts(Instant initialTime, Duration modelPeriodTime)
-      throws InvalidProtocolBufferException {
-    CurrentTime currentTime =
-        new CurrentTime(OPERATOR.getValue(), initialTime, Collections.emptyList());
-    ledger.createContract(OPERATOR, CurrentTime.TEMPLATE_ID, currentTime.toValue());
-    ledger.createContract(
-        OPERATOR,
-        TimeConfiguration.TEMPLATE_ID,
-        new TimeConfiguration(OPERATOR.getValue(), false, RelTime.fromDuration(modelPeriodTime))
-            .toValue());
-    ledger.createContract(
-        OPERATOR, TimeManager.TEMPLATE_ID, new TimeManager(OPERATOR.getValue()).toValue());
-    return ledger.getCreatedContractId(OPERATOR, TimeManager.TEMPLATE_ID, ContractId::new);
-  }
+  @Test
+  public void updateTime() throws InterruptedException, InvalidProtocolBufferException {
+    Instant initialTime = Instant.parse("1955-11-12T10:04:00Z");
+    Duration modelPeriodTime = Duration.ofHours(2);
+    TimeManager.ContractId managerCid = setupTimeServiceContracts(initialTime, modelPeriodTime);
 
-  private Instant getCurrentTimeInstant() {
-    ContractWithId<CurrentTime.ContractId> currentTimeCid =
-        ledger.getMatchedContract(OPERATOR, CurrentTime.TEMPLATE_ID, CurrentTime.ContractId::new);
-    return CurrentTime.fromValue(currentTimeCid.record).currentTime;
-  }
+    TimeUpdaterBot timeUpdaterBot = new TimeUpdaterBot(ledgerClient);
+    TimeUpdaterBotExecutor botExecutor = new TimeUpdaterBotExecutor(scheduler);
+    botExecutor.start(timeUpdaterBot, Duration.ofSeconds(1));
+    ledger.exerciseChoice(OPERATOR, managerCid.exerciseContinue());
 
-  private void changeModelPeriodTime(
-      TimeManager.ContractId timeManagerCid, Duration newModelPeriodTime)
-      throws InvalidProtocolBufferException {
-    ledger.exerciseChoice(
-        OPERATOR,
-        timeManagerCid.exerciseSetModelPeriodTime(RelTime.fromDuration(newModelPeriodTime)));
+    verifyModelPeriodTime(modelPeriodTime);
   }
 }
