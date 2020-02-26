@@ -13,7 +13,7 @@ import com.google.gson.JsonSerializer;
 import java.lang.reflect.Type;
 
 /** For simplicity this implementation serializes only labeled {@link Field}s. */
-public class RecordSerializer implements JsonSerializer<Record> {
+class RecordSerializer implements JsonSerializer<Record> {
 
   @Override
   public JsonElement serialize(Record record, Type type, JsonSerializationContext context) {

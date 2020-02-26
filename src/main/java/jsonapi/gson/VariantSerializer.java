@@ -11,7 +11,7 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import java.lang.reflect.Type;
 
-public class VariantSerializer implements JsonSerializer<Variant> {
+class VariantSerializer implements JsonSerializer<Variant> {
 
   @Override
   public JsonElement serialize(Variant variant, Type type, JsonSerializationContext context) {

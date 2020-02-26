@@ -2,7 +2,7 @@
  * Copyright (c) 2019, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-package jsonapi;
+package jsonapi.gson;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -15,19 +15,15 @@ import da.refapps.marketdataservice.datastream.EmptyDataStream;
 import da.refapps.marketdataservice.marketdatatypes.InstrumentId;
 import da.refapps.marketdataservice.marketdatatypes.Observation;
 import da.refapps.marketdataservice.marketdatatypes.ObservationReference;
-import da.refapps.marketdataservice.marketdatatypes.ObservationValue;
 import da.refapps.marketdataservice.marketdatatypes.Publisher;
 import da.refapps.marketdataservice.marketdatatypes.observationvalue.CleanPrice;
 import da.refapps.marketdataservice.roles.OperatorRole;
 import da.timeservice.timeservice.CurrentTime;
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collections;
 import jsonapi.events.CreatedEvent;
-import jsonapi.gson.GsonRegisteredAllDeserializers;
-import jsonapi.gson.GsonSerializer;
 import jsonapi.http.CreatedEventHolder;
 import jsonapi.http.HttpResponse;
 import org.junit.Assert;
@@ -40,8 +36,6 @@ public class JsonDeserializerTest {
       new ObservationReference(
           "Market1", new InstrumentId("InstrumentId1"), LocalDate.parse("2020-02-08"));
   private static final Publisher PUBLISHER = new Publisher("Publisher1");
-  private static final ObservationValue OBSERVATION_VALUE_1 =
-      new CleanPrice(new BigDecimal(BigInteger.TEN));
 
   @Test
   public void deserializeCurrentTime() {

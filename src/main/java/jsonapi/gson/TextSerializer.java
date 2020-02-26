@@ -8,7 +8,7 @@ import com.daml.ledger.javaapi.data.Text;
 import com.google.gson.*;
 import java.lang.reflect.Type;
 
-public class TextSerializer implements JsonSerializer<Text> {
+class TextSerializer implements JsonSerializer<Text> {
 
   @Override
   public JsonElement serialize(Text text, Type type, JsonSerializationContext context) {

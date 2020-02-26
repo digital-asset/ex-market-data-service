@@ -16,7 +16,7 @@ import java.lang.reflect.Type;
 import jsonapi.ClassName;
 import jsonapi.events.CreatedEvent;
 
-public class CreatedEventDeserializer implements JsonDeserializer<CreatedEvent> {
+class CreatedEventDeserializer implements JsonDeserializer<CreatedEvent> {
 
   @Override
   public CreatedEvent deserialize(

@@ -11,7 +11,7 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import java.lang.reflect.Type;
 
-public class PartySerializer implements JsonSerializer<Party> {
+class PartySerializer implements JsonSerializer<Party> {
 
   @Override
   public JsonElement serialize(Party party, Type type, JsonSerializationContext context) {

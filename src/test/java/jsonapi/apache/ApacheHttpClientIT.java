@@ -13,15 +13,12 @@ import com.daml.ledger.javaapi.data.Party;
 import com.daml.ledger.javaapi.data.Template;
 import com.digitalasset.testing.junit4.Sandbox;
 import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
-import com.google.gson.Gson;
 import com.google.protobuf.InvalidProtocolBufferException;
 import da.timeservice.timeservice.CurrentTime;
 import da.timeservice.timeservice.CurrentTime.ContractId;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.Key;
@@ -31,11 +28,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import jsonapi.JsonApi;
-import jsonapi.gson.GsonRegisteredAllDeserializers;
+import jsonapi.gson.GsonDeserializer;
 import jsonapi.gson.GsonSerializer;
 import jsonapi.http.Api;
 import jsonapi.http.HttpClient;
 import jsonapi.http.HttpResponse;
+import jsonapi.json.JsonDeserializer;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -54,7 +52,8 @@ public class ApacheHttpClientIT {
 
   @ClassRule public static ExternalResource startSandbox = sandbox.getClassRule();
   private final Api api = new Api("localhost", 7575);
-  private final Gson json = GsonRegisteredAllDeserializers.gson();
+  private final JsonDeserializer<HttpResponse> deserializer =
+      new GsonDeserializer().getHttpResponseDeserializer();
 
   @Rule
   public TestRule processes =
@@ -75,7 +74,7 @@ public class ApacheHttpClientIT {
     CurrentTime currentTime = new CurrentTime("Operator", Instant.now(), Collections.emptyList());
     CreateCommand command = new CreateCommand(CurrentTime.TEMPLATE_ID, currentTime);
 
-    HttpClient client = new ApacheHttpClient(this::fromJson, new GsonSerializer(), jwt);
+    HttpClient client = new ApacheHttpClient(deserializer, new GsonSerializer(), jwt);
     HttpResponse response = client.post(api.createContract(), command);
 
     assertThat(response.getStatus(), is(200));
@@ -90,7 +89,7 @@ public class ApacheHttpClientIT {
         ledger.getCreatedContractId(party, CurrentTime.TEMPLATE_ID, ContractId::new);
     ExerciseCommand command = contractId.exerciseCurrentTime_AddObserver("MarketDataVendor");
 
-    HttpClient client = new ApacheHttpClient(this::fromJson, new GsonSerializer(), jwt);
+    HttpClient client = new ApacheHttpClient(deserializer, new GsonSerializer(), jwt);
     HttpResponse response = client.post(api.exercise(), command);
 
     assertThat(response.getStatus(), is(200));
@@ -104,10 +103,6 @@ public class ApacheHttpClientIT {
     claim.put("actAs", parties);
     Map<String, Object> claims = Collections.singletonMap("https://daml.com/ledger-api", claim);
     return Jwts.builder().setClaims(claims).signWith(key).compact();
-  }
-
-  private HttpResponse fromJson(InputStream inputStream) {
-    return json.fromJson(new InputStreamReader(inputStream), HttpResponse.class);
   }
 
   private static class CreateCommand {

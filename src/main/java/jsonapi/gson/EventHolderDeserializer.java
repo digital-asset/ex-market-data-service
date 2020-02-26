@@ -14,7 +14,7 @@ import jsonapi.http.ArchivedEventHolder;
 import jsonapi.http.CreatedEventHolder;
 import jsonapi.http.EventHolder;
 
-public class EventHolderDeserializer implements JsonDeserializer<EventHolder> {
+class EventHolderDeserializer implements JsonDeserializer<EventHolder> {
 
   @Override
   public EventHolder deserialize(

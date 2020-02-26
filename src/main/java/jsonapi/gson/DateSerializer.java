@@ -11,7 +11,7 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import java.lang.reflect.Type;
 
-public class DateSerializer implements JsonSerializer<Date> {
+class DateSerializer implements JsonSerializer<Date> {
 
   @Override
   public JsonElement serialize(Date date, Type type, JsonSerializationContext context) {

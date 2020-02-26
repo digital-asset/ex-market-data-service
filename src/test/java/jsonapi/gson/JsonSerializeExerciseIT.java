@@ -2,7 +2,7 @@
  * Copyright (c) 2019, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-package jsonapi;
+package jsonapi.gson;
 
 import com.daml.ledger.javaapi.data.Party;
 import com.digitalasset.refapps.marketdataservice.extensions.RelTime;
@@ -28,6 +28,9 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import jsonapi.JsonApi;
+import jsonapi.JsonLedgerClient;
+import jsonapi.LedgerClient;
 import jsonapi.apache.ApacheHttpClient;
 import jsonapi.gson.GsonRegisteredAllDeserializers;
 import jsonapi.gson.GsonSerializer;
