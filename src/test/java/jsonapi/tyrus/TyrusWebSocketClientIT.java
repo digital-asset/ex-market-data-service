@@ -12,13 +12,10 @@ import static org.junit.Assert.assertThat;
 import com.daml.ledger.javaapi.data.Party;
 import com.digitalasset.testing.junit4.Sandbox;
 import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
-import com.google.gson.Gson;
 import com.google.protobuf.InvalidProtocolBufferException;
 import da.refapps.marketdataservice.roles.OperatorRole;
 import da.timeservice.timeservice.CurrentTime;
 import io.reactivex.Flowable;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
@@ -30,12 +27,13 @@ import jsonapi.ContractQuery;
 import jsonapi.JsonApi;
 import jsonapi.events.CreatedEvent;
 import jsonapi.events.Event;
-import jsonapi.gson.GsonRegisteredAllDeserializers;
+import jsonapi.gson.GsonDeserializer;
 import jsonapi.gson.GsonSerializer;
 import jsonapi.http.Api;
 import jsonapi.http.Jwt;
 import jsonapi.http.WebSocketClient;
 import jsonapi.http.WebSocketResponse;
+import jsonapi.json.JsonDeserializer;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -80,7 +78,9 @@ public class TyrusWebSocketClientIT {
     ContractQuery query =
         new ContractQuery(Arrays.asList(OperatorRole.TEMPLATE_ID, CurrentTime.TEMPLATE_ID));
 
-    WebSocketClient client = new TyrusWebSocketClient(this::fromJson, new GsonSerializer(), jwt);
+    JsonDeserializer<WebSocketResponse> deserializer =
+        new GsonDeserializer().getWebSocketResponseDeserializer();
+    WebSocketClient client = new TyrusWebSocketClient(deserializer, new GsonSerializer(), jwt);
     Flowable<WebSocketResponse> response = client.post(api.searchContractsForever(), query);
 
     List<ArrayList<Event>> values =
@@ -101,10 +101,5 @@ public class TyrusWebSocketClientIT {
     createdEvent = (CreatedEvent) values.get(1).get(0);
     assertThat(createdEvent.getTemplateId(), is(OperatorRole.TEMPLATE_ID));
     assertThat(createdEvent.getPayload(), is(operatorRole));
-  }
-
-  private WebSocketResponse fromJson(InputStream inputStream) {
-    Gson json = GsonRegisteredAllDeserializers.gson();
-    return json.fromJson(new InputStreamReader(inputStream), WebSocketResponse.class);
   }
 }

@@ -13,7 +13,7 @@ import da.refapps.marketdataservice.marketdatatypes.ObservationValue;
 import da.refapps.marketdataservice.marketdatatypes.observationvalue.CleanPrice;
 import java.lang.reflect.Type;
 
-public class ObservationValueDeserializer implements JsonDeserializer<ObservationValue> {
+class ObservationValueDeserializer implements JsonDeserializer<ObservationValue> {
 
   @Override
   public ObservationValue deserialize(

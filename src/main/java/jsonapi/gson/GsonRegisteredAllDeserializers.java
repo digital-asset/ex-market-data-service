@@ -16,7 +16,7 @@ import jsonapi.events.Event;
 import jsonapi.http.EventHolder;
 import jsonapi.http.HttpResponse;
 
-public class GsonRegisteredAllDeserializers {
+class GsonRegisteredAllDeserializers {
 
   public static Gson gson() {
     return new GsonBuilder()

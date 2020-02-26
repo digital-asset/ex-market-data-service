@@ -10,12 +10,12 @@ import java.time.Instant;
 import java.util.Collections;
 import jsonapi.apache.ApacheHttpClient;
 import jsonapi.http.Api;
+import jsonapi.http.HttpResponse;
 import jsonapi.http.Jwt;
 import jsonapi.http.WebSocketResponse;
 import jsonapi.json.JsonDeserializer;
 import jsonapi.json.JsonSerializer;
 import jsonapi.tyrus.TyrusWebSocketClient;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +30,7 @@ public class Utils {
     while (!isRunning && !hasPassedSince(started, timeout)) {
       log.info("Waiting for JSON API...");
       try {
-        HttpResponse response = Request.Options(uri).execute().returnResponse();
+        org.apache.http.HttpResponse response = Request.Options(uri).execute().returnResponse();
         if (response.getStatusLine().getStatusCode() < 500) {
           isRunning = true;
         }
@@ -57,17 +57,15 @@ public class Utils {
       String ledgerId,
       String party,
       String applicationId,
-      JsonDeserializer<jsonapi.http.HttpResponse> httpResponseDeserializer,
+      JsonDeserializer<HttpResponse> httpResponseDeserializer,
       JsonSerializer jsonSerializer,
-      JsonDeserializer<WebSocketResponse> webSocketResponseDeserializer) {
+      JsonDeserializer<WebSocketResponse> webSocketResponseDeserializer,
+      Api api) {
     String jwt = Jwt.createToken(ledgerId, applicationId, Collections.singletonList(party));
     ApacheHttpClient httpClient =
         new ApacheHttpClient(httpResponseDeserializer, jsonSerializer, jwt);
     TyrusWebSocketClient webSocketClient =
         new TyrusWebSocketClient(webSocketResponseDeserializer, jsonSerializer, jwt);
-    // TODO: Make this configurable.
-    Api api = new Api("localhost", 7575);
-
-    return new JsonLedgerClient(httpClient, webSocketClient, jsonSerializer, api);
+    return new JsonLedgerClient(httpClient, webSocketClient, api);
   }
 }

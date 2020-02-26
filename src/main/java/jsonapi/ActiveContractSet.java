@@ -29,8 +29,8 @@ public class ActiveContractSet {
     return new ActiveContractSet();
   }
 
-  // TODO: Remove this method
-  public Stream<ActiveContract> getActiveContracts() {
+  // Visible for testing
+  Stream<ActiveContract> getActiveContracts() {
     return Collections.unmodifiableCollection(activeContracts.values()).stream();
   }
 

@@ -12,7 +12,7 @@ import java.lang.reflect.Type;
 import jsonapi.events.CreatedEvent;
 import jsonapi.http.HttpResponse.CreateResult;
 
-public class CreateResultDeserializer implements JsonDeserializer<CreateResult> {
+class CreateResultDeserializer implements JsonDeserializer<CreateResult> {
 
   @Override
   public CreateResult deserialize(

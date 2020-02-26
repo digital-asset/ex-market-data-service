@@ -16,18 +16,17 @@ import jsonapi.http.HttpResponse;
 import jsonapi.http.HttpResponse.SearchResult;
 import jsonapi.http.WebSocketClient;
 import jsonapi.http.WebSocketResponse;
-import jsonapi.json.JsonSerializer;
 
 public class JsonLedgerClient implements LedgerClient {
 
   private final HttpClient httpClient;
   private final WebSocketClient webSocketClient;
-  private final JsonSerializer toJson;
   private final Api api;
 
   private void throwIfStatusIsNot200(HttpResponse httpResponse) throws RuntimeException {
     if (httpResponse.getStatus() != 200) {
-      throw new RuntimeException(toJson.apply(httpResponse.getErrors()));
+      String errors = String.join(";", httpResponse.getErrors());
+      throw new RuntimeException(errors);
     }
   }
 
@@ -49,40 +48,24 @@ public class JsonLedgerClient implements LedgerClient {
     return webSocketResponse.getEvents().get();
   }
 
-  public JsonLedgerClient(
-      HttpClient httpClient, WebSocketClient webSocketClient, JsonSerializer toJson, Api api) {
+  public JsonLedgerClient(HttpClient httpClient, WebSocketClient webSocketClient, Api api) {
     this.httpClient = httpClient;
     this.webSocketClient = webSocketClient;
-    this.toJson = toJson;
     this.api = api;
   }
 
   @Override
-  public String create(CreateCommand command) {
+  public void create(CreateCommand command) {
     HttpResponse httpResponse = httpClient.post(api.createContract(), command);
     throwIfStatusIsNot200(httpResponse);
-    // TODO: Make void
-    return toJson.apply(httpResponse);
   }
 
   @Override
-  public String exerciseChoice(ExerciseCommand command) {
+  public void exerciseChoice(ExerciseCommand command) {
     HttpResponse httpResponse = httpClient.post(api.exercise(), command);
     throwIfStatusIsNot200(httpResponse);
-    // TODO: Make void
-    return toJson.apply(httpResponse);
   }
 
-  @Override
-  public ActiveContractSet getActiveContracts() {
-    HttpResponse httpResponse = httpClient.get(api.searchContract());
-    throwIfStatusIsNot200(httpResponse);
-    ActiveContractSet acs = ActiveContractSet.empty();
-    SearchResult searchResult = (SearchResult) httpResponse.getResult();
-    return acs.update(searchResult.getCreatedEvents());
-  }
-
-  // TODO: Eliminate code duplication, fix interface
   @Override
   public ActiveContractSet queryContracts(ContractQuery query) {
     HttpResponse httpResponse = httpClient.post(api.searchContract(), query);

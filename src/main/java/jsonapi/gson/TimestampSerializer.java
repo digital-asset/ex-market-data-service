@@ -11,7 +11,7 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import java.lang.reflect.Type;
 
-public class TimestampSerializer implements JsonSerializer<Timestamp> {
+class TimestampSerializer implements JsonSerializer<Timestamp> {
 
   @Override
   public JsonElement serialize(Timestamp timestamp, Type type, JsonSerializationContext context) {

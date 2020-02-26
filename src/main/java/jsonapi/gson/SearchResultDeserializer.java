@@ -14,7 +14,7 @@ import java.util.Collection;
 import jsonapi.events.CreatedEvent;
 import jsonapi.http.HttpResponse;
 
-public class SearchResultDeserializer implements JsonDeserializer<HttpResponse.SearchResult> {
+class SearchResultDeserializer implements JsonDeserializer<HttpResponse.SearchResult> {
 
   @Override
   public HttpResponse.SearchResult deserialize(

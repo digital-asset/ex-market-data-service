@@ -12,7 +12,7 @@ import com.google.gson.JsonParseException;
 import java.lang.reflect.Type;
 import java.time.LocalDate;
 
-public class DateDeserializer implements JsonDeserializer<Date> {
+class DateDeserializer implements JsonDeserializer<Date> {
 
   @Override
   public Date deserialize(

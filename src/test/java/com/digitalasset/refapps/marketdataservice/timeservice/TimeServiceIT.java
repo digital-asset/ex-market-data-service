@@ -4,27 +4,35 @@
  */
 package com.digitalasset.refapps.marketdataservice.timeservice;
 
-import static com.digitalasset.refapps.marketdataservice.utils.AppParties.ALL_PARTIES;
 import static com.digitalasset.refapps.utils.EventuallyUtil.eventually;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 import com.daml.ledger.javaapi.data.Party;
-import com.digitalasset.refapps.marketdataservice.Main;
 import com.digitalasset.refapps.marketdataservice.extensions.RelTime;
-import com.digitalasset.refapps.marketdataservice.utils.AppParties;
-import com.digitalasset.refapps.utils.DamlScript;
 import com.digitalasset.testing.junit4.Sandbox;
 import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
 import com.digitalasset.testing.utils.ContractWithId;
 import com.google.protobuf.InvalidProtocolBufferException;
 import da.timeservice.timeservice.CurrentTime;
+import da.timeservice.timeservice.TimeConfiguration;
 import da.timeservice.timeservice.TimeManager;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import jsonapi.JsonApi;
+import jsonapi.LedgerClient;
+import jsonapi.Utils;
+import jsonapi.gson.GsonDeserializer;
+import jsonapi.gson.GsonSerializer;
+import jsonapi.http.Api;
+import jsonapi.http.HttpResponse;
+import jsonapi.http.WebSocketResponse;
+import jsonapi.json.JsonDeserializer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -35,94 +43,122 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 
 public class TimeServiceIT {
-  private static final Path RELATIVE_DAR_PATH = Paths.get("./target/market-data-service.dar");
 
-  private static final Party OPERATOR_PARTY = new Party("Operator");
-
-  private static final Duration systemPeriodTime = Duration.ofMillis(100); // must be non-zero
+  private static final Path RELATIVE_DAR_PATH = Paths.get("target/market-data-service.dar");
+  private static final Party OPERATOR = new Party("Operator");
+  private static final String APPLICATION_ID = "market-data-service";
 
   private static final Sandbox sandbox =
       Sandbox.builder()
           .dar(RELATIVE_DAR_PATH)
-          .parties(OPERATOR_PARTY.getValue())
+          .parties(OPERATOR.getValue())
           .useWallclockTime()
           .build();
-
-  @ClassRule public static ExternalResource compile = sandbox.getClassRule();
+  @ClassRule public static ExternalResource startSandbox = sandbox.getClassRule();
 
   @Rule
   public final TestRule processes =
       RuleChain.outerRule(sandbox.getRule()).around(new JsonApi(sandbox::getSandboxPort));
 
-  private DamlScript script;
-  private DefaultLedgerAdapter ledgerAdapter;
-  private ContractWithId<TimeManager.ContractId> timeManager;
+  private final GsonSerializer jsonSerializer = new GsonSerializer();
+  private final GsonDeserializer jsonDeserializer = new GsonDeserializer();
+  private final JsonDeserializer<HttpResponse> httpResponseDeserializer =
+      jsonDeserializer.getHttpResponseDeserializer();
+  private final JsonDeserializer<WebSocketResponse> webSocketResponseDeserializer =
+      jsonDeserializer.getWebSocketResponseDeserializer();
+
+  private ScheduledExecutorService scheduler;
+  private DefaultLedgerAdapter ledger;
+  private LedgerClient ledgerClient;
 
   @Before
-  public void setUp() throws Throwable {
-    Main.runBots(sandbox.getClient().getLedgerId(), new AppParties(ALL_PARTIES), systemPeriodTime);
-    // Valid port is assigned only after the sandbox has been started.
-    // Therefore trigger has to be configured at the point where this can be guaranteed.
-    script =
-        DamlScript.builder()
-            .dar(Paths.get("./target/market-data-service.dar"))
-            .scriptName("DA.RefApps.MarketDataService.MarketSetupScript:setupMarketForSandbox")
-            .sandboxPort(sandbox.getSandboxPort())
-            .useWallclockTime()
-            .build();
-    script.run();
-    ledgerAdapter = sandbox.getLedgerAdapter();
-    timeManager = getTimeManagerCid();
+  public void setup() {
+    ledger = sandbox.getLedgerAdapter();
+    String ledgerId = sandbox.getClient().getLedgerId();
+    scheduler = Executors.newScheduledThreadPool(1);
+    Api api = new Api("localhost", 7575);
+    ledgerClient =
+        Utils.createJsonLedgerClient(
+            ledgerId,
+            OPERATOR.getValue(),
+            APPLICATION_ID,
+            httpResponseDeserializer,
+            jsonSerializer,
+            webSocketResponseDeserializer,
+            api);
   }
 
   @After
   public void tearDown() {
-    script.kill();
-    Main.terminateTimeUpdaterBot();
+    scheduler.shutdown();
   }
 
   private Instant getCurrentTimeInstant() {
     ContractWithId<CurrentTime.ContractId> currentTimeCid =
-        ledgerAdapter.getMatchedContract(
-            OPERATOR_PARTY, CurrentTime.TEMPLATE_ID, CurrentTime.ContractId::new);
+        ledger.getMatchedContract(OPERATOR, CurrentTime.TEMPLATE_ID, CurrentTime.ContractId::new);
     return CurrentTime.fromValue(currentTimeCid.record).currentTime;
   }
 
-  private ContractWithId<TimeManager.ContractId> getTimeManagerCid() {
-    return ledgerAdapter.getMatchedContract(
-        OPERATOR_PARTY, TimeManager.TEMPLATE_ID, TimeManager.ContractId::new);
+  private TimeManager.ContractId setupTimeServiceContracts(
+      Instant initialTime, Duration modelPeriodTime) throws InvalidProtocolBufferException {
+    CurrentTime currentTime =
+        new CurrentTime(OPERATOR.getValue(), initialTime, Collections.emptyList());
+    TimeConfiguration timeConfiguration =
+        new TimeConfiguration(OPERATOR.getValue(), false, RelTime.fromDuration(modelPeriodTime));
+    TimeManager timeManager = new TimeManager(OPERATOR.getValue());
+    ledger.createContract(OPERATOR, CurrentTime.TEMPLATE_ID, currentTime.toValue());
+    ledger.createContract(OPERATOR, TimeConfiguration.TEMPLATE_ID, timeConfiguration.toValue());
+    ledger.createContract(OPERATOR, TimeManager.TEMPLATE_ID, timeManager.toValue());
+    return ledger.getCreatedContractId(
+        OPERATOR, TimeManager.TEMPLATE_ID, TimeManager.ContractId::new);
   }
 
-  private void changeModelPeriodTime(Duration newModelPeriodTime)
+  private void changeModelPeriodTime(
+      TimeManager.ContractId timeManagerCid, Duration newModelPeriodTime)
       throws InvalidProtocolBufferException {
-    ledgerAdapter.exerciseChoice(
-        OPERATOR_PARTY,
-        timeManager.contractId.exerciseSetModelPeriodTime(
-            RelTime.fromDuration(newModelPeriodTime)));
+    ledger.exerciseChoice(
+        OPERATOR,
+        timeManagerCid.exerciseSetModelPeriodTime(RelTime.fromDuration(newModelPeriodTime)));
   }
 
   private void verifyModelPeriodTime(Duration newModelPeriodTime) throws InterruptedException {
-    // Passes when the difference between two subsequent times will be equal to newModelPeriodTime.
     eventually(
         () -> {
           Instant time1 = getCurrentTimeInstant();
           Instant time2 = getCurrentTimeInstant();
-          assertEquals(time1.plus(newModelPeriodTime), time2);
+          assertThat(time2, is(time1.plus(newModelPeriodTime)));
         });
   }
 
   @Test
   public void modelPeriodTimeCanBeChanged()
       throws InvalidProtocolBufferException, InterruptedException {
-    ledgerAdapter.exerciseChoice(OPERATOR_PARTY, timeManager.contractId.exerciseContinue());
-    Duration newModelPeriodTime1 = Duration.ofHours(3);
-    Duration newModelPeriodTime2 = Duration.ofHours(5);
-    assertNotEquals(newModelPeriodTime1, newModelPeriodTime2);
-    // The current model period is not known. To test the change two distinct values are used and
-    // verified.
-    changeModelPeriodTime(newModelPeriodTime1);
-    verifyModelPeriodTime(newModelPeriodTime1);
-    changeModelPeriodTime(newModelPeriodTime2);
-    verifyModelPeriodTime(newModelPeriodTime2);
+    Instant initialTime = Instant.parse("1955-11-12T10:04:00Z");
+    Duration modelPeriodTime = Duration.ofHours(2);
+    TimeManager.ContractId managerCid = setupTimeServiceContracts(initialTime, modelPeriodTime);
+
+    TimeUpdaterBot timeUpdaterBot = new TimeUpdaterBot(ledgerClient);
+    TimeUpdaterBotExecutor botExecutor = new TimeUpdaterBotExecutor(scheduler);
+    botExecutor.start(timeUpdaterBot, Duration.ofSeconds(1));
+    ledger.exerciseChoice(OPERATOR, managerCid.exerciseContinue());
+
+    Duration newModelPeriodTime = modelPeriodTime.plusHours(3);
+    changeModelPeriodTime(managerCid, newModelPeriodTime);
+
+    verifyModelPeriodTime(newModelPeriodTime);
+  }
+
+  @Test
+  public void updateTime() throws InterruptedException, InvalidProtocolBufferException {
+    Instant initialTime = Instant.parse("1955-11-12T10:04:00Z");
+    Duration modelPeriodTime = Duration.ofHours(2);
+    TimeManager.ContractId managerCid = setupTimeServiceContracts(initialTime, modelPeriodTime);
+
+    TimeUpdaterBot timeUpdaterBot = new TimeUpdaterBot(ledgerClient);
+    TimeUpdaterBotExecutor botExecutor = new TimeUpdaterBotExecutor(scheduler);
+    botExecutor.start(timeUpdaterBot, Duration.ofSeconds(1));
+    ledger.exerciseChoice(OPERATOR, managerCid.exerciseContinue());
+
+    verifyModelPeriodTime(modelPeriodTime);
   }
 }

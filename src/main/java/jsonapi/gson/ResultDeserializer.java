@@ -12,7 +12,7 @@ import com.google.gson.JsonParseException;
 import java.lang.reflect.Type;
 import jsonapi.http.HttpResponse;
 
-public class ResultDeserializer implements JsonDeserializer<HttpResponse.Result> {
+class ResultDeserializer implements JsonDeserializer<HttpResponse.Result> {
 
   @Override
   public HttpResponse.Result deserialize(
