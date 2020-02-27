@@ -138,6 +138,26 @@ public class AppConfig {
       return this;
     }
 
+    public AppConfigBuilder setLedgerId(String ledgerId) {
+      this.ledgerId = ledgerId;
+      return this;
+    }
+
+    public AppConfigBuilder setJsonApiHost(String jsonApiHost) {
+      this.jsonApiHost = jsonApiHost;
+      return this;
+    }
+
+    public AppConfigBuilder setJsonApiPort(int jsonApiPort) {
+      this.jsonApiPort = jsonApiPort;
+      return this;
+    }
+
+    public AppConfigBuilder setAppParties(String... appParties) {
+      this.appParties = new AppParties(appParties);
+      return this;
+    }
+
     public AppConfig create() {
       return new AppConfig(
           jsonApiHost, jsonApiPort, ledgerId, applicationId, appParties, systemPeriodTime);

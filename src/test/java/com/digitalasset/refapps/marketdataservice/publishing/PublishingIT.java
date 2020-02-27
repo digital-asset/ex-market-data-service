@@ -9,8 +9,8 @@ import static com.digitalasset.refapps.utils.EventuallyUtil.eventually;
 
 import com.daml.ledger.javaapi.data.Party;
 import com.digitalasset.jsonapi.JsonApi;
+import com.digitalasset.refapps.marketdataservice.AppConfig;
 import com.digitalasset.refapps.marketdataservice.Main;
-import com.digitalasset.refapps.marketdataservice.utils.AppParties;
 import com.digitalasset.testing.junit4.Sandbox;
 import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -78,12 +78,16 @@ public class PublishingIT {
 
   @Before
   public void setUp() throws Throwable {
-    Main.runBots(
-        sandbox.getClient().getLedgerId(),
-        "localhost",
-        7575,
-        new AppParties(ALL_PARTIES),
-        systemPeriodTime);
+    AppConfig appConfig =
+        AppConfig.builder()
+            .setLedgerId(sandbox.getClient().getLedgerId())
+            .setJsonApiHost("localhost")
+            .setJsonApiPort(7575)
+            .setAppParties(ALL_PARTIES)
+            .setSystemPeriodTime(systemPeriodTime)
+            .create();
+
+    Main.runBots(appConfig);
     // Valid port is assigned only after the sandbox has been started.
     // Therefore trigger has to be configured at the point where this can be guaranteed.
     File log = new File("integration-marketSetupAndTriggers.log");

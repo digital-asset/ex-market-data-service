@@ -58,7 +58,7 @@ public class Main {
     Thread.currentThread().join();
   }
 
-  private static void runBots(AppConfig appConfig) {
+  public static void runBots(AppConfig appConfig) {
     AppParties parties = appConfig.getAppParties();
     if (parties.hasMarketDataProvider1()) {
       logger.info("Starting automation for MarketDataProvider1.");
@@ -93,14 +93,6 @@ public class Main {
       timeUpdaterBotExecutor.start(timeUpdaterBot, appConfig.getSystemPeriodTime());
     }
   }
-
-  @Deprecated
-  public static void runBots(
-      String ledgerId,
-      String jsonApiHost,
-      int jsonApiPort,
-      AppParties parties,
-      Duration systemPeriodTime) {}
 
   private static void wire(
       AppConfig appConfig,
