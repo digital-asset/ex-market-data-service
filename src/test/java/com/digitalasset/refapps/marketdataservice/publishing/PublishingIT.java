@@ -58,6 +58,7 @@ public class PublishingIT {
       new ObservationReference(
           "European Bond Market", new InstrumentId("ISIN 123 1244"), LocalDate.of(2021, 3, 20));
 
+  private static final String APPLICATION_ID = "market-data-service";
   private static final Duration systemPeriodTime = Duration.ofSeconds(5);
 
   private static final Sandbox sandbox =
@@ -81,6 +82,7 @@ public class PublishingIT {
     AppConfig appConfig =
         AppConfig.builder()
             .setLedgerId(sandbox.getClient().getLedgerId())
+            .setApplicationId(APPLICATION_ID)
             .setJsonApiHost("localhost")
             .setJsonApiPort(7575)
             .setAppParties(ALL_PARTIES)
