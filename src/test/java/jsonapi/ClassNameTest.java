@@ -9,7 +9,7 @@ import static org.junit.Assert.assertEquals;
 import com.daml.ledger.javaapi.data.Identifier;
 import org.junit.Test;
 
-public class IdentifierToClassNameTest {
+public class ClassNameTest {
 
   @Test
   public void concatenatesModuleAndEntityNames() {
