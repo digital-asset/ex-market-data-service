@@ -55,7 +55,6 @@ public class Main {
       System.exit(1);
     }
 
-    // TODO: Don't we need to wait for Sandbox?
     waitForJsonApi(cliOptions.getJsonApiHost(), cliOptions.getJsonApiPort());
 
     AppParties appParties = new AppParties(cliOptions.getParties());
