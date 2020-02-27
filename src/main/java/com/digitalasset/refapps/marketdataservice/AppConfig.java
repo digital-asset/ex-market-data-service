@@ -159,8 +159,21 @@ public class AppConfig {
     }
 
     public AppConfig create() {
+      require(nonNullOrBlank(jsonApiHost), "JSON API host cannot be null or blank.");
+      require(nonNullOrBlank(ledgerId), "Ledger ID cannot be null or blank.");
+      require(nonNullOrBlank(applicationId), "Application ID cannot be null or blank.");
       return new AppConfig(
           jsonApiHost, jsonApiPort, ledgerId, applicationId, appParties, systemPeriodTime);
+    }
+
+    private void require(boolean condition, String message) {
+      if (!condition) {
+        throw new IllegalArgumentException(message);
+      }
+    }
+
+    private boolean nonNullOrBlank(String s) {
+      return s != null && !s.trim().isEmpty();
     }
   }
 }
