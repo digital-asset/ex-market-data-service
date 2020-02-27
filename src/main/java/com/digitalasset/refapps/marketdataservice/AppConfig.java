@@ -21,6 +21,7 @@ import com.digitalasset.jsonapi.json.JsonSerializer;
 import com.digitalasset.jsonapi.tyrus.TyrusWebSocketClient;
 import com.digitalasset.refapps.marketdataservice.utils.AppParties;
 import com.digitalasset.refapps.marketdataservice.utils.CliOptions;
+import java.net.URI;
 import java.time.Duration;
 import java.util.Arrays;
 
@@ -109,6 +110,10 @@ public class AppConfig {
 
   public static AppConfigBuilder builder() {
     return new AppConfigBuilder();
+  }
+
+  public URI getJsonApiUrl() {
+    return URI.create(String.format("%s://%s:%d", "http", getJsonApiHost(), getJsonApiPort()));
   }
 
   public static class AppConfigBuilder {

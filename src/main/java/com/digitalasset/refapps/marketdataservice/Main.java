@@ -17,6 +17,7 @@ import com.digitalasset.refapps.marketdataservice.timeservice.TimeUpdaterBotExec
 import com.digitalasset.refapps.marketdataservice.utils.AppParties;
 import com.digitalasset.refapps.marketdataservice.utils.CliOptions;
 import io.reactivex.Flowable;
+import java.net.URI;
 import java.time.Duration;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -49,7 +50,7 @@ public class Main {
             .setSystemPeriodTime(SYSTEM_PERIOD_TIME)
             .create();
 
-    waitForJsonApi(cliOptions.getJsonApiHost(), cliOptions.getJsonApiPort());
+    waitForJsonApi(appConfig.getJsonApiUrl());
 
     runBots(appConfig);
 
@@ -129,10 +130,9 @@ public class Main {
     command.asCreateCommand().ifPresent(ledgerClient::create);
   }
 
-  public static void waitForJsonApi(String host, int port) {
-    String jsonApiUri = String.format("http://%s:%d", host, port);
+  private static void waitForJsonApi(URI uri) {
     try {
-      Utils.waitForJsonApi(jsonApiUri);
+      Utils.waitForJsonApi(uri);
     } catch (Exception e) {
       System.exit(1);
     }

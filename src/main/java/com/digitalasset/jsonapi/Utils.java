@@ -5,6 +5,7 @@
 package com.digitalasset.jsonapi;
 
 import java.io.IOException;
+import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
 import org.apache.http.client.fluent.Request;
@@ -14,7 +15,7 @@ import org.slf4j.LoggerFactory;
 public class Utils {
   private static final Logger log = LoggerFactory.getLogger("JsonAPI Util");
 
-  public static void waitForJsonApi(String uri) throws Exception {
+  public static void waitForJsonApi(URI uri) throws Exception {
     Instant started = Instant.now();
     boolean isRunning = false;
     Duration timeout = Duration.ofSeconds(30);
