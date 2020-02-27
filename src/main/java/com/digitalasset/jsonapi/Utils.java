@@ -4,18 +4,9 @@
  */
 package com.digitalasset.jsonapi;
 
-import com.digitalasset.jsonapi.apache.ApacheHttpClient;
-import com.digitalasset.jsonapi.http.Api;
-import com.digitalasset.jsonapi.http.HttpResponse;
-import com.digitalasset.jsonapi.http.Jwt;
-import com.digitalasset.jsonapi.http.WebSocketResponse;
-import com.digitalasset.jsonapi.json.JsonDeserializer;
-import com.digitalasset.jsonapi.json.JsonSerializer;
-import com.digitalasset.jsonapi.tyrus.TyrusWebSocketClient;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Collections;
 import org.apache.http.client.fluent.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,21 +42,5 @@ public class Utils {
   private static boolean hasPassedSince(Instant started, Duration timeout) {
     Duration elapsed = Duration.between(started, Instant.now());
     return elapsed.compareTo(timeout) > 0;
-  }
-
-  public static LedgerClient createJsonLedgerClient(
-      String ledgerId,
-      String party,
-      String applicationId,
-      JsonDeserializer<HttpResponse> httpResponseDeserializer,
-      JsonSerializer jsonSerializer,
-      JsonDeserializer<WebSocketResponse> webSocketResponseDeserializer,
-      Api api) {
-    String jwt = Jwt.createToken(ledgerId, applicationId, Collections.singletonList(party));
-    ApacheHttpClient httpClient =
-        new ApacheHttpClient(httpResponseDeserializer, jsonSerializer, jwt);
-    TyrusWebSocketClient webSocketClient =
-        new TyrusWebSocketClient(webSocketResponseDeserializer, jsonSerializer, jwt);
-    return new JsonLedgerClient(httpClient, webSocketClient, api);
   }
 }
