@@ -4,6 +4,7 @@
  */
 package com.digitalasset.jsonapi;
 
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -27,7 +28,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.hamcrest.CoreMatchers;
 import org.junit.Test;
 
 public class ActiveContractSetTest {
@@ -136,10 +136,8 @@ public class ActiveContractSetTest {
 
     List<ActiveContract> activeContracts = newAcs.getActiveContracts().collect(Collectors.toList());
     assertThat(activeContracts.size(), is(2));
-    assertThat(
-        activeContracts, CoreMatchers.hasItem(new ActiveContract(identifier, "#ABC", template)));
-    assertThat(
-        activeContracts, CoreMatchers.hasItem(new ActiveContract(identifier, "#789", template)));
+    assertThat(activeContracts, hasItem(new ActiveContract(identifier, "#ABC", template)));
+    assertThat(activeContracts, hasItem(new ActiveContract(identifier, "#789", template)));
   }
 
   @Test
