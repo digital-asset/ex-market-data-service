@@ -32,7 +32,7 @@ public class AppConfig {
   private final String applicationId;
   private final AppParties appParties;
   private final Duration systemPeriodTime;
-  private final GsonSerializer jsonSerializer;
+  private final GsonSerializer jsonSerializer = new GsonSerializer();
   private final JsonDeserializer<WebSocketResponse> webSocketResponseDeserializer;
   private final JsonDeserializer<HttpResponse> httpResponseDeserializer;
 
@@ -49,10 +49,9 @@ public class AppConfig {
     this.applicationId = applicationId;
     this.appParties = appParties;
     this.systemPeriodTime = systemPeriodTime;
-    jsonSerializer = new GsonSerializer();
     GsonDeserializer deserializer = new GsonDeserializer();
-    webSocketResponseDeserializer = deserializer.getWebSocketResponseDeserializer();
-    httpResponseDeserializer = deserializer.getHttpResponseDeserializer();
+    this.webSocketResponseDeserializer = deserializer.getWebSocketResponseDeserializer();
+    this.httpResponseDeserializer = deserializer.getHttpResponseDeserializer();
   }
 
   public LedgerClient getClientFor(String... parties) {
