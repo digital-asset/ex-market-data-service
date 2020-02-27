@@ -17,7 +17,6 @@ import com.digitalasset.jsonapi.http.Jwt;
 import com.digitalasset.jsonapi.http.WebSocketClient;
 import com.digitalasset.jsonapi.http.WebSocketResponse;
 import com.digitalasset.jsonapi.json.JsonDeserializer;
-import com.digitalasset.jsonapi.json.JsonSerializer;
 import com.digitalasset.jsonapi.tyrus.TyrusWebSocketClient;
 import com.digitalasset.refapps.marketdataservice.utils.AppParties;
 import com.digitalasset.refapps.marketdataservice.utils.CliOptions;
@@ -33,6 +32,9 @@ public class AppConfig {
   private final String applicationId;
   private final AppParties appParties;
   private final Duration systemPeriodTime;
+  private final GsonSerializer jsonSerializer;
+  private final JsonDeserializer<WebSocketResponse> webSocketResponseDeserializer;
+  private final JsonDeserializer<HttpResponse> httpResponseDeserializer;
 
   private AppConfig(
       String jsonApiHost,
@@ -47,6 +49,10 @@ public class AppConfig {
     this.applicationId = applicationId;
     this.appParties = appParties;
     this.systemPeriodTime = systemPeriodTime;
+    jsonSerializer = new GsonSerializer();
+    GsonDeserializer deserializer = new GsonDeserializer();
+    webSocketResponseDeserializer = deserializer.getWebSocketResponseDeserializer();
+    httpResponseDeserializer = deserializer.getHttpResponseDeserializer();
   }
 
   public LedgerClient getClientFor(String... parties) {
@@ -55,49 +61,20 @@ public class AppConfig {
   }
 
   private HttpClient getHttpClientFor(String... parties) {
-    return new ApacheHttpClient(
-        getHttpResponseDeserializer(), getJsonSerializer(), getTokenFor(parties));
+    return new ApacheHttpClient(httpResponseDeserializer, jsonSerializer, getTokenFor(parties));
   }
 
   private WebSocketClient getWebSocketClientFor(String... parties) {
     return new TyrusWebSocketClient(
-        getWebSocketResponseDeserializer(), getJsonSerializer(), getTokenFor(parties));
+        webSocketResponseDeserializer, jsonSerializer, getTokenFor(parties));
   }
 
   private Api getApi() {
-    return new Api(getJsonApiHost(), getJsonApiPort());
-  }
-
-  private JsonDeserializer<HttpResponse> getHttpResponseDeserializer() {
-    return new GsonDeserializer().getHttpResponseDeserializer();
-  }
-
-  private JsonDeserializer<WebSocketResponse> getWebSocketResponseDeserializer() {
-    return new GsonDeserializer().getWebSocketResponseDeserializer();
-  }
-
-  private JsonSerializer getJsonSerializer() {
-    return new GsonSerializer();
+    return new Api(jsonApiHost, jsonApiPort);
   }
 
   private String getTokenFor(String... parties) {
-    return Jwt.createToken(getLedgerId(), getApplicationId(), Arrays.asList(parties));
-  }
-
-  private String getJsonApiHost() {
-    return jsonApiHost;
-  }
-
-  private int getJsonApiPort() {
-    return jsonApiPort;
-  }
-
-  private String getLedgerId() {
-    return ledgerId;
-  }
-
-  private String getApplicationId() {
-    return applicationId;
+    return Jwt.createToken(ledgerId, applicationId, Arrays.asList(parties));
   }
 
   public AppParties getAppParties() {
@@ -108,12 +85,12 @@ public class AppConfig {
     return systemPeriodTime;
   }
 
-  public static AppConfigBuilder builder() {
-    return new AppConfigBuilder();
+  public URI getJsonApiUrl() {
+    return URI.create(String.format("%s://%s:%d", "http", jsonApiHost, jsonApiPort));
   }
 
-  public URI getJsonApiUrl() {
-    return URI.create(String.format("%s://%s:%d", "http", getJsonApiHost(), getJsonApiPort()));
+  public static AppConfigBuilder builder() {
+    return new AppConfigBuilder();
   }
 
   public static class AppConfigBuilder {
