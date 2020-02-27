@@ -8,6 +8,7 @@ import static com.digitalasset.refapps.marketdataservice.utils.AppParties.ALL_PA
 import static com.digitalasset.refapps.utils.EventuallyUtil.eventually;
 
 import com.daml.ledger.javaapi.data.Party;
+import com.digitalasset.jsonapi.JsonApi;
 import com.digitalasset.refapps.marketdataservice.Main;
 import com.digitalasset.refapps.marketdataservice.utils.AppParties;
 import com.digitalasset.testing.junit4.Sandbox;
@@ -34,7 +35,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import jsonapi.JsonApi;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;

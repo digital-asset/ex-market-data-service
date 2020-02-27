@@ -6,6 +6,9 @@ package com.digitalasset.refapps.marketdataservice.publishing;
 
 import com.daml.ledger.javaapi.data.Command;
 import com.daml.ledger.javaapi.data.Identifier;
+import com.digitalasset.jsonapi.ActiveContractSet;
+import com.digitalasset.jsonapi.Contract;
+import com.digitalasset.jsonapi.ContractQuery;
 import com.google.common.collect.Sets;
 import da.refapps.marketdataservice.datastream.DataStream;
 import da.refapps.marketdataservice.datastream.EmptyDataStream;
@@ -18,9 +21,6 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
-import jsonapi.ActiveContractSet;
-import jsonapi.Contract;
-import jsonapi.ContractQuery;
 
 /** An automation bot that publishes values on streams given by a data provider. */
 public class DataProviderBot {

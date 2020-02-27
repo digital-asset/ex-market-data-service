@@ -4,6 +4,10 @@
  */
 package com.digitalasset.refapps.marketdataservice.timeservice;
 
+import com.digitalasset.jsonapi.ActiveContractSet;
+import com.digitalasset.jsonapi.Contract;
+import com.digitalasset.jsonapi.ContractQuery;
+import com.digitalasset.jsonapi.LedgerClient;
 import com.google.common.collect.Iterables;
 import da.timeservice.timeservice.CurrentTime;
 import da.timeservice.timeservice.TimeManager;
@@ -14,10 +18,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import jsonapi.ActiveContractSet;
-import jsonapi.Contract;
-import jsonapi.ContractQuery;
-import jsonapi.LedgerClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

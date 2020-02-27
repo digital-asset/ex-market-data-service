@@ -5,12 +5,12 @@
 package com.digitalasset.refapps.marketdataservice.publishing;
 
 import com.daml.ledger.javaapi.data.Identifier;
+import com.digitalasset.jsonapi.ActiveContractSet;
 import da.refapps.marketdataservice.marketdatatypes.ObservationReference;
 import da.refapps.marketdataservice.marketdatatypes.ObservationValue;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.Set;
-import jsonapi.ActiveContractSet;
 
 public interface PublishingDataProvider {
   Set<Identifier> getUsedTemplates();
