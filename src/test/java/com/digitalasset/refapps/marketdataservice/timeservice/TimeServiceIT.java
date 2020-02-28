@@ -11,13 +11,7 @@ import static org.junit.Assert.assertThat;
 import com.daml.ledger.javaapi.data.Party;
 import com.digitalasset.jsonapi.JsonApi;
 import com.digitalasset.jsonapi.LedgerClient;
-import com.digitalasset.jsonapi.Utils;
-import com.digitalasset.jsonapi.gson.GsonDeserializer;
-import com.digitalasset.jsonapi.gson.GsonSerializer;
-import com.digitalasset.jsonapi.http.Api;
-import com.digitalasset.jsonapi.http.HttpResponse;
-import com.digitalasset.jsonapi.http.WebSocketResponse;
-import com.digitalasset.jsonapi.json.JsonDeserializer;
+import com.digitalasset.refapps.marketdataservice.AppConfig;
 import com.digitalasset.refapps.marketdataservice.extensions.RelTime;
 import com.digitalasset.testing.junit4.Sandbox;
 import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
@@ -60,13 +54,6 @@ public class TimeServiceIT {
   public final TestRule processes =
       RuleChain.outerRule(sandbox.getRule()).around(new JsonApi(sandbox::getSandboxPort));
 
-  private final GsonSerializer jsonSerializer = new GsonSerializer();
-  private final GsonDeserializer jsonDeserializer = new GsonDeserializer();
-  private final JsonDeserializer<HttpResponse> httpResponseDeserializer =
-      jsonDeserializer.getHttpResponseDeserializer();
-  private final JsonDeserializer<WebSocketResponse> webSocketResponseDeserializer =
-      jsonDeserializer.getWebSocketResponseDeserializer();
-
   private ScheduledExecutorService scheduler;
   private DefaultLedgerAdapter ledger;
   private LedgerClient ledgerClient;
@@ -76,16 +63,14 @@ public class TimeServiceIT {
     ledger = sandbox.getLedgerAdapter();
     String ledgerId = sandbox.getClient().getLedgerId();
     scheduler = Executors.newScheduledThreadPool(1);
-    Api api = new Api("localhost", 7575);
-    ledgerClient =
-        Utils.createJsonLedgerClient(
-            ledgerId,
-            OPERATOR.getValue(),
-            APPLICATION_ID,
-            httpResponseDeserializer,
-            jsonSerializer,
-            webSocketResponseDeserializer,
-            api);
+    AppConfig appConfig =
+        AppConfig.builder()
+            .setLedgerId(ledgerId)
+            .setApplicationId(APPLICATION_ID)
+            .setJsonApiHost("localhost")
+            .setJsonApiPort(7575)
+            .create();
+    ledgerClient = appConfig.getClientFor(OPERATOR.getValue());
   }
 
   @After

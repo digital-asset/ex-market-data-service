@@ -14,11 +14,6 @@ import org.kohsuke.args4j.spi.StringArrayOptionHandler;
 // Valid use case for a DataClass. CLI parser requires non-fields for options.
 @SuppressWarnings({"PMD.DataClass", "FieldCanBeLocal", "CanBeFinal"})
 public class CliOptions {
-  @Option(name = "-s", usage = "Sandbox host", metaVar = "SANDBOX_HOST")
-  private String sandboxHost = "localhost";
-
-  @Option(name = "-p", usage = "Sandbox port", metaVar = "SANDBOX_PORT")
-  private int sandboxPort = 6865;
 
   @Option(name = "-ledgerId", usage = "Ledger ID", metaVar = "LEDGER_ID", required = true)
   private String ledgerId = null;
@@ -35,14 +30,6 @@ public class CliOptions {
       handler = StringArrayOptionHandler.class,
       metaVar = "PARTIES")
   private String[] parties = ALL_PARTIES;
-
-  public String getSandboxHost() {
-    return sandboxHost;
-  }
-
-  public int getSandboxPort() {
-    return sandboxPort;
-  }
 
   public String[] getParties() {
     return parties;

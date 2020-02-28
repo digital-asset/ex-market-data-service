@@ -8,6 +8,7 @@ import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.lang.ProcessBuilder.Redirect;
+import java.net.URI;
 import java.util.function.IntSupplier;
 import org.junit.rules.ExternalResource;
 import org.slf4j.Logger;
@@ -51,7 +52,7 @@ public class JsonApi extends ExternalResource {
 
   private static void waitForJsonApi() {
     try {
-      Utils.waitForJsonApi("http://localhost:7575");
+      Utils.waitForJsonApi(URI.create("http://localhost:7575"));
     } catch (Exception e) {
       fail("Failed to start JSON API");
     }
