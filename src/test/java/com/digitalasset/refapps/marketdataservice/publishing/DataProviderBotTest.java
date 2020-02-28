@@ -7,6 +7,8 @@ package com.digitalasset.refapps.marketdataservice.publishing;
 import com.daml.ledger.javaapi.data.Command;
 import com.daml.ledger.javaapi.data.ExerciseCommand;
 import com.daml.ledger.javaapi.data.Identifier;
+import com.digitalasset.jsonapi.ActiveContract;
+import com.digitalasset.jsonapi.ActiveContractSet;
 import com.google.common.collect.Sets;
 import da.refapps.marketdataservice.datastream.DataStream;
 import da.refapps.marketdataservice.datastream.EmptyDataStream;
@@ -26,8 +28,6 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
-import jsonapi.ActiveContract;
-import jsonapi.ActiveContractSet;
 import org.junit.Test;
 
 public class DataProviderBotTest {

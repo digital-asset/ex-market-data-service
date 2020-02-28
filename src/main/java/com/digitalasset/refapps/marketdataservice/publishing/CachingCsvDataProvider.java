@@ -5,6 +5,8 @@
 package com.digitalasset.refapps.marketdataservice.publishing;
 
 import com.daml.ledger.javaapi.data.Identifier;
+import com.digitalasset.jsonapi.ActiveContractSet;
+import com.digitalasset.jsonapi.Contract;
 import com.google.common.collect.Sets;
 import da.refapps.marketdataservice.datasource.DataSource;
 import da.refapps.marketdataservice.marketdatatypes.ObservationReference;
@@ -19,8 +21,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Function;
 import java.util.stream.Stream;
-import jsonapi.ActiveContractSet;
-import jsonapi.Contract;
 
 public class CachingCsvDataProvider implements PublishingDataProvider {
 

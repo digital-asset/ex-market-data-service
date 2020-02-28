@@ -12,13 +12,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.daml.ledger.javaapi.data.ExerciseCommand;
+import com.digitalasset.jsonapi.events.CreatedEvent;
 import com.digitalasset.refapps.utils.ManualExecutorService;
 import da.timeservice.timeservice.CurrentTime;
 import da.timeservice.timeservice.TimeManager;
 import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import jsonapi.events.CreatedEvent;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;

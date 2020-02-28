@@ -8,9 +8,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.daml.ledger.javaapi.data.ExerciseCommand;
+import com.digitalasset.jsonapi.events.CreatedEvent;
 import da.timeservice.timeservice.CurrentTime;
 import da.timeservice.timeservice.TimeManager;
-import jsonapi.events.CreatedEvent;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;

@@ -7,6 +7,8 @@ package com.digitalasset.refapps.marketdataservice.publishing;
 import static com.digitalasset.refapps.marketdataservice.assertions.Assert.assertEmpty;
 import static com.digitalasset.refapps.marketdataservice.assertions.Assert.assertOptionalValue;
 
+import com.digitalasset.jsonapi.ActiveContract;
+import com.digitalasset.jsonapi.ActiveContractSet;
 import da.refapps.marketdataservice.datasource.DataSource;
 import da.refapps.marketdataservice.marketdatatypes.InstrumentId;
 import da.refapps.marketdataservice.marketdatatypes.ObservationReference;
@@ -17,8 +19,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Optional;
-import jsonapi.ActiveContract;
-import jsonapi.ActiveContractSet;
 import org.junit.Test;
 
 public class CachingCsvDataProviderTest {
