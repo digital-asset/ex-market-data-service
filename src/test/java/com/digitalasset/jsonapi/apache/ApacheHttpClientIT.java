@@ -17,23 +17,17 @@ import com.digitalasset.jsonapi.gson.GsonSerializer;
 import com.digitalasset.jsonapi.http.Api;
 import com.digitalasset.jsonapi.http.HttpClient;
 import com.digitalasset.jsonapi.http.HttpResponse;
+import com.digitalasset.jsonapi.http.Jwt;
 import com.digitalasset.jsonapi.json.JsonDeserializer;
 import com.digitalasset.testing.junit4.Sandbox;
 import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
 import com.google.protobuf.InvalidProtocolBufferException;
 import da.timeservice.timeservice.CurrentTime;
 import da.timeservice.timeservice.CurrentTime.ContractId;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.Key;
 import java.time.Instant;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -66,7 +60,7 @@ public class ApacheHttpClientIT {
   public void setUp() {
     ledger = sandbox.getLedgerAdapter();
     String ledgerId = sandbox.getClient().getLedgerId();
-    jwt = createJwt(ledgerId, Collections.singletonList(OPERATOR));
+    jwt = Jwt.createToken(ledgerId, "market-data-service", Collections.singletonList(OPERATOR));
   }
 
   @Test
@@ -93,16 +87,6 @@ public class ApacheHttpClientIT {
     HttpResponse response = client.post(api.exercise(), command);
 
     assertThat(response.getStatus(), is(200));
-  }
-
-  private String createJwt(String ledgerId, List<String> parties) {
-    Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-    Map<String, Object> claim = new HashMap<>();
-    claim.put("ledgerId", ledgerId);
-    claim.put("applicationId", "market-data-service");
-    claim.put("actAs", parties);
-    Map<String, Object> claims = Collections.singletonMap("https://daml.com/ledger-api", claim);
-    return Jwts.builder().setClaims(claims).signWith(key).compact();
   }
 
   private static class CreateCommand {
