@@ -78,8 +78,7 @@ publicationRule transformObservation party activeContracts _ _ () = do
       whenSome mbCurrentTime $ \(_, currentTime) ->
         when (freshStream.lastUpdated /= currentTime.currentTime) $ do
           debug ("Checking expiration of licenses on stream: " <> (show freshStream))
-          emitCommands [exerciseCmd sCid UpdateLicenses] [toAnyContractId sCid]
-          pure ()
+          void $ emitCommands [exerciseCmd sCid UpdateLicenses] [toAnyContractId sCid]
           ))
 
 observationHasChanged : Observation -> Observation -> Bool
