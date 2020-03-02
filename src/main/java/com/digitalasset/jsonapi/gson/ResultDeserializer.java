@@ -29,12 +29,13 @@ class ResultDeserializer implements JsonDeserializer<Result> {
       JsonObject object = jsonElement.getAsJsonObject();
       if (object.size() == 2 && object.has("exerciseResult") && object.has("events")) {
         return ExerciseResult.class;
+      } else {
+        return CreateResult.class;
       }
-    }
-    if (jsonElement.isJsonArray()) {
+    } else if (jsonElement.isJsonArray()) {
       return SearchResult.class;
     } else {
-      return CreateResult.class;
+      throw new IllegalStateException("Could not detect result type");
     }
   }
 }
