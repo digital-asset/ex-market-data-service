@@ -12,5 +12,4 @@ USER daml
 
 EXPOSE 7575
 
-ENTRYPOINT ~/.daml/bin/daml json-api --ledger-host ${SANDBOX_HOST} --ledger-port ${SANDBOX_PORT} --http-port 7575 --max-inbound-message-size 4194304 --package-reload-interval 5s --application-id HTTP-JSON-API-Gateway
-
+ENTRYPOINT ~/.daml/bin/daml json-api --ledger-host ${SANDBOX_HOST} --ledger-port ${SANDBOX_PORT} --http-port 7575
