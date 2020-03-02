@@ -69,12 +69,11 @@ public class JsonLedgerClientIT {
   private HttpClient httpClient;
   private WebSocketClient webSocketClient;
   private Api api;
-  private String ledgerId;
 
   @Before
   public void setUp() {
     ledger = sandbox.getLedgerAdapter();
-    ledgerId = sandbox.getClient().getLedgerId();
+    String ledgerId = sandbox.getClient().getLedgerId();
     String jwt =
         Jwt.createToken(ledgerId, APPLICATION_ID, Collections.singletonList(OPERATOR.getValue()));
     httpClient = new ApacheHttpClient(httpResponseDeserializer, jsonSerializer, jwt);

@@ -66,7 +66,8 @@ public class JsonDeserializerTest {
             .registerTypeAdapter(EventHolder.class, new EventHolderDeserializer())
             .registerTypeAdapter(Result.class, new ResultDeserializer())
             .registerTypeAdapter(SearchResult.class, new SearchResultDeserializer())
-            .create().fromJson(serializedCurrentTime, CurrentTime.class);
+            .create()
+            .fromJson(serializedCurrentTime, CurrentTime.class);
     Assert.assertEquals(expectedCurrentTime, deserializedCurrentTime);
   }
 
@@ -155,7 +156,8 @@ public class JsonDeserializerTest {
             .registerTypeAdapter(EventHolder.class, new EventHolderDeserializer())
             .registerTypeAdapter(Result.class, new ResultDeserializer())
             .registerTypeAdapter(SearchResult.class, new SearchResultDeserializer())
-            .create().fromJson(serializedDataStream, DataStream.class);
+            .create()
+            .fromJson(serializedDataStream, DataStream.class);
     Assert.assertEquals(expectedDataStream, deserializedDataStream);
   }
 
@@ -180,7 +182,8 @@ public class JsonDeserializerTest {
             + "      ]\n"
             + "   }\n"
             + "}";
-    CreatedEvent expectedCreatedEvent = new CreatedEvent(null, null, new OperatorRole("Operator"));
+    CreatedEvent expectedCreatedEvent =
+        new CreatedEvent(OperatorRole.TEMPLATE_ID, "#14:1", new OperatorRole("Operator"));
     HttpResponse deserializedHttpResponse =
         new GsonBuilder()
             .registerTypeAdapter(Instant.class, new InstantDeserializer())
@@ -193,13 +196,13 @@ public class JsonDeserializerTest {
             .registerTypeAdapter(EventHolder.class, new EventHolderDeserializer())
             .registerTypeAdapter(Result.class, new ResultDeserializer())
             .registerTypeAdapter(SearchResult.class, new SearchResultDeserializer())
-            .create().fromJson(serializedHttpResponse, HttpResponse.class);
+            .create()
+            .fromJson(serializedHttpResponse, HttpResponse.class);
     HttpResponse.ExerciseResult result =
         (HttpResponse.ExerciseResult) deserializedHttpResponse.getResult();
     CreatedEventHolder deserializedCreatedEventHolder =
         (CreatedEventHolder) Iterables.getOnlyElement(result.getEvents());
-    Assert.assertEquals(
-        expectedCreatedEvent.getPayload(), deserializedCreatedEventHolder.event().getPayload());
+    Assert.assertEquals(expectedCreatedEvent, deserializedCreatedEventHolder.event());
   }
 
   @Test
@@ -219,18 +222,19 @@ public class JsonDeserializerTest {
             + "  \"owner\": \"MarketDataProvider2\"\n"
             + "}";
 
-    Gson deserializer = new GsonBuilder()
-        .registerTypeAdapter(Instant.class, new InstantDeserializer())
-        .registerTypeAdapter(ObservationValue.class, new ObservationValueDeserializer())
-        .registerTypeAdapter(Identifier.class, new IdentifierDeserializer())
-        .registerTypeAdapter(Date.class, new DateDeserializer())
-        .registerTypeAdapter(LocalDate.class, new LocalDateDeserializer())
-        .registerTypeAdapter(Event.class, new EventDeserializer())
-        .registerTypeAdapter(CreatedEvent.class, new CreatedEventDeserializer())
-        .registerTypeAdapter(EventHolder.class, new EventHolderDeserializer())
-        .registerTypeAdapter(Result.class, new ResultDeserializer())
-        .registerTypeAdapter(SearchResult.class, new SearchResultDeserializer())
-        .create();
+    Gson deserializer =
+        new GsonBuilder()
+            .registerTypeAdapter(Instant.class, new InstantDeserializer())
+            .registerTypeAdapter(ObservationValue.class, new ObservationValueDeserializer())
+            .registerTypeAdapter(Identifier.class, new IdentifierDeserializer())
+            .registerTypeAdapter(Date.class, new DateDeserializer())
+            .registerTypeAdapter(LocalDate.class, new LocalDateDeserializer())
+            .registerTypeAdapter(Event.class, new EventDeserializer())
+            .registerTypeAdapter(CreatedEvent.class, new CreatedEventDeserializer())
+            .registerTypeAdapter(EventHolder.class, new EventHolderDeserializer())
+            .registerTypeAdapter(Result.class, new ResultDeserializer())
+            .registerTypeAdapter(SearchResult.class, new SearchResultDeserializer())
+            .create();
     DataSource result = deserializer.fromJson(json, DataSource.class);
 
     assertThat(

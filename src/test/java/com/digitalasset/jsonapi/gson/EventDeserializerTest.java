@@ -42,9 +42,7 @@ public class EventDeserializerTest {
     Event deserializedEvent = gson.fromJson(serializedCreatedEvent, Event.class);
     assertThat(deserializedEvent, instanceOf(CreatedEvent.class));
     CreatedEvent deserializedCreatedEvent = (CreatedEvent) deserializedEvent;
-    assertEquals(expectedCreatedEvent.getPayload(), deserializedCreatedEvent.getPayload());
-    assertEquals(expectedCreatedEvent.getTemplateId(), deserializedCreatedEvent.getTemplateId());
-    assertEquals(expectedCreatedEvent.getContractId(), deserializedCreatedEvent.getContractId());
+    assertEquals(expectedCreatedEvent, deserializedCreatedEvent);
   }
 
   @Test
