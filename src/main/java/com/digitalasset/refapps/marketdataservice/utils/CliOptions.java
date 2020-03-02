@@ -11,7 +11,7 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.StringArrayOptionHandler;
 
-// Valid use case for a DataClass. CLI parser requires non-fields for options.
+// CLI parser requires non-fields for options.
 @SuppressWarnings({"PMD.DataClass", "FieldCanBeLocal", "CanBeFinal"})
 public class CliOptions {
 
