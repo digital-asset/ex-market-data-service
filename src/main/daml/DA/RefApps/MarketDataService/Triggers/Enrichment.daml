@@ -72,12 +72,14 @@ publicationRule transformObservation party activeContracts _ _ () = do
           partition (\(_, s) -> observationHasChanged s.observation newObservation) ownDataStreams
     forA_ nonFreshStreams (\(sCid, dataStream) -> do
       debug ("Updating observation on stream: " <> (show dataStream))
-      dedupExercise sCid UpdateObservation with time = newObservation.time, newValue = newObservation.value)
+      emitCommands [exerciseCmd sCid UpdateObservation with time = newObservation.time, newValue = newObservation.value] [toAnyContractId sCid]
+      )
     forA_ freshStreams (\(sCid, freshStream) ->
       whenSome mbCurrentTime $ \(_, currentTime) ->
         when (freshStream.lastUpdated /= currentTime.currentTime) $ do
           debug ("Checking expiration of licenses on stream: " <> (show freshStream))
-          dedupExercise sCid UpdateLicenses))
+          void $ emitCommands [exerciseCmd sCid UpdateLicenses] [toAnyContractId sCid]
+          ))
 
 observationHasChanged : Observation -> Observation -> Bool
 observationHasChanged old new = old.label == new.label && old.time < new.time
