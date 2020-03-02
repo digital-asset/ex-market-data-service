@@ -37,6 +37,7 @@ import java.util.Collections;
 import org.junit.Assert;
 import org.junit.Test;
 
+// TODO: ERA-745
 public class JsonDeserializerTest {
 
   private static final String OPERATOR = "Operator1";
@@ -55,19 +56,7 @@ public class JsonDeserializerTest {
     CurrentTime expectedCurrentTime =
         new CurrentTime(operator, Instant.parse(time), Collections.emptyList());
     CurrentTime deserializedCurrentTime =
-        new GsonBuilder()
-            .registerTypeAdapter(Instant.class, new InstantDeserializer())
-            .registerTypeAdapter(ObservationValue.class, new ObservationValueDeserializer())
-            .registerTypeAdapter(Identifier.class, new IdentifierDeserializer())
-            .registerTypeAdapter(Date.class, new DateDeserializer())
-            .registerTypeAdapter(LocalDate.class, new LocalDateDeserializer())
-            .registerTypeAdapter(Event.class, new EventDeserializer())
-            .registerTypeAdapter(CreatedEvent.class, new CreatedEventDeserializer())
-            .registerTypeAdapter(EventHolder.class, new EventHolderDeserializer())
-            .registerTypeAdapter(Result.class, new ResultDeserializer())
-            .registerTypeAdapter(SearchResult.class, new SearchResultDeserializer())
-            .create()
-            .fromJson(serializedCurrentTime, CurrentTime.class);
+        getDeserializer().fromJson(serializedCurrentTime, CurrentTime.class);
     Assert.assertEquals(expectedCurrentTime, deserializedCurrentTime);
   }
 
@@ -91,19 +80,7 @@ public class JsonDeserializerTest {
             + "   }\n"
             + "}";
     EmptyDataStream deserializedEmptyDataStream =
-        new GsonBuilder()
-            .registerTypeAdapter(Instant.class, new InstantDeserializer())
-            .registerTypeAdapter(ObservationValue.class, new ObservationValueDeserializer())
-            .registerTypeAdapter(Identifier.class, new IdentifierDeserializer())
-            .registerTypeAdapter(Date.class, new DateDeserializer())
-            .registerTypeAdapter(LocalDate.class, new LocalDateDeserializer())
-            .registerTypeAdapter(Event.class, new EventDeserializer())
-            .registerTypeAdapter(CreatedEvent.class, new CreatedEventDeserializer())
-            .registerTypeAdapter(EventHolder.class, new EventHolderDeserializer())
-            .registerTypeAdapter(Result.class, new ResultDeserializer())
-            .registerTypeAdapter(SearchResult.class, new SearchResultDeserializer())
-            .create()
-            .fromJson(serializedEmptyDataStream, EmptyDataStream.class);
+        getDeserializer().fromJson(serializedEmptyDataStream, EmptyDataStream.class);
     Assert.assertEquals(expectedEmptyDataStream, deserializedEmptyDataStream);
   }
 
@@ -145,19 +122,7 @@ public class JsonDeserializerTest {
             + "   \"lastUpdated\":\"2020-01-03T10:15:30Z\"\n"
             + "}";
     DataStream deserializedDataStream =
-        new GsonBuilder()
-            .registerTypeAdapter(Instant.class, new InstantDeserializer())
-            .registerTypeAdapter(ObservationValue.class, new ObservationValueDeserializer())
-            .registerTypeAdapter(Identifier.class, new IdentifierDeserializer())
-            .registerTypeAdapter(Date.class, new DateDeserializer())
-            .registerTypeAdapter(LocalDate.class, new LocalDateDeserializer())
-            .registerTypeAdapter(Event.class, new EventDeserializer())
-            .registerTypeAdapter(CreatedEvent.class, new CreatedEventDeserializer())
-            .registerTypeAdapter(EventHolder.class, new EventHolderDeserializer())
-            .registerTypeAdapter(Result.class, new ResultDeserializer())
-            .registerTypeAdapter(SearchResult.class, new SearchResultDeserializer())
-            .create()
-            .fromJson(serializedDataStream, DataStream.class);
+        getDeserializer().fromJson(serializedDataStream, DataStream.class);
     Assert.assertEquals(expectedDataStream, deserializedDataStream);
   }
 
@@ -185,19 +150,7 @@ public class JsonDeserializerTest {
     CreatedEvent expectedCreatedEvent =
         new CreatedEvent(OperatorRole.TEMPLATE_ID, "#14:1", new OperatorRole("Operator"));
     HttpResponse deserializedHttpResponse =
-        new GsonBuilder()
-            .registerTypeAdapter(Instant.class, new InstantDeserializer())
-            .registerTypeAdapter(ObservationValue.class, new ObservationValueDeserializer())
-            .registerTypeAdapter(Identifier.class, new IdentifierDeserializer())
-            .registerTypeAdapter(Date.class, new DateDeserializer())
-            .registerTypeAdapter(LocalDate.class, new LocalDateDeserializer())
-            .registerTypeAdapter(Event.class, new EventDeserializer())
-            .registerTypeAdapter(CreatedEvent.class, new CreatedEventDeserializer())
-            .registerTypeAdapter(EventHolder.class, new EventHolderDeserializer())
-            .registerTypeAdapter(Result.class, new ResultDeserializer())
-            .registerTypeAdapter(SearchResult.class, new SearchResultDeserializer())
-            .create()
-            .fromJson(serializedHttpResponse, HttpResponse.class);
+        getDeserializer().fromJson(serializedHttpResponse, HttpResponse.class);
     HttpResponse.ExerciseResult result =
         (HttpResponse.ExerciseResult) deserializedHttpResponse.getResult();
     CreatedEventHolder deserializedCreatedEventHolder =
@@ -222,19 +175,7 @@ public class JsonDeserializerTest {
             + "  \"owner\": \"MarketDataProvider2\"\n"
             + "}";
 
-    Gson deserializer =
-        new GsonBuilder()
-            .registerTypeAdapter(Instant.class, new InstantDeserializer())
-            .registerTypeAdapter(ObservationValue.class, new ObservationValueDeserializer())
-            .registerTypeAdapter(Identifier.class, new IdentifierDeserializer())
-            .registerTypeAdapter(Date.class, new DateDeserializer())
-            .registerTypeAdapter(LocalDate.class, new LocalDateDeserializer())
-            .registerTypeAdapter(Event.class, new EventDeserializer())
-            .registerTypeAdapter(CreatedEvent.class, new CreatedEventDeserializer())
-            .registerTypeAdapter(EventHolder.class, new EventHolderDeserializer())
-            .registerTypeAdapter(Result.class, new ResultDeserializer())
-            .registerTypeAdapter(SearchResult.class, new SearchResultDeserializer())
-            .create();
+    Gson deserializer = getDeserializer();
     DataSource result = deserializer.fromJson(json, DataSource.class);
 
     assertThat(
@@ -249,5 +190,20 @@ public class JsonDeserializerTest {
                     new InstrumentId("ISIN 123 1244"),
                     LocalDate.of(2021, 3, 20)),
                 "default-1000.csv")));
+  }
+
+  private Gson getDeserializer() {
+    return new GsonBuilder()
+        .registerTypeAdapter(Instant.class, new InstantDeserializer())
+        .registerTypeAdapter(ObservationValue.class, new ObservationValueDeserializer())
+        .registerTypeAdapter(Identifier.class, new IdentifierDeserializer())
+        .registerTypeAdapter(Date.class, new DateDeserializer())
+        .registerTypeAdapter(LocalDate.class, new LocalDateDeserializer())
+        .registerTypeAdapter(Event.class, new EventDeserializer())
+        .registerTypeAdapter(CreatedEvent.class, new CreatedEventDeserializer())
+        .registerTypeAdapter(EventHolder.class, new EventHolderDeserializer())
+        .registerTypeAdapter(Result.class, new ResultDeserializer())
+        .registerTypeAdapter(SearchResult.class, new SearchResultDeserializer())
+        .create();
   }
 }
