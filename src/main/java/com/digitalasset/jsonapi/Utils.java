@@ -10,6 +10,7 @@ import com.digitalasset.refapps.utils.EventuallyBuilder;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,14 +35,27 @@ public class Utils {
     log.info("Waiting for JSON API...");
     try {
       org.apache.http.HttpResponse response = Request.Options(uri).execute().returnResponse();
-      if (response.getStatusLine().getStatusCode() < 500) {
-        throw new RuntimeException("Connection failed");
+      if (!serverHasResponded(response)) {
+        throw new ConnectionFailed();
       }
-    } catch (IOException ignored) {
+    } catch (IOException e) {
+      throw new ConnectionFailed(e);
     }
   }
 
   private static Exception notAvailableWithinTimeout() {
     return new Exception("JSON API not available within " + TIMEOUT.toMillis() + "ms timout");
+  }
+
+  private static boolean serverHasResponded(HttpResponse response) {
+    return response.getStatusLine().getStatusCode() < 500;
+  }
+
+  public static class ConnectionFailed extends RuntimeException {
+    public ConnectionFailed() {}
+
+    public ConnectionFailed(Throwable cause) {
+      super(cause);
+    }
   }
 }
