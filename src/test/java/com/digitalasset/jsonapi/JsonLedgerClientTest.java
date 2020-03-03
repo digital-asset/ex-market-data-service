@@ -4,7 +4,6 @@
  */
 package com.digitalasset.jsonapi;
 
-import com.digitalasset.jsonapi.gson.GsonSerializer;
 import com.digitalasset.jsonapi.http.Api;
 import com.digitalasset.jsonapi.http.HttpClient;
 import com.digitalasset.jsonapi.http.HttpResponse;
@@ -47,7 +46,6 @@ public class JsonLedgerClientTest {
   private static final String someBadRequestErrorMessage = "some bad request error message";
   private static final HttpResponse badHttpResponse =
       new HttpResponse(400, null, Collections.singletonList(someBadRequestErrorMessage), null);
-  private static final GsonSerializer jsonSerializer = new GsonSerializer();
   private static final HttpClient httpClient = new DummyHttpClientGivingError();
   private static final Api api = new Api(null, 0);
 
