@@ -119,4 +119,21 @@ public class JsonLedgerClientIT {
     CurrentTime updatedTime = CurrentTime.fromValue(contract.record);
     assertThat(updatedTime.observers, hasItem(OPERATOR.getValue()));
   }
+
+  @Test
+  public void create() {
+    CurrentTime currentTime =
+        new CurrentTime(
+            OPERATOR.getValue(),
+            Instant.parse("2020-02-04T22:57:29Z"),
+            Collections.singletonList("MarketDataVendor"));
+
+    LedgerClient ledgerClient = new JsonLedgerClient(httpClient, webSocketClient, api);
+    ledgerClient.create(currentTime.create());
+
+    ContractWithId<ContractId> contract =
+        ledger.getMatchedContract(OPERATOR, CurrentTime.TEMPLATE_ID, CurrentTime.ContractId::new);
+    CurrentTime createdTime = CurrentTime.fromValue(contract.record);
+    assertThat(createdTime, is(currentTime));
+  }
 }
