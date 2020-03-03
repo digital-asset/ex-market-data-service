@@ -8,9 +8,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 import com.daml.ledger.javaapi.data.ExerciseCommand;
-import com.daml.ledger.javaapi.data.Identifier;
 import com.daml.ledger.javaapi.data.Party;
-import com.daml.ledger.javaapi.data.Template;
 import com.digitalasset.jsonapi.JsonApi;
 import com.digitalasset.jsonapi.gson.GsonDeserializer;
 import com.digitalasset.jsonapi.gson.GsonSerializer;
@@ -64,18 +62,7 @@ public class ApacheHttpClientIT {
   }
 
   @Test
-  public void createContract() {
-    CurrentTime currentTime = new CurrentTime("Operator", Instant.now(), Collections.emptyList());
-    CreateCommand command = new CreateCommand(CurrentTime.TEMPLATE_ID, currentTime);
-
-    HttpClient client = new ApacheHttpClient(deserializer, new GsonSerializer(), jwt);
-    HttpResponse response = client.post(api.createContract(), command);
-
-    assertThat(response.getStatus(), is(200));
-  }
-
-  @Test
-  public void exerciseChoice() throws InvalidProtocolBufferException {
+  public void canSendPostRequests() throws InvalidProtocolBufferException {
     CurrentTime currentTime = new CurrentTime("Operator", Instant.now(), Collections.emptyList());
     Party party = new Party(OPERATOR);
     ledger.createContract(party, CurrentTime.TEMPLATE_ID, currentTime.toValue());
@@ -87,24 +74,5 @@ public class ApacheHttpClientIT {
     HttpResponse response = client.post(api.exercise(), command);
 
     assertThat(response.getStatus(), is(200));
-  }
-
-  private static class CreateCommand {
-
-    private final Identifier templateId;
-    private final Template payload;
-
-    public CreateCommand(Identifier identifier, Template contract) {
-      this.templateId = identifier;
-      this.payload = contract;
-    }
-
-    public Identifier getTemplateId() {
-      return templateId;
-    }
-
-    public Template getPayload() {
-      return payload;
-    }
   }
 }
