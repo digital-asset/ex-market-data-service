@@ -18,6 +18,10 @@ public class EventuallyUtil {
     try {
       EVENTUALLY.execute(code);
     } catch (TimeoutExceeded ignore) {
+      // This exception may be thrown even if the machine is "too slow" to run the code before
+      // timeout.
+      // One may need to increase the timeout (Duration TOO_MUCH_TIME) in case of an especially slow
+      // environment.
       fail("Code did not succeed within timeout.");
     }
   }
