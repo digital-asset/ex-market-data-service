@@ -57,10 +57,10 @@ publicationRule transformObservation party activeContracts _ _ () = do
       mbCurrentTime = head $ getContracts @CurrentTime activeContracts
 
   forA_ ownPublications (\(_, p) -> do
-    debug ("Triggered by publication: " <> (show p))
+    -- debug ("Triggered by publication: " <> (show p))
 
     let newObservation = transformObservation p.observation
-    debug ("Enriched observation:" <> (show newObservation))
+    -- debug ("Enriched observation:" <> (show newObservation))
 
     forA_
       (filter (\(_, s) -> s.reference == p.observation.label) ownEmptyDataStreams)

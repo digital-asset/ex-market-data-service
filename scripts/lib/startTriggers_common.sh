@@ -41,10 +41,10 @@ daml trigger \
     --ledger-port ${SANDBOX_PORT} \
     --ledger-party MarketDataVendor &
 
-daml trigger \
-    --wall-clock-time \
-    --dar "${DAR_FILE}" \
-    --trigger-name DA.RefApps.MarketDataService.Triggers.Enrichment:enrichCleanPriceWithAccrualTrigger \
-    --ledger-host ${SANDBOX_HOST} \
-    --ledger-port ${SANDBOX_PORT} \
-    --ledger-party AnalyticsVendor &
+# daml trigger \
+#     --wall-clock-time \
+#     --dar "${DAR_FILE}" \
+#     --trigger-name DA.RefApps.MarketDataService.Triggers.Enrichment:enrichCleanPriceWithAccrualTrigger \
+#     --ledger-host ${SANDBOX_HOST} \
+#     --ledger-port ${SANDBOX_PORT} \
+#     --ledger-party AnalyticsVendor &

@@ -4,9 +4,6 @@
  */
 package com.digitalasset.refapps.marketdataservice.publishing;
 
-import static com.digitalasset.refapps.marketdataservice.utils.AppParties.ALL_PARTIES;
-import static com.digitalasset.refapps.utils.EventuallyUtil.eventually;
-
 import com.daml.ledger.javaapi.data.Party;
 import com.digitalasset.refapps.marketdataservice.Main;
 import com.digitalasset.refapps.marketdataservice.utils.AppParties;
@@ -22,7 +19,11 @@ import da.refapps.marketdataservice.marketdatatypes.observationvalue.CleanPrice;
 import da.refapps.marketdataservice.marketdatatypes.observationvalue.EnrichedCleanDirtyPrice;
 import da.refapps.marketdataservice.publication.Publication;
 import da.timeservice.timeservice.TimeManager;
+import org.junit.*;
+import org.junit.rules.ExternalResource;
+
 import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -34,14 +35,17 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import org.junit.*;
-import org.junit.rules.ExternalResource;
+
+import static com.digitalasset.refapps.marketdataservice.utils.AppParties.ALL_PARTIES;
+import static com.digitalasset.refapps.utils.EventuallyUtil.eventually;
 
 public class PublishingIT {
   private static final Path RELATIVE_DAR_PATH = Paths.get("target/market-data-service.dar");
 
   private static final Party OPERATOR_PARTY = new Party("Operator");
   private static final Party MARKET_DATA_VENDOR_PARTY = new Party("MarketDataVendor");
+  private static final Party A = new Party("AnalyticsVendor");
+
   private static final Party ENDUSER_PARTY = new Party("EndUser");
 
   private static final ObservationReference US_BOND_1 =
@@ -102,23 +106,32 @@ public class PublishingIT {
         MARKET_DATA_VENDOR_PARTY,
         observation(US_BOND_1, "2019-11-12T12:30:00Z", cleanprice("1")),
         observation(EU_BOND_1, "2019-11-12T12:30:00Z", cleanprice("1000")));
-    observePublication(
-        ENDUSER_PARTY,
-        observation(US_BOND_1, "2019-11-12T12:30:00Z", cleanprice("1")),
-        observation(
-            US_BOND_1,
-            "2019-11-12T12:30:00Z",
-            dirtyprice("1", "1.0150136986", "0.0150136986", LocalDate.of(2020, 2, 11), "0.02")));
+    //    observePublication(
+    //        ENDUSER_PARTY,
+    //        observation(US_BOND_1, "2019-11-12T12:30:00Z", cleanprice("1")),
+    //        observation(
+    //            US_BOND_1,
+    //            "2019-11-12T12:30:00Z",
+    //            dirtyprice("1", "1.0150136986", "0.0150136986", LocalDate.of(2020, 2, 11),
+    // "0.02")));
 
     startModelClock();
+    Thread.sleep(10000);
 
-    observePublication(
-        ENDUSER_PARTY,
-        observation(US_BOND_1, "2019-11-12T14:30:00Z", cleanprice("2")),
-        observation(
-            US_BOND_1,
-            "2019-11-12T14:30:00Z",
-            dirtyprice("2", "2.0150136986", "0.0150136986", LocalDate.of(2020, 2, 11), "0.02")));
+    //    observePublication(
+    //        ENDUSER_PARTY,
+    //        observation(US_BOND_1, "2019-11-12T14:30:00Z", cleanprice("2")),
+    //        observation(
+    //            US_BOND_1,
+    //            "2019-11-12T14:30:00Z",
+    //            dirtyprice("2", "2.0150136986", "0.0150136986", LocalDate.of(2020, 2, 11),
+    // "0.02")));
+    System.out.println("ENDED!");
+    try {
+      System.in.read();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   /**
@@ -129,7 +142,7 @@ public class PublishingIT {
     eventually(
         () ->
             ledgerAdapter.getCreatedContractId(
-                ENDUSER_PARTY, LiveStreamLicense.TEMPLATE_ID, LiveStreamLicense.ContractId::new));
+                A, LiveStreamLicense.TEMPLATE_ID, LiveStreamLicense.ContractId::new));
   }
 
   private void startModelClock() throws InvalidProtocolBufferException {
