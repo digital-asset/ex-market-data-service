@@ -6,12 +6,11 @@ package com.digitalasset.refapps.utils;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 public class Eventually {
 
-  public static final Eventually DEFAULT_EVENTUALLY =
-      new Eventually(Duration.ofSeconds(30), Duration.ofMillis(200), Instant::now);
   private final Duration timeout;
   private final Duration interval;
   private final Supplier<Instant> now;
@@ -23,13 +22,22 @@ public class Eventually {
   }
 
   public void execute(Runnable code) throws InterruptedException {
+    execute(
+        () -> {
+          code.run();
+          return true;
+        });
+  }
+
+  public void execute(BooleanSupplier code) throws InterruptedException {
     Instant started = now.get();
     boolean finished = false;
     while (!finished && !hasTimedOutSince(started)) {
       try {
-        code.run();
-        finished = true;
+        finished = code.getAsBoolean();
       } catch (Throwable ignored) {
+      }
+      if (!finished) {
         Thread.sleep(interval.toMillis());
       }
     }
@@ -41,10 +49,6 @@ public class Eventually {
   private boolean hasTimedOutSince(Instant start) {
     Duration elapsed = Duration.between(start, now.get());
     return elapsed.compareTo(timeout) > 0;
-  }
-
-  public static void eventually(Runnable code) throws InterruptedException {
-    DEFAULT_EVENTUALLY.execute(code);
   }
 
   public static class TimeoutExceeded extends RuntimeException {}

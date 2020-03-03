@@ -31,15 +31,13 @@ public class Utils {
     log.info("JSON API available.");
   }
 
-  private static void connectTo(URI uri) {
+  private static boolean connectTo(URI uri) {
     log.info("Waiting for JSON API...");
     try {
-      org.apache.http.HttpResponse response = Request.Options(uri).execute().returnResponse();
-      if (!serverHasResponded(response)) {
-        throw new ConnectionFailed();
-      }
+      HttpResponse response = Request.Options(uri).execute().returnResponse();
+      return serverHasResponded(response);
     } catch (IOException e) {
-      throw new ConnectionFailed(e);
+      return false;
     }
   }
 
@@ -49,13 +47,5 @@ public class Utils {
 
   private static boolean serverHasResponded(HttpResponse response) {
     return response.getStatusLine().getStatusCode() < 500;
-  }
-
-  public static class ConnectionFailed extends RuntimeException {
-    public ConnectionFailed() {}
-
-    public ConnectionFailed(Throwable cause) {
-      super(cause);
-    }
   }
 }
