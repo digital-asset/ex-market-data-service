@@ -71,7 +71,7 @@ public class TimeUpdaterBot {
     return new ContractId(timeManager.getContractId());
   }
 
-  // TODO: Rework polling from HTTP and TimeUpdaterBot scheduling.
+  // TODO: ERA-746
   private Flowable<ActiveContractSet> getContracts(ContractQuery query) {
     return Flowable.interval(100, TimeUnit.MILLISECONDS)
         .map(x -> ledger.queryContracts(query))

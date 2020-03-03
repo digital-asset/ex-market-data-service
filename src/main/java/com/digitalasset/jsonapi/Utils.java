@@ -4,44 +4,48 @@
  */
 package com.digitalasset.jsonapi;
 
+import com.digitalasset.refapps.utils.Eventually;
+import com.digitalasset.refapps.utils.Eventually.TimeoutExceeded;
+import com.digitalasset.refapps.utils.EventuallyBuilder;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
-import java.time.Instant;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Utils {
+
   private static final Logger log = LoggerFactory.getLogger("JsonAPI Util");
+  private static final Duration TIMEOUT = Duration.ofSeconds(30);
+  private static final Eventually EVENTUALLY =
+      new EventuallyBuilder().setTimeout(TIMEOUT).setInterval(Duration.ofSeconds(1)).create();
 
   public static void waitForJsonApi(URI uri) throws Exception {
-    Instant started = Instant.now();
-    boolean isRunning = false;
-    Duration timeout = Duration.ofSeconds(30);
-    while (!isRunning && !hasPassedSince(started, timeout)) {
-      log.info("Waiting for JSON API...");
-      try {
-        org.apache.http.HttpResponse response = Request.Options(uri).execute().returnResponse();
-        if (response.getStatusLine().getStatusCode() < 500) {
-          isRunning = true;
-        }
-      } catch (IOException ignored) {
-      }
-      Thread.sleep(1000);
-    }
-    if (!isRunning) {
-      throw notAvailableWithin(timeout);
+    try {
+      EVENTUALLY.execute(() -> connectTo(uri));
+    } catch (TimeoutExceeded e) {
+      throw notAvailableWithinTimeout();
     }
     log.info("JSON API available.");
   }
 
-  private static Exception notAvailableWithin(Duration timeout) {
-    return new Exception("JSON API not available within " + timeout.toMillis() + "ms timout");
+  private static boolean connectTo(URI uri) {
+    log.info("Waiting for JSON API...");
+    try {
+      HttpResponse response = Request.Options(uri).execute().returnResponse();
+      return serverHasResponded(response);
+    } catch (IOException e) {
+      return false;
+    }
   }
 
-  private static boolean hasPassedSince(Instant started, Duration timeout) {
-    Duration elapsed = Duration.between(started, Instant.now());
-    return elapsed.compareTo(timeout) > 0;
+  private static Exception notAvailableWithinTimeout() {
+    return new Exception("JSON API not available within " + TIMEOUT.toMillis() + "ms timout");
+  }
+
+  private static boolean serverHasResponded(HttpResponse response) {
+    return response.getStatusLine().getStatusCode() < 500;
   }
 }

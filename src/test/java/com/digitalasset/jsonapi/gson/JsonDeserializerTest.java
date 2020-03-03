@@ -7,17 +7,25 @@ package com.digitalasset.jsonapi.gson;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
+import com.daml.ledger.javaapi.data.Date;
+import com.daml.ledger.javaapi.data.Identifier;
 import com.digitalasset.jsonapi.events.CreatedEvent;
+import com.digitalasset.jsonapi.events.Event;
 import com.digitalasset.jsonapi.http.CreatedEventHolder;
+import com.digitalasset.jsonapi.http.EventHolder;
 import com.digitalasset.jsonapi.http.HttpResponse;
+import com.digitalasset.jsonapi.http.HttpResponse.Result;
+import com.digitalasset.jsonapi.http.HttpResponse.SearchResult;
 import com.google.common.collect.Iterables;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import da.refapps.marketdataservice.datasource.DataSource;
 import da.refapps.marketdataservice.datastream.DataStream;
 import da.refapps.marketdataservice.datastream.EmptyDataStream;
 import da.refapps.marketdataservice.marketdatatypes.InstrumentId;
 import da.refapps.marketdataservice.marketdatatypes.Observation;
 import da.refapps.marketdataservice.marketdatatypes.ObservationReference;
+import da.refapps.marketdataservice.marketdatatypes.ObservationValue;
 import da.refapps.marketdataservice.marketdatatypes.Publisher;
 import da.refapps.marketdataservice.marketdatatypes.observationvalue.CleanPrice;
 import da.refapps.marketdataservice.roles.OperatorRole;
@@ -29,6 +37,7 @@ import java.util.Collections;
 import org.junit.Assert;
 import org.junit.Test;
 
+// TODO: ERA-745
 public class JsonDeserializerTest {
 
   private static final String OPERATOR = "Operator1";
@@ -47,7 +56,7 @@ public class JsonDeserializerTest {
     CurrentTime expectedCurrentTime =
         new CurrentTime(operator, Instant.parse(time), Collections.emptyList());
     CurrentTime deserializedCurrentTime =
-        GsonRegisteredAllDeserializers.gson().fromJson(serializedCurrentTime, CurrentTime.class);
+        getDeserializer().fromJson(serializedCurrentTime, CurrentTime.class);
     Assert.assertEquals(expectedCurrentTime, deserializedCurrentTime);
   }
 
@@ -71,8 +80,7 @@ public class JsonDeserializerTest {
             + "   }\n"
             + "}";
     EmptyDataStream deserializedEmptyDataStream =
-        GsonRegisteredAllDeserializers.gson()
-            .fromJson(serializedEmptyDataStream, EmptyDataStream.class);
+        getDeserializer().fromJson(serializedEmptyDataStream, EmptyDataStream.class);
     Assert.assertEquals(expectedEmptyDataStream, deserializedEmptyDataStream);
   }
 
@@ -114,7 +122,7 @@ public class JsonDeserializerTest {
             + "   \"lastUpdated\":\"2020-01-03T10:15:30Z\"\n"
             + "}";
     DataStream deserializedDataStream =
-        GsonRegisteredAllDeserializers.gson().fromJson(serializedDataStream, DataStream.class);
+        getDeserializer().fromJson(serializedDataStream, DataStream.class);
     Assert.assertEquals(expectedDataStream, deserializedDataStream);
   }
 
@@ -139,15 +147,15 @@ public class JsonDeserializerTest {
             + "      ]\n"
             + "   }\n"
             + "}";
-    CreatedEvent expectedCreatedEvent = new CreatedEvent(null, null, new OperatorRole("Operator"));
+    CreatedEvent expectedCreatedEvent =
+        new CreatedEvent(OperatorRole.TEMPLATE_ID, "#14:1", new OperatorRole("Operator"));
     HttpResponse deserializedHttpResponse =
-        GsonRegisteredAllDeserializers.gson().fromJson(serializedHttpResponse, HttpResponse.class);
+        getDeserializer().fromJson(serializedHttpResponse, HttpResponse.class);
     HttpResponse.ExerciseResult result =
         (HttpResponse.ExerciseResult) deserializedHttpResponse.getResult();
     CreatedEventHolder deserializedCreatedEventHolder =
         (CreatedEventHolder) Iterables.getOnlyElement(result.getEvents());
-    Assert.assertEquals(
-        expectedCreatedEvent.getPayload(), deserializedCreatedEventHolder.event().getPayload());
+    Assert.assertEquals(expectedCreatedEvent, deserializedCreatedEventHolder.event());
   }
 
   @Test
@@ -167,7 +175,7 @@ public class JsonDeserializerTest {
             + "  \"owner\": \"MarketDataProvider2\"\n"
             + "}";
 
-    Gson deserializer = GsonRegisteredAllDeserializers.gson();
+    Gson deserializer = getDeserializer();
     DataSource result = deserializer.fromJson(json, DataSource.class);
 
     assertThat(
@@ -182,5 +190,20 @@ public class JsonDeserializerTest {
                     new InstrumentId("ISIN 123 1244"),
                     LocalDate.of(2021, 3, 20)),
                 "default-1000.csv")));
+  }
+
+  private Gson getDeserializer() {
+    return new GsonBuilder()
+        .registerTypeAdapter(Instant.class, new InstantDeserializer())
+        .registerTypeAdapter(ObservationValue.class, new ObservationValueDeserializer())
+        .registerTypeAdapter(Identifier.class, new IdentifierDeserializer())
+        .registerTypeAdapter(Date.class, new DateDeserializer())
+        .registerTypeAdapter(LocalDate.class, new LocalDateDeserializer())
+        .registerTypeAdapter(Event.class, new EventDeserializer())
+        .registerTypeAdapter(CreatedEvent.class, new CreatedEventDeserializer())
+        .registerTypeAdapter(EventHolder.class, new EventHolderDeserializer())
+        .registerTypeAdapter(Result.class, new ResultDeserializer())
+        .registerTypeAdapter(SearchResult.class, new SearchResultDeserializer())
+        .create();
   }
 }

@@ -6,31 +6,23 @@ package com.digitalasset.refapps.utils;
 
 import static org.junit.Assert.fail;
 
+import com.digitalasset.refapps.utils.Eventually.TimeoutExceeded;
 import java.time.Duration;
-import java.time.Instant;
 
 public class EventuallyUtil {
   private static final Duration TOO_MUCH_TIME = Duration.ofMinutes(3L);
+  private static final Eventually EVENTUALLY =
+      new EventuallyBuilder().setTimeout(TOO_MUCH_TIME).create();
 
   public static void eventually(Runnable code) throws InterruptedException {
-    Instant started = Instant.now();
-    boolean finished = false;
-    while (!finished) {
-      try {
-        code.run();
-        finished = true;
-      } catch (Throwable t) {
-        if (Duration.between(started, Instant.now()).compareTo(TOO_MUCH_TIME) > 0) {
-          // This exception (AssertionError) may be thrown even if the machine is only "too slow"
-          // to run the code before timeout.
-          // One may need to increase the timeout (Duration TOO_MUCH_TIME) in case of an especially
-          // slow environment.
-          fail("Code did not succeed within timeout.");
-        } else {
-          Thread.sleep(200);
-          finished = false;
-        }
-      }
+    try {
+      EVENTUALLY.execute(code);
+    } catch (TimeoutExceeded ignore) {
+      // This exception may be thrown even if the machine is "too slow" to run the code before
+      // timeout.
+      // One may need to increase the timeout (Duration TOO_MUCH_TIME) in case of an especially slow
+      // environment.
+      fail("Code did not succeed within timeout.");
     }
   }
 }

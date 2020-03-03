@@ -69,12 +69,11 @@ public class JsonLedgerClientIT {
   private HttpClient httpClient;
   private WebSocketClient webSocketClient;
   private Api api;
-  private String ledgerId;
 
   @Before
   public void setUp() {
     ledger = sandbox.getLedgerAdapter();
-    ledgerId = sandbox.getClient().getLedgerId();
+    String ledgerId = sandbox.getClient().getLedgerId();
     String jwt =
         Jwt.createToken(ledgerId, APPLICATION_ID, Collections.singletonList(OPERATOR.getValue()));
     httpClient = new ApacheHttpClient(httpResponseDeserializer, jsonSerializer, jwt);
@@ -119,5 +118,22 @@ public class JsonLedgerClientIT {
         ledger.getMatchedContract(OPERATOR, CurrentTime.TEMPLATE_ID, ContractId::new);
     CurrentTime updatedTime = CurrentTime.fromValue(contract.record);
     assertThat(updatedTime.observers, hasItem(OPERATOR.getValue()));
+  }
+
+  @Test
+  public void create() {
+    CurrentTime currentTime =
+        new CurrentTime(
+            OPERATOR.getValue(),
+            Instant.parse("2020-02-04T22:57:29Z"),
+            Collections.singletonList("MarketDataVendor"));
+
+    LedgerClient ledgerClient = new JsonLedgerClient(httpClient, webSocketClient, api);
+    ledgerClient.create(currentTime.create());
+
+    ContractWithId<ContractId> contract =
+        ledger.getMatchedContract(OPERATOR, CurrentTime.TEMPLATE_ID, CurrentTime.ContractId::new);
+    CurrentTime createdTime = CurrentTime.fromValue(contract.record);
+    assertThat(createdTime, is(currentTime));
   }
 }

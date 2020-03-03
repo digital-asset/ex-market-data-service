@@ -21,9 +21,9 @@ public abstract class TimeUpdaterBotBaseTest {
 
   String operator = "Dummy Operator";
 
-  CreatedEvent createTimeManager() {
+  CreatedEvent createTimeManager(String contractId) {
     TimeManager timeManager = new TimeManager(operator);
-    return new CreatedEvent(TimeManager.TEMPLATE_ID, "123", timeManager);
+    return new CreatedEvent(TimeManager.TEMPLATE_ID, contractId, timeManager);
   }
 
   CreatedEvent createCurrentTime() {

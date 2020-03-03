@@ -95,11 +95,12 @@ public class Main {
     }
   }
 
+  // We can consider accepting a Function<ActiveContractSet, Flowable<Collection<Command>> as bots
+  // later, if the API supports submitting commands in batch.
   private static void wire(
       AppConfig appConfig,
       String party,
       ContractQuery contractQuery,
-      // TODO: Don't we need a Flowable<Collection<Command>>?
       Function<ActiveContractSet, Flowable<Command>> bot) {
     LedgerClient ledgerClient = appConfig.getClientFor(party);
     //noinspection ResultOfMethodCallIgnored

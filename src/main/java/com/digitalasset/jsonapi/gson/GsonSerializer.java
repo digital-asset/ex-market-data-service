@@ -4,6 +4,8 @@
  */
 package com.digitalasset.jsonapi.gson;
 
+import com.daml.ledger.javaapi.data.CreateCommand;
+import com.daml.ledger.javaapi.data.DamlList;
 import com.daml.ledger.javaapi.data.Date;
 import com.daml.ledger.javaapi.data.ExerciseCommand;
 import com.daml.ledger.javaapi.data.Identifier;
@@ -32,6 +34,8 @@ public class GsonSerializer implements JsonSerializer {
           .registerTypeAdapter(Variant.class, new VariantSerializer())
           .registerTypeAdapter(Numeric.class, new NumericSerializer())
           .registerTypeAdapter(ExerciseCommand.class, new ExerciseCommandSerializer())
+          .registerTypeAdapter(DamlList.class, new DamlListSerializer())
+          .registerTypeAdapter(CreateCommand.class, new CreateCommandSerializer())
           .create();
 
   @Override

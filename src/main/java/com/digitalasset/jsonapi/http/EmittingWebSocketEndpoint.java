@@ -24,6 +24,7 @@ public class EmittingWebSocketEndpoint extends javax.websocket.Endpoint {
   @Override
   public void onOpen(Session session, EndpointConfig endpointConfig) {
     log.debug("Connected.");
+    // As of now we need to use String, because incoming data frames are text and not binary.
     Whole<String> messageHandler = new MessageHandler();
     session.addMessageHandler(messageHandler);
   }

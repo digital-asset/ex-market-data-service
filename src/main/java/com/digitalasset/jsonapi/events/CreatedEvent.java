@@ -22,18 +22,6 @@ public class CreatedEvent implements Event {
     this.payload = payload;
   }
 
-  public Identifier getTemplateId() {
-    return templateId;
-  }
-
-  public String getContractId() {
-    return contractId;
-  }
-
-  public Template getPayload() {
-    return payload;
-  }
-
   @Override
   public ActiveContractSet update(ActiveContractSet activeContractSet) {
     ActiveContract activeContract = toActiveContract();
@@ -41,7 +29,7 @@ public class CreatedEvent implements Event {
   }
 
   private ActiveContract toActiveContract() {
-    return new ActiveContract(getTemplateId(), getContractId(), getPayload());
+    return new ActiveContract(templateId, contractId, payload);
   }
 
   @Override
@@ -53,13 +41,13 @@ public class CreatedEvent implements Event {
       return false;
     }
     CreatedEvent that = (CreatedEvent) o;
-    return Objects.equals(getTemplateId(), that.getTemplateId())
-        && Objects.equals(getContractId(), that.getContractId())
-        && Objects.equals(getPayload(), that.getPayload());
+    return Objects.equals(templateId, that.templateId)
+        && Objects.equals(contractId, that.contractId)
+        && Objects.equals(payload, that.payload);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(getTemplateId(), getContractId(), getPayload());
+    return Objects.hash(templateId, contractId, payload);
   }
 }

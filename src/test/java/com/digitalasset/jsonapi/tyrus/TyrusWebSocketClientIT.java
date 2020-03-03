@@ -93,13 +93,19 @@ public class TyrusWebSocketClientIT {
     assertThat(values.get(0), everyItem(instanceOf(CreatedEvent.class)));
     assertThat(values.get(0).size(), is(1));
     CreatedEvent createdEvent = (CreatedEvent) values.get(0).get(0);
-    assertThat(createdEvent.getTemplateId(), is(CurrentTime.TEMPLATE_ID));
-    assertThat(createdEvent.getPayload(), is(currentTime));
+    CurrentTime.ContractId currentTimeCid =
+        ledger.getCreatedContractId(party, CurrentTime.TEMPLATE_ID, CurrentTime.ContractId::new);
+    CreatedEvent expectedCreatedEvent =
+        new CreatedEvent(CurrentTime.TEMPLATE_ID, currentTimeCid.contractId, currentTime);
+    assertThat(createdEvent, is(expectedCreatedEvent));
 
     assertThat(values.get(1), everyItem(instanceOf(CreatedEvent.class)));
     assertThat(values.get(1).size(), is(1));
     createdEvent = (CreatedEvent) values.get(1).get(0);
-    assertThat(createdEvent.getTemplateId(), is(OperatorRole.TEMPLATE_ID));
-    assertThat(createdEvent.getPayload(), is(operatorRole));
+    OperatorRole.ContractId operatorRoleCid =
+        ledger.getCreatedContractId(party, OperatorRole.TEMPLATE_ID, OperatorRole.ContractId::new);
+    expectedCreatedEvent =
+        new CreatedEvent(OperatorRole.TEMPLATE_ID, operatorRoleCid.contractId, operatorRole);
+    assertThat(createdEvent, is(expectedCreatedEvent));
   }
 }

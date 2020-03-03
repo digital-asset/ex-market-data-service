@@ -20,7 +20,7 @@ public class TimeUpdaterBotTest extends TimeUpdaterBotBaseTest {
 
   @Test
   public void updateModelTimeAdvancesCurrentTime() {
-    CreatedEvent eventManager = createTimeManager();
+    CreatedEvent eventManager = createTimeManager("123");
     CreatedEvent eventCurrentTime = createCurrentTime();
     when(ledgerClient.queryContracts(queryFor(TimeManager.TEMPLATE_ID)))
         .thenReturn(createContractResponse(eventManager));
@@ -30,8 +30,7 @@ public class TimeUpdaterBotTest extends TimeUpdaterBotBaseTest {
     TimeUpdaterBot bot = new TimeUpdaterBot(ledgerClient);
     bot.updateModelTime();
 
-    TimeManager.ContractId timeManagerCid =
-        new TimeManager.ContractId(eventManager.getContractId());
+    TimeManager.ContractId timeManagerCid = new TimeManager.ContractId("123");
     ExerciseCommand expectedCommand = timeManagerCid.exerciseAdvanceCurrentTime();
     verify(ledgerClient).exerciseChoice(expectedCommand);
   }
