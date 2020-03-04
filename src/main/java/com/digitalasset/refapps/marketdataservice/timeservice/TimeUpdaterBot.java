@@ -4,18 +4,18 @@
  */
 package com.digitalasset.refapps.marketdataservice.timeservice;
 
-import com.daml.ledger.javaapi.data.*;
-import com.daml.ledger.javaapi.data.LedgerOffset.Absolute;
-import com.daml.ledger.rxjava.LedgerClient;
-import com.digitalasset.refapps.marketdataservice.utils.CommandsAndPendingSetBuilder;
-import com.digitalasset.refapps.marketdataservice.utils.CommandsAndPendingSetBuilder.Factory;
+import com.digitalasset.jsonapi.ActiveContractSet;
+import com.digitalasset.jsonapi.Contract;
+import com.digitalasset.jsonapi.ContractQuery;
+import com.digitalasset.jsonapi.LedgerClient;
 import com.google.common.collect.Iterables;
 import da.timeservice.timeservice.CurrentTime;
 import da.timeservice.timeservice.TimeManager;
+import da.timeservice.timeservice.TimeManager.ContractId;
+import io.reactivex.Flowable;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -25,28 +25,14 @@ public class TimeUpdaterBot {
 
   private static final Logger logger = LoggerFactory.getLogger(TimeUpdaterBot.class);
 
-  private final LedgerClient client;
-  private final CommandsAndPendingSetBuilder commandsAndPendingSetBuilder;
-  private final FiltersByParty timeManagerFilter;
-  private final FiltersByParty currentTimeFilter;
+  private final LedgerClient ledger;
+  private final ContractQuery timeManagerFilter;
+  private final ContractQuery currentTimeFilter;
 
-  public TimeUpdaterBot(
-      LedgerClient client, Factory commandsAndPendingSetBuilderFactory, String party) {
-    this(client, commandsAndPendingSetBuilderFactory, party, UUID.randomUUID().toString());
-  }
-
-  TimeUpdaterBot(
-      LedgerClient client,
-      CommandsAndPendingSetBuilder.Factory commandsAndPendingSetBuilderFactory,
-      String party,
-      String botId) {
-    this.client = client;
-    this.timeManagerFilter = createFilter(party, TimeManager.TEMPLATE_ID);
-    this.currentTimeFilter = createFilter(party, CurrentTime.TEMPLATE_ID);
-    String botName = getClass().getSimpleName();
-    String workflowId = String.format("WORKFLOW-%s-%s-%s", party, botName, botId);
-    this.commandsAndPendingSetBuilder =
-        commandsAndPendingSetBuilderFactory.create(party, workflowId);
+  public TimeUpdaterBot(LedgerClient ledger) {
+    this.ledger = ledger;
+    this.timeManagerFilter = new ContractQuery(Collections.singleton(TimeManager.TEMPLATE_ID));
+    this.currentTimeFilter = new ContractQuery(Collections.singleton(CurrentTime.TEMPLATE_ID));
   }
 
   void updateModelTime() {
@@ -54,7 +40,7 @@ public class TimeUpdaterBot {
       logger.debug("Updating current time...");
       TimeManager.ContractId manager = getTimeManager();
       logger.debug("Old time: {}", getModelCurrentTime());
-      submitCommand(manager.exerciseAdvanceCurrentTime());
+      ledger.exerciseChoice(manager.exerciseAdvanceCurrentTime());
       logger.info("New time: {}", getModelCurrentTime());
       logger.info("Updated current time");
     } catch (Throwable e) {
@@ -63,66 +49,32 @@ public class TimeUpdaterBot {
     }
   }
 
-  private static FiltersByParty createFilter(String party, Identifier templateId) {
-    return new FiltersByParty(
-        Collections.singletonMap(party, new InclusiveFilter(Collections.singleton(templateId))));
-  }
-
   private Instant getModelCurrentTime() {
-    List<CreatedEvent> createdEvents = getCreatedEvents(currentTimeFilter);
-    CreatedEvent createdEvent = Iterables.getOnlyElement(createdEvents);
-    CurrentTime currentTime = CurrentTime.fromValue(createdEvent.getArguments());
-    return currentTime.currentTime;
+    Flowable<ActiveContractSet> activeContractSet = getContracts(currentTimeFilter);
+    List<Contract<CurrentTime>> currentTimes =
+        activeContractSet
+            .blockingFirst()
+            .getActiveContracts(CurrentTime.TEMPLATE_ID, CurrentTime.class)
+            .collect(Collectors.toList());
+    Contract<CurrentTime> currentTime = Iterables.getOnlyElement(currentTimes);
+    return currentTime.getContract().currentTime;
   }
 
   private TimeManager.ContractId getTimeManager() {
-    List<CreatedEvent> createdEvents = getCreatedEvents(timeManagerFilter);
-    CreatedEvent createdEvent = Iterables.getOnlyElement(createdEvents);
-    return new TimeManager.ContractId(createdEvent.getContractId());
+    Flowable<ActiveContractSet> activeContractSet = getContracts(timeManagerFilter);
+    List<Contract<TimeManager>> timeManagers =
+        activeContractSet
+            .blockingFirst()
+            .getActiveContracts(TimeManager.TEMPLATE_ID, TimeManager.class)
+            .collect(Collectors.toList());
+    Contract<TimeManager> timeManager = Iterables.getOnlyElement(timeManagers);
+    return new ContractId(timeManager.getContractId());
   }
 
-  private void submitCommand(Command command) {
-    List<Command> commands = Collections.singletonList(command);
-    SubmitCommandsRequest submitCommandsRequest =
-        commandsAndPendingSetBuilder
-            .newBuilder()
-            .addCommand(command)
-            .build()
-            .get()
-            .getSubmitCommandsRequest();
-    client
-        .getCommandSubmissionClient()
-        .submit(
-            submitCommandsRequest.getWorkflowId(),
-            submitCommandsRequest.getApplicationId(),
-            submitCommandsRequest.getCommandId(),
-            submitCommandsRequest.getParty(),
-            submitCommandsRequest.getLedgerEffectiveTime(),
-            submitCommandsRequest.getMaximumRecordTime(),
-            commands)
-        .blockingGet();
-  }
-
-  private List<CreatedEvent> getCreatedEvents(FiltersByParty filter) {
-    GetActiveContractsResponse activeContractSetResponse =
-        client
-            .getActiveContractSetClient()
-            .getActiveContracts(filter, false)
-            .timeout(5, TimeUnit.SECONDS)
-            .blockingFirst();
-    if (activeContractSetResponse.getCreatedEvents().isEmpty()) {
-      Absolute offset = new Absolute(activeContractSetResponse.getOffset().get());
-      Transaction transaction =
-          client
-              .getTransactionsClient()
-              .getTransactions(offset, filter, false)
-              .filter(x -> !x.getEvents().isEmpty())
-              .blockingFirst();
-      return transaction.getEvents().stream()
-          .filter(x -> x instanceof CreatedEvent)
-          .map(x -> (CreatedEvent) x)
-          .collect(Collectors.toList());
-    }
-    return activeContractSetResponse.getCreatedEvents();
+  // TODO: ERA-746
+  private Flowable<ActiveContractSet> getContracts(ContractQuery query) {
+    return Flowable.interval(100, TimeUnit.MILLISECONDS)
+        .map(x -> ledger.queryContracts(query))
+        .filter(xs -> !xs.isEmpty());
   }
 }

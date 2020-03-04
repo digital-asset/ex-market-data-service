@@ -5,8 +5,7 @@
 package com.digitalasset.refapps.marketdataservice.publishing;
 
 import com.daml.ledger.javaapi.data.Identifier;
-import com.daml.ledger.javaapi.data.Template;
-import com.daml.ledger.rxjava.components.LedgerViewFlowable;
+import com.digitalasset.jsonapi.ActiveContractSet;
 import da.refapps.marketdataservice.marketdatatypes.ObservationReference;
 import da.refapps.marketdataservice.marketdatatypes.ObservationValue;
 import java.time.Instant;
@@ -17,7 +16,5 @@ public interface PublishingDataProvider {
   Set<Identifier> getUsedTemplates();
 
   Optional<ObservationValue> getObservation(
-      LedgerViewFlowable.LedgerView<Template> ledgerView,
-      ObservationReference reference,
-      Instant time);
+      ActiveContractSet activeContractSet, ObservationReference reference, Instant time);
 }

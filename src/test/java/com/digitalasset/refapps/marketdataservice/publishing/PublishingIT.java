@@ -8,8 +8,9 @@ import static com.digitalasset.refapps.marketdataservice.utils.AppParties.ALL_PA
 import static com.digitalasset.refapps.utils.EventuallyUtil.eventually;
 
 import com.daml.ledger.javaapi.data.Party;
+import com.digitalasset.jsonapi.JsonApi;
+import com.digitalasset.refapps.marketdataservice.AppConfig;
 import com.digitalasset.refapps.marketdataservice.Main;
-import com.digitalasset.refapps.marketdataservice.utils.AppParties;
 import com.digitalasset.testing.junit4.Sandbox;
 import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -34,8 +35,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExternalResource;
+import org.junit.rules.RuleChain;
+import org.junit.rules.TestRule;
 
 public class PublishingIT {
   private static final Path RELATIVE_DAR_PATH = Paths.get("target/market-data-service.dar");
@@ -51,6 +58,7 @@ public class PublishingIT {
       new ObservationReference(
           "European Bond Market", new InstrumentId("ISIN 123 1244"), LocalDate.of(2021, 3, 20));
 
+  private static final String APPLICATION_ID = "market-data-service";
   private static final Duration systemPeriodTime = Duration.ofSeconds(5);
 
   private static final Sandbox sandbox =
@@ -58,17 +66,30 @@ public class PublishingIT {
           .dar(RELATIVE_DAR_PATH)
           .parties(OPERATOR_PARTY.getValue())
           .useWallclockTime()
-          .setupAppCallback(Main.runBots(new AppParties(ALL_PARTIES), systemPeriodTime))
           .build();
 
   @ClassRule public static ExternalResource compile = sandbox.getClassRule();
-  @Rule public ExternalResource sandboxRule = sandbox.getRule();
+
+  @Rule
+  public final TestRule processes =
+      RuleChain.outerRule(sandbox.getRule()).around(new JsonApi(sandbox::getSandboxPort));
 
   private Process marketSetupAndTriggers;
   private DefaultLedgerAdapter ledgerAdapter;
 
   @Before
   public void setUp() throws Throwable {
+    AppConfig appConfig =
+        AppConfig.builder()
+            .setLedgerId(sandbox.getClient().getLedgerId())
+            .setApplicationId(APPLICATION_ID)
+            .setJsonApiHost("localhost")
+            .setJsonApiPort(7575)
+            .setAppParties(ALL_PARTIES)
+            .setSystemPeriodTime(systemPeriodTime)
+            .create();
+
+    Main.runBots(appConfig);
     // Valid port is assigned only after the sandbox has been started.
     // Therefore trigger has to be configured at the point where this can be guaranteed.
     File log = new File("integration-marketSetupAndTriggers.log");

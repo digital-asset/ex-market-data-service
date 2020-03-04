@@ -4,16 +4,11 @@
  */
 package com.digitalasset.refapps.marketdataservice.publishing;
 
-import static com.digitalasset.refapps.marketdataservice.assertions.Assert.assertHasSingleExercise;
-import static com.digitalasset.refapps.utils.LedgerTestViewUtil.createEmptyLedgerTestView;
-import static org.junit.Assert.assertTrue;
-
+import com.daml.ledger.javaapi.data.Command;
+import com.daml.ledger.javaapi.data.ExerciseCommand;
 import com.daml.ledger.javaapi.data.Identifier;
-import com.daml.ledger.javaapi.data.Template;
-import com.daml.ledger.rxjava.components.LedgerViewFlowable;
-import com.daml.ledger.rxjava.components.LedgerViewFlowable.LedgerTestView;
-import com.daml.ledger.rxjava.components.helpers.CommandsAndPendingSet;
-import com.digitalasset.refapps.marketdataservice.utils.CommandsAndPendingSetBuilder;
+import com.digitalasset.jsonapi.ActiveContract;
+import com.digitalasset.jsonapi.ActiveContractSet;
 import com.google.common.collect.Sets;
 import da.refapps.marketdataservice.datastream.DataStream;
 import da.refapps.marketdataservice.datastream.EmptyDataStream;
@@ -24,9 +19,9 @@ import da.refapps.marketdataservice.marketdatatypes.ObservationValue;
 import da.refapps.marketdataservice.marketdatatypes.Publisher;
 import da.refapps.marketdataservice.marketdatatypes.observationvalue.CleanPrice;
 import da.timeservice.timeservice.CurrentTime;
+import io.reactivex.Flowable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -44,9 +39,6 @@ public class DataProviderBotTest {
   private static final ObservationValue OBSERVATION_VALUE_1 =
       new CleanPrice(new BigDecimal(BigInteger.TEN));
 
-  private final CommandsAndPendingSetBuilder.Factory cmdsBuilderFactory =
-      CommandsAndPendingSetBuilder.factory("AppId1", Clock::systemUTC, Duration.ofSeconds(2));
-
   private class TestDataProvider implements PublishingDataProvider {
     private final Optional value;
 
@@ -61,22 +53,19 @@ public class DataProviderBotTest {
 
     @Override
     public Optional<ObservationValue> getObservation(
-        LedgerViewFlowable.LedgerView<Template> ledgerView,
-        ObservationReference reference,
-        Instant time) {
+        ActiveContractSet activeContractSet, ObservationReference reference, Instant time) {
       return value;
     }
   }
 
   private final PublishingDataProvider publishingDataProvider =
       new TestDataProvider(Optional.of(OBSERVATION_VALUE_1));
-  private final DataProviderBot bot =
-      new DataProviderBot(cmdsBuilderFactory, PUBLISHER.party, publishingDataProvider);
+  private final DataProviderBot bot = new DataProviderBot(PUBLISHER.party, publishingDataProvider);
 
   private final PublishingDataProvider nonpublishingDataProvider =
       new TestDataProvider(Optional.empty());
   private final DataProviderBot botNonpublishing =
-      new DataProviderBot(cmdsBuilderFactory, PUBLISHER.party, nonpublishingDataProvider);
+      new DataProviderBot(PUBLISHER.party, nonpublishingDataProvider);
 
   @Test
   public void testEmptyStreamIsStarted() {
@@ -87,13 +76,18 @@ public class DataProviderBotTest {
             OPERATOR, Instant.parse("2020-01-03T10:15:30.00Z"), Collections.emptyList());
     final String emptyDataStreamCid = "cid2";
 
-    LedgerTestView<Template> ledgerView =
-        createEmptyLedgerTestView()
-            .addActiveContract(CurrentTime.TEMPLATE_ID, "cid1", currentTime)
-            .addActiveContract(EmptyDataStream.TEMPLATE_ID, emptyDataStreamCid, emptyDataStream);
+    ActiveContractSet activeContractSet =
+        ActiveContractSet.empty()
+            .add(new ActiveContract(CurrentTime.TEMPLATE_ID, "cid1", currentTime))
+            .add(
+                new ActiveContract(
+                    EmptyDataStream.TEMPLATE_ID, emptyDataStreamCid, emptyDataStream));
 
-    CommandsAndPendingSet result = bot.calculateCommands(ledgerView).blockingFirst();
-    assertHasSingleExercise(result, emptyDataStreamCid, "StartDataStream");
+    Observation observation =
+        new Observation(REFERENCE, currentTime.currentTime, OBSERVATION_VALUE_1);
+    ExerciseCommand expectedCommand =
+        new EmptyDataStream.ContractId(emptyDataStreamCid).exerciseStartDataStream(observation);
+    bot.getCommands(activeContractSet).test().assertValue(expectedCommand);
   }
 
   @Test
@@ -105,12 +99,15 @@ public class DataProviderBotTest {
             OPERATOR, Instant.parse("2020-01-03T10:15:30.00Z"), Collections.emptyList());
     final String emptyDataStreamCid = "cid2";
 
-    LedgerTestView<Template> ledgerView =
-        createEmptyLedgerTestView()
-            .addActiveContract(CurrentTime.TEMPLATE_ID, "cid1", currentTime)
-            .addActiveContract(EmptyDataStream.TEMPLATE_ID, emptyDataStreamCid, emptyDataStream);
+    ActiveContractSet activeContractSet =
+        ActiveContractSet.empty()
+            .add(new ActiveContract(CurrentTime.TEMPLATE_ID, "cid1", currentTime))
+            .add(
+                new ActiveContract(
+                    EmptyDataStream.TEMPLATE_ID, emptyDataStreamCid, emptyDataStream));
+    Flowable<Command> commands = botNonpublishing.getCommands(activeContractSet);
 
-    assertTrue(botNonpublishing.calculateCommands(ledgerView).isEmpty().blockingGet());
+    commands.test().assertNoValues();
   }
 
   @Test
@@ -128,13 +125,16 @@ public class DataProviderBotTest {
         new CurrentTime(OPERATOR, now.plus(Duration.ofSeconds(10)), Collections.emptyList());
     final String dataStreamCid = "cid2";
 
-    LedgerTestView<Template> ledgerView =
-        createEmptyLedgerTestView()
-            .addActiveContract(CurrentTime.TEMPLATE_ID, "cid1", currentTime)
-            .addActiveContract(DataStream.TEMPLATE_ID, dataStreamCid, dataStream);
+    ActiveContractSet activeContractSet =
+        ActiveContractSet.empty()
+            .add(new ActiveContract(CurrentTime.TEMPLATE_ID, "cid1", currentTime))
+            .add(new ActiveContract(DataStream.TEMPLATE_ID, dataStreamCid, dataStream));
+    Flowable<Command> commands = bot.getCommands(activeContractSet);
 
-    CommandsAndPendingSet result = bot.calculateCommands(ledgerView).blockingFirst();
-    assertHasSingleExercise(result, dataStreamCid, "UpdateObservation");
+    ExerciseCommand expectedCommand =
+        new DataStream.ContractId(dataStreamCid)
+            .exerciseUpdateObservation(currentTime.currentTime, OBSERVATION_VALUE_1);
+    commands.test().assertValue(expectedCommand);
   }
 
   @Test
@@ -151,12 +151,13 @@ public class DataProviderBotTest {
     CurrentTime currentTime = new CurrentTime(OPERATOR, now, Collections.emptyList());
     final String dataStreamCid = "cid2";
 
-    LedgerTestView<Template> ledgerView =
-        createEmptyLedgerTestView()
-            .addActiveContract(CurrentTime.TEMPLATE_ID, "cid1", currentTime)
-            .addActiveContract(DataStream.TEMPLATE_ID, dataStreamCid, dataStream);
+    ActiveContractSet activeContractSet =
+        ActiveContractSet.empty()
+            .add(new ActiveContract(CurrentTime.TEMPLATE_ID, "cid1", currentTime))
+            .add(new ActiveContract(DataStream.TEMPLATE_ID, dataStreamCid, dataStream));
+    Flowable<Command> commands = bot.getCommands(activeContractSet);
 
-    assertTrue(botNonpublishing.calculateCommands(ledgerView).isEmpty().blockingGet());
+    commands.test().assertNoValues();
   }
 
   @Test
@@ -174,12 +175,14 @@ public class DataProviderBotTest {
         new CurrentTime(OPERATOR, now.plus(Duration.ofSeconds(10)), Collections.emptyList());
     final String dataStreamCid = "cid2";
 
-    LedgerTestView<Template> ledgerView =
-        createEmptyLedgerTestView()
-            .addActiveContract(CurrentTime.TEMPLATE_ID, "cid1", currentTime)
-            .addActiveContract(DataStream.TEMPLATE_ID, dataStreamCid, dataStream);
+    ActiveContractSet activeContractSet =
+        ActiveContractSet.empty()
+            .add(new ActiveContract(CurrentTime.TEMPLATE_ID, "cid1", currentTime))
+            .add(new ActiveContract(DataStream.TEMPLATE_ID, dataStreamCid, dataStream));
+    Flowable<Command> commands = botNonpublishing.getCommands(activeContractSet);
 
-    CommandsAndPendingSet result = botNonpublishing.calculateCommands(ledgerView).blockingFirst();
-    assertHasSingleExercise(result, dataStreamCid, "UpdateLicenses");
+    ExerciseCommand expectedCommand =
+        new DataStream.ContractId(dataStreamCid).exerciseUpdateLicenses();
+    commands.test().assertValue(expectedCommand);
   }
 }

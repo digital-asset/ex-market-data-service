@@ -11,14 +11,18 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.StringArrayOptionHandler;
 
-// Valid use case for a DataClass.
-@SuppressWarnings("PMD.DataClass")
+// CLI parser requires non-fields for options.
+@SuppressWarnings({"PMD.DataClass", "FieldCanBeLocal", "CanBeFinal"})
 public class CliOptions {
-  @Option(name = "-s", usage = "Sandbox host", metaVar = "SANDBOX_HOST")
-  private String sandboxHost = "localhost";
 
-  @Option(name = "-p", usage = "Sandbox port", metaVar = "SANDBOX_PORT")
-  private int sandboxPort = 6865;
+  @Option(name = "-ledgerId", usage = "Ledger ID", metaVar = "LEDGER_ID", required = true)
+  private String ledgerId = null;
+
+  @Option(name = "-jsonHost", usage = "JSON API host", metaVar = "JSON_API_HOST")
+  private String jsonApiHost = "localhost";
+
+  @Option(name = "-jsonPort", usage = "JSON API port", metaVar = "JSON_API_PORT")
+  private int jsonApiPort = 7575;
 
   @Option(
       name = "-u",
@@ -27,19 +31,23 @@ public class CliOptions {
       metaVar = "PARTIES")
   private String[] parties = ALL_PARTIES;
 
-  public String getSandboxHost() {
-    return sandboxHost;
-  }
-
-  public int getSandboxPort() {
-    return sandboxPort;
-  }
-
   public String[] getParties() {
     return parties;
   }
 
-  public static CliOptions parseArgs(String[] args) {
+  public String getLedgerId() {
+    return ledgerId;
+  }
+
+  public String getJsonApiHost() {
+    return jsonApiHost;
+  }
+
+  public int getJsonApiPort() {
+    return jsonApiPort;
+  }
+
+  public static CliOptions parseArgs(String[] args) throws CmdLineException {
     CliOptions options = new CliOptions();
     CmdLineParser parser = new CmdLineParser(options);
     try {
@@ -47,7 +55,7 @@ public class CliOptions {
     } catch (CmdLineException e) {
       System.err.println("Invalid command line options");
       parser.printUsage(System.err);
-      System.exit(1);
+      throw e;
     }
     return options;
   }

@@ -9,6 +9,7 @@ executors:
   mvn-executor:
     docker:
       - image: circleci/openjdk:11.0-jdk
+    resource_class: large
   daml-executor:
     docker:
       - image: circleci/openjdk:11.0-jdk
@@ -101,6 +102,10 @@ jobs:
           path: target/surefire-reports
       - store_artifacts:
           path: target/surefire-reports
+      - store_test_results:
+          path: target/failsafe-reports
+      - store_artifacts:
+          path: target/failsafe-reports
       - run:
           command: |
             mkdir logs

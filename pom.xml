@@ -33,6 +33,18 @@
             <groupId>com.daml.ledger</groupId>
             <artifactId>bindings-rxjava</artifactId>
             <version>${daml-sdk.version}</version>
+            <!-- Cannot remove as test library needs as provided dependency. Reduced scoped. -->
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.daml.ledger</groupId>
+            <artifactId>bindings-java</artifactId>
+            <version>${daml-sdk.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.reactivex.rxjava2</groupId>
+            <artifactId>rxjava</artifactId>
+            <version>2.2.17</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -58,6 +70,33 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>3.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>fluent-hc</artifactId>
+            <version>4.3.6</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.tyrus.bundles</groupId>
+            <artifactId>tyrus-standalone-client-jdk</artifactId>
+            <version>1.12</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>0.10.7</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>0.10.7</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>0.10.7</version>
+            <scope>runtime</scope>
         </dependency>
     </dependencies>
 
@@ -155,6 +194,9 @@
                         <exclude>**/README</exclude>
                         <exclude>src/license/*</exclude>
                         <exclude>**/*.txt</exclude>
+                        <exclude>**/*.hi</exclude>
+                        <exclude>**/*.hie</exclude>
+                        <exclude>**/*.log</exclude>
                         <exclude>**/.daml/package-database/**/*.*</exclude>
                     </excludes>
                     <mapping>
