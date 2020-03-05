@@ -62,6 +62,8 @@ publicationRule transformObservation party activeContracts _ _ () = do
     let newObservation = transformObservation p.observation
     debug ("Enriched observation:" <> (show newObservation))
 
+    let ownDataStreamsForThisPublication = (filter (\(_, s) -> s.observation.label == p.observation.label) ownDataStreams)
+
     forA_
       (filter (\(_, s) -> s.reference == p.observation.label) ownEmptyDataStreams)
       (\(sCid, emptyDataStream) -> do
@@ -69,7 +71,7 @@ publicationRule transformObservation party activeContracts _ _ () = do
         dedupExercise sCid StartDataStream with newObservation)
 
     let (nonFreshStreams, freshStreams) =
-          partition (\(_, s) -> observationHasChanged s.observation newObservation) ownDataStreams
+          partition (\(_, s) -> observationHasChanged s.observation newObservation) ownDataStreamsForThisPublication
     forA_ nonFreshStreams (\(sCid, dataStream) -> do
       debug ("Updating observation on stream: " <> (show dataStream))
       emitCommands [exerciseCmd sCid UpdateObservation with time = newObservation.time, newValue = newObservation.value] [toAnyContractId sCid]
