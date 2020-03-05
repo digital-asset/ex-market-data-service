@@ -17,6 +17,7 @@ import DA.RefApps.MarketDataService.DataStream
 import DA.RefApps.MarketDataService.Publication
 import DA.RefApps.MarketDataService.Triggers.Enrichment
 import DA.RefApps.MarketDataService.MarketDataTypes
+import DA.RefApps.MarketDataService.Roles
 import Test.DA.RefApps.MarketDataService.MarketSetupTest
 
 coupons : [Date]
@@ -113,13 +114,16 @@ observationHasChangedWhenTimeIsNewerAndValueChanged = scenario do
 -- fixing ERA-712
 publicationRuleEmitsOnlyOneExerciseCommandPerDataStream: Scenario ()
 publicationRuleEmitsOnlyOneExerciseCommandPerDataStream = scenario do
-  marketSetupScenario
   operator <- getParty "Operator"
+  marketDataVendor <- getParty "MarketDataVendor"
   marketDataProvider1 <- getParty "MarketDataProvider1"
   marketDataProvider2 <- getParty "MarketDataProvider2"
-  marketDataVendor <- getParty "MarketDataVendor"
+  analyticsVendor <- getParty "AnalyticsVendor"
 
   let
+    starting = addRelTime appStartTime (hours 1)
+    ending = addRelTime appStartTime (days 10)
+    staleHours = 3
     published = T.time (date 1997 Aug 4) 12 23 45
     usReference =
       ObservationReference with
@@ -142,9 +146,19 @@ publicationRuleEmitsOnlyOneExerciseCommandPerDataStream = scenario do
         time = published
         value = CleanPrice with clean = 3.0
 
+  currentTimeCid <- submit operator do
+    create CurrentTime with
+      operator = operator
+      currentTime = appStartTime
+      observers = [marketDataVendor]
+
+  operatorRole <- submit operator $ create (OperatorRole with operator = operator)
+  mdvAnvRelation <- createRelationship operator operatorRole marketDataVendor analyticsVendor
+  createDataStream marketDataVendor analyticsVendor mdvAnvRelation usReference starting ending staleHours
   dataStreamUs <- submit marketDataVendor do
     (edsUsCid, _) <- fetchByKey @EmptyDataStream (Publisher marketDataVendor, usReference)
     exercise edsUsCid StartDataStream with newObservation = usObservation
+
   publicationUs <- submit marketDataProvider1 do
     create Publication
       with
