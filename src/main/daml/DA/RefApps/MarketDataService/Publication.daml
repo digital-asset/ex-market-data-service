@@ -35,7 +35,3 @@ template Publication
             with
               observation = newObservation
               published = now
-
-      Close: ContractId ClosedPublication
-        do create ClosedPublication with publication = this
-
