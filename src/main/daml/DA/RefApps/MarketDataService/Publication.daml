@@ -39,10 +39,3 @@ template Publication
       Close: ContractId ClosedPublication
         do create ClosedPublication with publication = this
 
-template ClosedPublication
-  with
-    publication: Publication
-  where
-    signatory publication.publisher.party
-    observer publication.consumer.party
-
