@@ -12,4 +12,5 @@ USER daml
 
 EXPOSE 7575
 
-ENTRYPOINT ~/.daml/bin/daml json-api --ledger-host ${SANDBOX_HOST} --ledger-port ${SANDBOX_PORT} --http-port 7575
+# sleep 5 to wait for sandbox, to avoid abort
+ENTRYPOINT sleep 5 && ~/.daml/bin/daml json-api --ledger-host ${SANDBOX_HOST} --ledger-port ${SANDBOX_PORT} --http-port 7575

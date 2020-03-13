@@ -20,6 +20,8 @@ services:
       dockerfile: Dockerfile-json
     depends_on:
       - "ex-market-data-service-sandbox"
+    ports:
+      - "127.0.0.1:7575:7575"
     environment:
       - SANDBOX_HOST=ex-market-data-service-sandbox
       - SANDBOX_PORT=6865
@@ -46,8 +48,8 @@ services:
     volumes:
       - ./data:/home/sdk/data
     environment:
-      - SANDBOX_HOST=ex-market-data-service-sandbox
-      - SANDBOX_PORT=6865
+      - JSON_HOST=ex-market-data-service-json
+      - JSON_PORT=7575
 
   ex-market-data-service-navigator:
     image: digitalasset/ex-market-data-service-navigator:0.0.1
