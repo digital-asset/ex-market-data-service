@@ -46,13 +46,13 @@ There are two options:
 
 1. Start the DAML Sandbox and Navigator. Type:
     ```shell
-    daml start --sandbox-option --address=localhost --sandbox-option -w
+    daml start --sandbox-option --address=localhost --sandbox-option --wall-clock-time --sandbox-option --ledgerid=market-data-service
     ```
     The navigator will automatically open in new browser tab at http://localhost:7500.
 2. Start the automation logic by starting bots and the triggers. Type:
     ```shell
     scripts/startTriggers.sh localhost 6865 target/market-data-service.dar
-    java -jar target/market-data-service-0.0.1-SNAPSHOT.jar
+    java -jar target/market-data-service-0.0.1-SNAPSHOT.jar -ledgerId market-data-service
     ```
 
 ### Stopping the App
