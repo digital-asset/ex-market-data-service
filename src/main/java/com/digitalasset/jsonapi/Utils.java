@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 public class Utils {
 
   private static final Logger log = LoggerFactory.getLogger("JsonAPI Util");
-  private static final Duration TIMEOUT = Duration.ofSeconds(30);
+  private static final Duration TIMEOUT = Duration.ofSeconds(180);
   private static final Eventually EVENTUALLY =
       new EventuallyBuilder().setTimeout(TIMEOUT).setInterval(Duration.ofSeconds(1)).create();
 
@@ -34,9 +34,11 @@ public class Utils {
   private static boolean connectTo(URI uri) {
     log.info("Waiting for JSON API...");
     try {
+      log.info(uri.toString());
       HttpResponse response = Request.Options(uri).execute().returnResponse();
       return serverHasResponded(response);
     } catch (IOException e) {
+      log.info(e.toString());
       return false;
     }
   }
@@ -46,6 +48,7 @@ public class Utils {
   }
 
   private static boolean serverHasResponded(HttpResponse response) {
+    log.info(Integer.toString(response.getStatusLine().getStatusCode()));
     return response.getStatusLine().getStatusCode() < 500;
   }
 }

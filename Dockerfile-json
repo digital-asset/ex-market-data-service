@@ -8,9 +8,11 @@ FROM digitalasset/daml-sdk:${sdk_vsn}
 
 WORKDIR /home/daml
 
+COPY --chown=daml scripts/ /home/daml/scripts/
+
 USER daml
 
 EXPOSE 7575
 
-# sleep 5 to wait for sandbox, to avoid abort
-ENTRYPOINT sleep 5 && ~/.daml/bin/daml json-api --ledger-host ${SANDBOX_HOST} --ledger-port ${SANDBOX_PORT} --http-port 7575
+ENTRYPOINT ~/scripts/waitForSandbox.sh ${SANDBOX_HOST} ${SANDBOX_PORT} && \
+           ~/.daml/bin/daml json-api --ledger-host ${SANDBOX_HOST} --ledger-port ${SANDBOX_PORT} --http-port 7575

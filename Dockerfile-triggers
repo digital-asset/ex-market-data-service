@@ -13,4 +13,5 @@ COPY --chown=daml scripts/ /home/daml/scripts/
 
 USER daml
 
-CMD ~/scripts/startTriggers.sh "${SANDBOX_HOST}" "${SANDBOX_PORT}"
+CMD ~/scripts/waitForSandbox.sh ${SANDBOX_HOST} ${SANDBOX_PORT} && \
+    ~/scripts/startTriggers.sh "${SANDBOX_HOST}" "${SANDBOX_PORT}"
