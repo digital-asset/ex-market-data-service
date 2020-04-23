@@ -23,6 +23,7 @@ public class Utils {
       new EventuallyBuilder().setTimeout(TIMEOUT).setInterval(Duration.ofSeconds(1)).create();
 
   public static void waitForJsonApi(URI uri) throws Exception {
+    log.info("Waiting for JSON API at: {}", uri);
     try {
       EVENTUALLY.execute(() -> connectTo(uri));
     } catch (TimeoutExceeded e) {
@@ -34,11 +35,10 @@ public class Utils {
   private static boolean connectTo(URI uri) {
     log.info("Waiting for JSON API...");
     try {
-      log.info(uri.toString());
       HttpResponse response = Request.Options(uri).execute().returnResponse();
       return serverHasResponded(response);
     } catch (IOException e) {
-      log.info(e.toString());
+      log.info("Could not reach JSON API.", e);
       return false;
     }
   }
