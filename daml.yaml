@@ -6,6 +6,7 @@
 sdk-version: 1.0.1
 name: market-data-service
 source: src/main/daml
+init-script: DA.RefApps.MarketDataService.MarketSetupScript:setupMarketForSandbox
 parties:
   - MarketDataProvider1
   - MarketDataProvider2
