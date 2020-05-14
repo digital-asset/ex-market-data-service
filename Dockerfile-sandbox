@@ -4,14 +4,20 @@
 
 ARG sdk_vsn=1.0.1
 
-FROM digitalasset/daml-sdk:${sdk_vsn}
+FROM digitalasset/daml-sdk:${sdk_vsn} AS source
 
-WORKDIR /home/daml
-
-COPY --chown=daml target/market-data-service.dar /home/daml/
+WORKDIR /home/daml/
 
 USER daml
+COPY --chown=daml daml.yaml ./
+COPY --chown=daml src/main/daml src/main/daml
+COPY --chown=daml ui-backend.conf frontend-config.js /home/daml/
 
 EXPOSE 6865
 
-CMD ~/.daml/bin/daml sandbox -- --wall-clock-time --address 0.0.0.0 --port 6865 market-data-service.dar --ledgerid market-data-service
+ENTRYPOINT daml start \
+  --sandbox-option="--address=0.0.0.0" \
+  --sandbox-option="--static-time" \
+  --sandbox-port=6865 \
+  --start-navigator=false \
+  --json-api-port=none
