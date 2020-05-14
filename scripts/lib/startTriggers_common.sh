@@ -25,14 +25,6 @@ SANDBOX_HOST="${1}"
 SANDBOX_PORT="${2}"
 DAR_FILE="${3:-/home/daml/market-data-service.dar}"
 
-daml script \
-    --wall-clock-time \
-    --dar "${DAR_FILE}" \
-    --script-name DA.RefApps.MarketDataService.MarketSetupScript:setupMarketForSandbox \
-    --ledger-host ${SANDBOX_HOST} \
-    --ledger-port ${SANDBOX_PORT}
-echo "DAML script executed"
-
 daml trigger \
     --wall-clock-time \
     --dar "${DAR_FILE}" \
