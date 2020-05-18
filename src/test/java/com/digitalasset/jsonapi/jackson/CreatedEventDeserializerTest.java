@@ -11,8 +11,15 @@ import com.digitalasset.jsonapi.events.CreatedEvent;
 import com.digitalasset.jsonapi.gson.GsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import da.refapps.marketdataservice.datastream.EmptyDataStream;
+import da.refapps.marketdataservice.marketdatatypes.Consumer;
+import da.refapps.marketdataservice.marketdatatypes.InstrumentId;
+import da.refapps.marketdataservice.marketdatatypes.ObservationReference;
+import da.refapps.marketdataservice.marketdatatypes.Publisher;
 import da.refapps.marketdataservice.roles.OperatorRole;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.util.Collections;
 import org.junit.Test;
 
 public class CreatedEventDeserializerTest extends DeserializerBaseTest<CreatedEvent> {
@@ -35,6 +42,42 @@ public class CreatedEventDeserializerTest extends DeserializerBaseTest<CreatedEv
     ObjectMapper deserializer = getClassDeserializer();
 
     CreatedEvent actual = deserializer.readValue(json, getDeserializeClass());
+    assertEquals(expected, actual);
+
+    json =
+        "{\n"
+            + "    \"payload\": {\n"
+            + "        \"operator\": \"Operator\",\n"
+            + "        \"reference\": {\n"
+            + "            \"market\": \"US Bond Market\",\n"
+            + "            \"instrumentId\": {\n"
+            + "                \"unpack\": \"ISIN 288 2839\"\n"
+            + "            },\n"
+            + "            \"maturityDate\": \"2021-02-11\"\n"
+            + "        },\n"
+            + "        \"consumers\": [\n"
+            + "            {\n"
+            + "                \"party\": \"MarketDataVendor\"\n"
+            + "            }\n"
+            + "        ],\n"
+            + "        \"publisher\": {\n"
+            + "            \"party\": \"MarketDataProvider1\"\n"
+            + "        }\n"
+            + "    },\n"
+            + "    \"contractId\": \"#15:9\",\n"
+            + "    \"templateId\": \"8cfce063acdf0e2f23dec16bd40eb3eeed3807eee2de3b2859db44c5042a2263:DA.RefApps.MarketDataService.DataStream:EmptyDataStream\"\n"
+            + "}";
+    expected =
+        new CreatedEvent(
+            EmptyDataStream.TEMPLATE_ID,
+            "#15:9",
+            new EmptyDataStream(
+                "Operator",
+                new ObservationReference(
+                    "US Bond Market", new InstrumentId("ISIN 288 2839"), LocalDate.of(2021, 2, 11)),
+                Collections.singletonList(new Consumer("MarketDataVendor")),
+                new Publisher("MarketDataProvider1")));
+    actual = deserializer.readValue(json, getDeserializeClass());
     assertEquals(expected, actual);
   }
 
