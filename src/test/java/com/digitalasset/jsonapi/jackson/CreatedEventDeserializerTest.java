@@ -9,8 +9,10 @@ import static org.junit.Assert.assertEquals;
 import com.daml.ledger.javaapi.data.Identifier;
 import com.digitalasset.jsonapi.events.CreatedEvent;
 import com.digitalasset.jsonapi.gson.GsonSerializer;
+import com.fasterxml.jackson.annotation.JsonCreator.Mode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import da.refapps.marketdataservice.datastream.EmptyDataStream;
 import da.refapps.marketdataservice.marketdatatypes.Consumer;
 import da.refapps.marketdataservice.marketdatatypes.InstrumentId;
@@ -93,6 +95,7 @@ public class CreatedEventDeserializerTest extends DeserializerBaseTest<CreatedEv
             .addDeserializer(CreatedEvent.class, new CreatedEventDeserializer(CreatedEvent.class))
             .addDeserializer(Identifier.class, new IdentifierDeserializer(Identifier.class))
             .addDeserializer(OperatorRole.class, new OperatorRoleDeserializer(OperatorRole.class));
-    return new ObjectMapper().registerModule(deserializers);
+    ParameterNamesModule parameterNamesModule = new ParameterNamesModule(Mode.PROPERTIES);
+    return new ObjectMapper().registerModules(deserializers, parameterNamesModule);
   }
 }
