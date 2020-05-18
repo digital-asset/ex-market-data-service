@@ -4,6 +4,8 @@
  */
 package com.digitalasset.jsonapi.jackson;
 
+import static com.digitalasset.jsonapi.jackson.Util.readNodeAs;
+
 import com.daml.ledger.javaapi.data.Identifier;
 import com.daml.ledger.javaapi.data.Template;
 import com.digitalasset.jsonapi.ClassName;
@@ -13,7 +15,6 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import java.io.IOException;
-import java.lang.reflect.Type;
 
 class CreatedEventDeserializer extends StdDeserializer<CreatedEvent> {
 
@@ -34,10 +35,5 @@ class CreatedEventDeserializer extends StdDeserializer<CreatedEvent> {
     } catch (ClassNotFoundException e) {
       throw new IllegalStateException(e.getMessage(), e);
     }
-  }
-
-  @SuppressWarnings("unchecked")
-  private <T> T readNodeAs(JsonParser jsonParser, JsonNode node, Class<?> type) throws IOException {
-    return (T) node.traverse(jsonParser.getCodec()).readValueAs(type);
   }
 }

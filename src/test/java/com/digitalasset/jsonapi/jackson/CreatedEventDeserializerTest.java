@@ -48,7 +48,8 @@ public class CreatedEventDeserializerTest extends DeserializerBaseTest<CreatedEv
     SimpleModule deserializers =
         new SimpleModule()
             .addDeserializer(CreatedEvent.class, new CreatedEventDeserializer(CreatedEvent.class))
-            .addDeserializer(Identifier.class, new IdentifierDeserializer(Identifier.class));
+            .addDeserializer(Identifier.class, new IdentifierDeserializer(Identifier.class))
+            .addDeserializer(OperatorRole.class, new OperatorRoleDeserializer(OperatorRole.class));
     return new ObjectMapper().registerModule(deserializers);
   }
 }
