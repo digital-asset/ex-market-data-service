@@ -17,7 +17,8 @@ class IdentifierDeserializer extends StdDeserializer<Identifier> {
   }
 
   @Override
-  public Identifier deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
+  public Identifier deserialize(
+      JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
     String[] parts = jsonParser.getValueAsString().split(":");
     return new Identifier(parts[0], parts[1], parts[2]);
   }

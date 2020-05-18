@@ -33,8 +33,8 @@ public class DateDeserializerTest extends DeserializerBaseTest<Date> {
 
   @Override
   protected ObjectMapper getClassDeserializer() {
-    SimpleModule deserializers = new SimpleModule().addDeserializer(Date.class, new DateDeserializer(Date.class));
+    SimpleModule deserializers =
+        new SimpleModule().addDeserializer(Date.class, new DateDeserializer(Date.class));
     return new ObjectMapper().registerModule(deserializers);
   }
-
 }

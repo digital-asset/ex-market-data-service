@@ -13,5 +13,4 @@ public class JacksonDeserializer {
   public JsonDeserializer<HttpResponse> getHttpResponseDeserializer() {
     throw new UnsupportedOperationException("Not implemented.");
   }
-
 }

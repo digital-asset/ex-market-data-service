@@ -5,7 +5,6 @@
 package com.digitalasset.jsonapi.jackson;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.JsonDeserializer;
 
 public abstract class DeserializerBaseTest<T> {
 

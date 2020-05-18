@@ -18,7 +18,8 @@ class DateDeserializer extends StdDeserializer<Date> {
   }
 
   @Override
-  public Date deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
+  public Date deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
+      throws IOException {
     LocalDate date = LocalDate.parse(jsonParser.getValueAsString());
     return new Date((int) date.toEpochDay());
   }
