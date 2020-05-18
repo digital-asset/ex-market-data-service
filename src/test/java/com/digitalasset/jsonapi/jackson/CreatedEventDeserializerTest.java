@@ -12,6 +12,7 @@ import com.digitalasset.jsonapi.gson.GsonSerializer;
 import com.fasterxml.jackson.annotation.JsonCreator.Mode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import da.refapps.marketdataservice.datastream.EmptyDataStream;
 import da.refapps.marketdataservice.marketdatatypes.Consumer;
@@ -67,7 +68,7 @@ public class CreatedEventDeserializerTest extends DeserializerBaseTest<CreatedEv
             + "        }\n"
             + "    },\n"
             + "    \"contractId\": \"#15:9\",\n"
-            + "    \"templateId\": \"8cfce063acdf0e2f23dec16bd40eb3eeed3807eee2de3b2859db44c5042a2263:DA.RefApps.MarketDataService.DataStream:EmptyDataStream\"\n"
+            + "    \"templateId\": \"31797e58e2941179b7be4f1ab5661948f684273217a67036a9b6bd2ca92a2012:DA.RefApps.MarketDataService.DataStream:EmptyDataStream\"\n"
             + "}";
     expected =
         new CreatedEvent(
@@ -94,8 +95,13 @@ public class CreatedEventDeserializerTest extends DeserializerBaseTest<CreatedEv
         new SimpleModule()
             .addDeserializer(CreatedEvent.class, new CreatedEventDeserializer(CreatedEvent.class))
             .addDeserializer(Identifier.class, new IdentifierDeserializer(Identifier.class))
+            .addDeserializer(InstrumentId.class, new InstrumentIdDeserializer(InstrumentId.class))
+            .addDeserializer(Consumer.class, new ConsumerDeserializer(Consumer.class))
+            .addDeserializer(Publisher.class, new PublisherDeserializer(Publisher.class))
             .addDeserializer(OperatorRole.class, new OperatorRoleDeserializer(OperatorRole.class));
-    ParameterNamesModule parameterNamesModule = new ParameterNamesModule(Mode.PROPERTIES);
-    return new ObjectMapper().registerModules(deserializers, parameterNamesModule);
+
+    return new ObjectMapper()
+        .registerModules(
+            deserializers, new ParameterNamesModule(Mode.PROPERTIES), new JavaTimeModule());
   }
 }
