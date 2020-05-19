@@ -8,6 +8,7 @@ package com.digitalasset.jsonapi.jackson.mixins;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 public abstract class PartyWrapper {
+  @SuppressWarnings("unused")
   @JsonCreator()
   public PartyWrapper(String party) {}
 }
