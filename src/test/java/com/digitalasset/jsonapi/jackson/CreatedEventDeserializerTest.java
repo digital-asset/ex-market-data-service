@@ -9,6 +9,7 @@ import static org.junit.Assert.assertEquals;
 import com.daml.ledger.javaapi.data.Identifier;
 import com.digitalasset.jsonapi.events.CreatedEvent;
 import com.digitalasset.jsonapi.gson.GsonSerializer;
+import com.digitalasset.jsonapi.jackson.mixins.PartyWrapper;
 import com.fasterxml.jackson.annotation.JsonCreator.Mode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -96,11 +97,11 @@ public class CreatedEventDeserializerTest extends DeserializerBaseTest<CreatedEv
             .addDeserializer(CreatedEvent.class, new CreatedEventDeserializer(CreatedEvent.class))
             .addDeserializer(Identifier.class, new IdentifierDeserializer(Identifier.class))
             .addDeserializer(InstrumentId.class, new InstrumentIdDeserializer(InstrumentId.class))
-            .addDeserializer(Consumer.class, new ConsumerDeserializer(Consumer.class))
-            .addDeserializer(Publisher.class, new PublisherDeserializer(Publisher.class))
             .addDeserializer(OperatorRole.class, new OperatorRoleDeserializer(OperatorRole.class));
 
     return new ObjectMapper()
+        .addMixIn(Consumer.class, PartyWrapper.class)
+        .addMixIn(Publisher.class, PartyWrapper.class)
         .registerModules(
             deserializers, new ParameterNamesModule(Mode.PROPERTIES), new JavaTimeModule());
   }
