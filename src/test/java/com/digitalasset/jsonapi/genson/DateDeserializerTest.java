@@ -7,11 +7,8 @@ package com.digitalasset.jsonapi.genson;
 import static org.junit.Assert.assertEquals;
 
 import com.daml.ledger.javaapi.data.Date;
-import com.owlike.genson.Context;
-import com.owlike.genson.Deserializer;
 import com.owlike.genson.Genson;
 import com.owlike.genson.GensonBuilder;
-import com.owlike.genson.stream.ObjectReader;
 import java.time.LocalDate;
 import org.junit.Test;
 
@@ -35,13 +32,5 @@ public class DateDeserializerTest extends DeserializerBaseTest<Date> {
 
   protected Genson getClassDeserializer() {
     return new GensonBuilder().withDeserializer(new DateDeserializer(), Date.class).create();
-  }
-
-  public static class DateDeserializer implements Deserializer<Date> {
-    @Override
-    public Date deserialize(ObjectReader objectReader, Context context) {
-      LocalDate date = LocalDate.parse(objectReader.valueAsString());
-      return new Date((int) date.toEpochDay());
-    }
   }
 }

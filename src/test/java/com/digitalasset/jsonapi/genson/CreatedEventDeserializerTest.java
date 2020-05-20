@@ -8,6 +8,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.daml.ledger.javaapi.data.Date;
 import com.daml.ledger.javaapi.data.Identifier;
 import com.digitalasset.jsonapi.events.CreatedEvent;
 import com.owlike.genson.Genson;
@@ -117,6 +118,8 @@ public class CreatedEventDeserializerTest extends DeserializerBaseTest<CreatedEv
     return new GensonBuilder()
         .useConstructorWithArguments(true)
         .withDeserializer(new IdentifierDeserializer(), Identifier.class)
+        .withDeserializer(new DateDeserializer(), Date.class)
+        .withDeserializer(new CreatedEventDeserializer(), CreatedEvent.class)
         .create();
   }
 }

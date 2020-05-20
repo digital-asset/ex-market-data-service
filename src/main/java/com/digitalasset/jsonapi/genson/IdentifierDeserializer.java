@@ -13,7 +13,8 @@ class IdentifierDeserializer implements Deserializer<Identifier> {
 
   @Override
   public Identifier deserialize(ObjectReader objectReader, Context context) {
-    String[] parts = objectReader.valueAsString().split(":");
+    String value = objectReader.valueAsString();
+    String[] parts = value.split(":");
     return new Identifier(parts[0], parts[1], parts[2]);
   }
 }
