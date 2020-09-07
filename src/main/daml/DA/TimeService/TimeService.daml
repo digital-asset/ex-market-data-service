@@ -7,11 +7,16 @@ daml 1.2
 module DA.TimeService.TimeService where
 
 import DA.Time
+import Daml.Script
 
 fetchTime: Party -> Update Time
 fetchTime operator = do
   (_, time) <- fetchByKey @CurrentTime operator
   pure time.currentTime
+
+fetchTimeScript: Party -> Party -> Script Time
+fetchTimeScript submitter operator = do
+  submit submitter $ exerciseByKeyCmd @CurrentTime operator (GetCurrentTime submitter)
 
 template CurrentTime
   with
@@ -26,11 +31,22 @@ template CurrentTime
     key operator: Party
     maintainer key
 
+    nonconsuming choice GetCurrentTime : Time
+      with
+        p : Party
+      controller p
+      do return currentTime
+
     controller operator can
+
       UpdateCurrentTime: ContractId CurrentTime
         with newCurrentTime: Time
         do
           create this with currentTime = newCurrentTime
+
+      nonconsuming AdvanceByCurrentTime: ContractId CurrentTime
+        with delta: RelTime
+        do exercise self (UpdateCurrentTime (addRelTime currentTime delta))
 
       CurrentTime_AddObserver: ContractId CurrentTime
         with newObserver: Party

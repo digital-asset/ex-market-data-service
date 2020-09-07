@@ -6,26 +6,34 @@
 daml 1.2
 module Test.DA.RefApps.MarketDataService.Utils where
 
+import Daml.Script
+
 import DA.RefApps.MarketDataService.MarketDataTypes
 import DA.RefApps.MarketDataService.Roles
 
 createRelationship : Party -> ContractId OperatorRole -> Party -> Party
-                  -> Scenario (ContractId PublisherConsumerRelationship, ContractId PublisherRole)
+                  -> Script (ContractId PublisherConsumerRelationship, ContractId PublisherRole)
 createRelationship operator operatorRole publisher consumer = do
   let p = Publisher with party = publisher
       c = Consumer with party = consumer
-  (relationRequest, roleRequest) <- operator `submit` exercise operatorRole InvitePublisherConsumer with publisher = p, consumer = c
-  publisherAccept <- publisher `submit` exercise relationRequest PublisherInvitation_Accept
-  publisherRole <- publisher `submit` exercise roleRequest PublisherRoleInvitation_Accept
-  relationship <- consumer `submit` exercise publisherAccept ConsumerInvitation_Accept
+  (relationRequest, roleRequest) <- operator `submit` exerciseCmd operatorRole InvitePublisherConsumer with publisher = p, consumer = c
+  publisherAccept <- publisher `submit` exerciseCmd relationRequest PublisherInvitation_Accept
+  publisherRole <- publisher `submit` exerciseCmd roleRequest PublisherRoleInvitation_Accept
+  relationship <- consumer `submit` exerciseCmd publisherAccept ConsumerInvitation_Accept
   return (relationship, publisherRole)
 
 createDataStream : Party -> Party -> (ContractId PublisherConsumerRelationship, ContractId PublisherRole) ->
                    ObservationReference -> Time -> Time -> Int -> SubscriptionFee ->
-                   Scenario SomeDataStream
+                   Script SomeDataStream
 createDataStream publisher consumer (relationship, pubRole) reference starting ending staleHours price = do
-  request <- consumer `submit` exercise relationship RequestStream
+  request <- consumer `submit` exerciseCmd relationship RequestStream
     with reference, starting, ending, staleHours
-  proposal <- publisher `submit` exercise request DataStreamRequest_Propose with price
-  license <- consumer `submit` exercise proposal DataLicenseProposal_Accept
-  publisher `submit` exercise pubRole RegisterLicense with licenseId = license
+  proposal <- publisher `submit` exerciseCmd request DataStreamRequest_Propose with price
+  license <- consumer `submit` exerciseCmd proposal DataLicenseProposal_Accept
+  publisher `submit` exerciseCmd pubRole RegisterLicense with licenseId = license
+
+-- Might move into daml-stdlib
+queryContractKey : forall t k. (TemplateKey t k, Eq k) => Party -> k -> Script (Optional (ContractId t, t))
+queryContractKey p k =
+  find (\(_, t) -> key t == k) <$>
+  query @t p

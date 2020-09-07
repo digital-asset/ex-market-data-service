@@ -10,6 +10,8 @@ import DA.Foldable
 import DA.TimeService.TimeService
 import DA.Action
 
+import Daml.Script
+
 import DA.RefApps.MarketDataService.MarketDataTypes
 import DA.RefApps.MarketDataService.Publication
 import DA.RefApps.MarketDataService.DataLicense
@@ -164,4 +166,10 @@ getLiveOrExpired operator publisher observationLabel consumer = do
 checkIsExpired : Party -> LicenseData -> Update Bool
 checkIsExpired operator licenseData = do
   currentTime <- fetchTime operator
+  pure $ isLicenseExpired licenseData currentTime
+
+checkIsExpiredScript : Party -> Party -> LicenseData -> Script Bool
+checkIsExpiredScript submitter operator licenseData = do
+  currentTime <- submit submitter do
+    exerciseByKeyCmd @CurrentTime operator (GetCurrentTime submitter)
   pure $ isLicenseExpired licenseData currentTime
