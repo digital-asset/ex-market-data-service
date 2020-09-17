@@ -10,6 +10,8 @@ import DA.Date
 import DA.Time as T
 import DA.TimeService.TimeService
 
+import Daml.Script
+
 import DA.RefApps.MarketDataService.DataStream
 import DA.RefApps.MarketDataService.MarketDataTypes
 import DA.RefApps.MarketDataService.Roles
@@ -18,28 +20,28 @@ import Test.DA.RefApps.MarketDataService.Utils
 
 
 roleSetup :
-  Scenario (
+  Script (
     ObservationReference, Observation, Party, Party,
     (ContractId PublisherConsumerRelationship, ContractId PublisherRole),
     Time, Time, ContractId CurrentTime, Party, ContractId EmptyDataStream, Int)
-roleSetup = scenario do
-  operator                <- getParty "Operator"
-  marketDataVendorParty   <- getParty "MarketDataVendor"
-  endUserParty           <- getParty "EndUser"
+roleSetup = script do
+  operator                <- allocateParty "Operator"
+  marketDataVendorParty   <- allocateParty "MarketDataVendor"
+  endUserParty           <- allocateParty "EndUser"
 
   let today = date 2019 Nov 12
       now = T.time today 14 57 0
   currentTimeCid <- operator `submit`
-    create CurrentTime with
+    createCmd CurrentTime with
       operator
       currentTime = now
       observers = [marketDataVendorParty, endUserParty]
 
-  operatorRole <- operator `submit` create OperatorRole with operator
+  operatorRole <- operator `submit` createCmd OperatorRole with operator
 
   mdvCon1Relation <- createRelationship operator operatorRole marketDataVendorParty endUserParty
 
-  now <- submit operator $ fetchTime operator
+  now <- fetchTimeScript operator operator
   let
     isin = InstrumentId "ISIN 123 XYZ"
     reference = ObservationReference
