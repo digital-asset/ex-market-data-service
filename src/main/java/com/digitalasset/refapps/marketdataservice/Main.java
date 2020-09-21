@@ -68,7 +68,7 @@ public class Main {
           new DataProviderBot(parties.getMarketDataProvider1(), dataProvider);
       wire(
           appConfig,
-          dataProviderBot.getPartyName(),
+          dataProviderBot.allocatePartyName(),
           dataProviderBot.getContractQuery(),
           dataProviderBot::getCommands);
     }
@@ -80,7 +80,7 @@ public class Main {
           new DataProviderBot(parties.getMarketDataProvider2(), dataProvider);
       wire(
           appConfig,
-          dataProviderBot.getPartyName(),
+          dataProviderBot.allocatePartyName(),
           dataProviderBot.getContractQuery(),
           dataProviderBot::getCommands);
     }

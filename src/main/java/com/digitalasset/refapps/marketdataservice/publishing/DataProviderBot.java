@@ -56,7 +56,7 @@ public class DataProviderBot {
     return new ContractQuery(templateSet);
   }
 
-  public String getPartyName() {
+  public String allocatePartyName() {
     return partyName;
   }
 

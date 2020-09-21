@@ -10,6 +10,7 @@ import DA.Assert
 import DA.Date
 import DA.Next.Map
 import DA.Time as T
+import Daml.Script
 import Daml.Trigger.Assert
 
 import DA.TimeService.TimeService
@@ -19,26 +20,27 @@ import DA.RefApps.MarketDataService.Triggers.Enrichment
 import DA.RefApps.MarketDataService.MarketDataTypes
 import DA.RefApps.MarketDataService.Roles
 import Test.DA.RefApps.MarketDataService.MarketSetupTest
+import Test.DA.RefApps.MarketDataService.Utils (queryContractKey)
 
 coupons : [Date]
 coupons = [date 2019 Feb 20, date 2020 Feb 20]
 
-testNextCouponDateAfter : Scenario ()
-testNextCouponDateAfter = scenario do
+testNextCouponDateAfter : Script ()
+testNextCouponDateAfter = script do
   Some (date 2019 Feb 20) === nextCouponDateAfter (date 2019 Jan 20) coupons
   Some (date 2020 Feb 20) === nextCouponDateAfter (date 2020 Jan 20) coupons
   None === nextCouponDateAfter (date 2021 Jan 20) coupons
 
-testAccruedInterestBetween : Scenario ()
-testAccruedInterestBetween = scenario do
+testAccruedInterestBetween : Script ()
+testAccruedInterestBetween = script do
   0.0 === accruedInterestBetween (date 2020 Feb 20) (date 2020 Feb 20) 1.0
   1.0/365.0 === accruedInterestBetween (date 2020 Feb 19) (date 2020 Feb 20) 1.0
   31.0/365.0 === accruedInterestBetween (date 2020 Jan 20) (date 2020 Feb 20) 1.0
   364.0/365.0 === accruedInterestBetween (date 2019 Feb 21) (date 2020 Feb 20) 1.0
   1.0 === accruedInterestBetween (date 2019 Feb 20) (date 2020 Feb 20) 1.0
 
-testAccruedInterest : Scenario ()
-testAccruedInterest = scenario do
+testAccruedInterest : Script ()
+testAccruedInterest = script do
   let
     bond = BondInfo
       with
@@ -55,16 +57,16 @@ testReference = ObservationReference with
   instrumentId = InstrumentId "Test Reference"
   maturityDate = date 1997 Aug 29
 
-observationHasNotChangedWhenValuesAreEqual : Scenario ()
-observationHasNotChangedWhenValuesAreEqual = scenario do
+observationHasNotChangedWhenValuesAreEqual : Script ()
+observationHasNotChangedWhenValuesAreEqual = script do
   let o = Observation with
         label = testReference
         time = T.time (date 1997 Aug 4) 12 23 45
         value = CleanPrice with clean = 1.0
   False === observationHasChanged o o
 
-observationHasNotChangedWhenTimeRemains : Scenario ()
-observationHasNotChangedWhenTimeRemains = scenario do
+observationHasNotChangedWhenTimeRemains : Script ()
+observationHasNotChangedWhenTimeRemains = script do
   let o1 = Observation with
         label = testReference
         time = T.time (date 1997 Aug 4) 12 23 45
@@ -75,8 +77,8 @@ observationHasNotChangedWhenTimeRemains = scenario do
         value = CleanPrice with clean = 2.0
   False === observationHasChanged o1 o2
 
-observationHasNotChangedWhenTimeIsOlderAndValueChanged : Scenario ()
-observationHasNotChangedWhenTimeIsOlderAndValueChanged = scenario do
+observationHasNotChangedWhenTimeIsOlderAndValueChanged : Script ()
+observationHasNotChangedWhenTimeIsOlderAndValueChanged = script do
   let o1 = Observation with
         label = testReference
         time = T.time (date 1997 Aug 4) 12 23 45
@@ -87,8 +89,8 @@ observationHasNotChangedWhenTimeIsOlderAndValueChanged = scenario do
         value = CleanPrice with clean = 2.0
   False === observationHasChanged o1 o2
 
-observationHasChangedWhenTimeIsNewerAndValueRemains : Scenario ()
-observationHasChangedWhenTimeIsNewerAndValueRemains = scenario do
+observationHasChangedWhenTimeIsNewerAndValueRemains : Script ()
+observationHasChangedWhenTimeIsNewerAndValueRemains = script do
   let o1 = Observation with
         label = testReference
         time = T.time (date 1997 Aug 4) 12 23 45
@@ -99,8 +101,8 @@ observationHasChangedWhenTimeIsNewerAndValueRemains = scenario do
         value = CleanPrice with clean = 1.0
   True === observationHasChanged o1 o2
 
-observationHasChangedWhenTimeIsNewerAndValueChanged : Scenario ()
-observationHasChangedWhenTimeIsNewerAndValueChanged = scenario do
+observationHasChangedWhenTimeIsNewerAndValueChanged : Script ()
+observationHasChangedWhenTimeIsNewerAndValueChanged = script do
   let o1 = Observation with
         label = testReference
         time = T.time (date 1997 Aug 4) 12 23 45
@@ -112,13 +114,13 @@ observationHasChangedWhenTimeIsNewerAndValueChanged = scenario do
   True === observationHasChanged o1 o2
 
 -- fixing ERA-712
-publicationRuleEmitsOnlyOneExerciseCommandPerDataStream: Scenario ()
-publicationRuleEmitsOnlyOneExerciseCommandPerDataStream = scenario do
-  operator <- getParty "Operator"
-  marketDataVendor <- getParty "MarketDataVendor"
-  marketDataProvider1 <- getParty "MarketDataProvider1"
-  marketDataProvider2 <- getParty "MarketDataProvider2"
-  analyticsVendor <- getParty "AnalyticsVendor"
+publicationRuleEmitsOnlyOneExerciseCommandPerDataStream: Script ()
+publicationRuleEmitsOnlyOneExerciseCommandPerDataStream = script do
+  operator <- allocateParty "Operator"
+  marketDataVendor <- allocateParty "MarketDataVendor"
+  marketDataProvider1 <- allocateParty "MarketDataProvider1"
+  marketDataProvider2 <- allocateParty "MarketDataProvider2"
+  analyticsVendor <- allocateParty "AnalyticsVendor"
 
   let
     starting = addRelTime appStartTime (hours 1)
@@ -147,20 +149,20 @@ publicationRuleEmitsOnlyOneExerciseCommandPerDataStream = scenario do
         value = CleanPrice with clean = 3.0
 
   currentTimeCid <- submit operator do
-    create CurrentTime with
+    createCmd CurrentTime with
       operator = operator
       currentTime = appStartTime
       observers = [marketDataVendor]
 
-  operatorRole <- submit operator $ create (OperatorRole with operator = operator)
+  operatorRole <- submit operator $ createCmd (OperatorRole with operator = operator)
   mdvAnvRelation <- createRelationship operator operatorRole marketDataVendor analyticsVendor
   createDataStream marketDataVendor analyticsVendor mdvAnvRelation usReference starting ending staleHours
+  Some (edsUsCid, _) <- queryContractKey @EmptyDataStream marketDataVendor (Publisher marketDataVendor, usReference)
   dataStreamUs <- submit marketDataVendor do
-    (edsUsCid, _) <- fetchByKey @EmptyDataStream (Publisher marketDataVendor, usReference)
-    exercise edsUsCid StartDataStream with newObservation = usObservation
+    exerciseCmd edsUsCid StartDataStream with newObservation = usObservation
 
   publicationUs <- submit marketDataProvider1 do
-    create Publication
+    createCmd Publication
       with
         observation = usObservation
         publisher = Publisher marketDataProvider1
@@ -169,7 +171,7 @@ publicationRuleEmitsOnlyOneExerciseCommandPerDataStream = scenario do
         operator
 
   publicationEu <- submit marketDataProvider2 do
-    create Publication
+    createCmd Publication
       with
         observation = euObservation
         publisher = Publisher marketDataProvider2
@@ -177,12 +179,9 @@ publicationRuleEmitsOnlyOneExerciseCommandPerDataStream = scenario do
         published
         operator
 
-  currentTime <- submit operator do
-    (currentTimeCid, currentTime) <- fetchByKey @CurrentTime operator
-    exercise currentTimeCid UpdateCurrentTime
-      with
-        newCurrentTime = addRelTime currentTime.currentTime $ hours 1
 
+  currentTime <- submit operator do
+    exerciseCmd currentTimeCid (AdvanceByCurrentTime $ hours 1)
   let
     activeContracts = toACS currentTime <> toACS dataStreamUs <> toACS publicationEu <> toACS publicationUs
     commandsInFlight = DA.Next.Map.empty

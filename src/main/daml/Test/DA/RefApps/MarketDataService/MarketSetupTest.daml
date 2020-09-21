@@ -9,18 +9,20 @@ module Test.DA.RefApps.MarketDataService.MarketSetupTest where
 import DA.Time as T
 import DA.TimeService.TimeService
 
+import Daml.Script
+
 import DA.RefApps.MarketDataService.MarketDataTypes
 import DA.RefApps.MarketDataService.DataLicense
 import DA.RefApps.MarketDataService.Roles
 
-marketSetupScenario : Scenario ()
-marketSetupScenario = scenario do
-  operator <- getParty "Operator"
-  marketDataProvider1Party <- getParty "MarketDataProvider1"
-  marketDataProvider2Party <- getParty "MarketDataProvider2"
-  marketDataVendorParty <- getParty "MarketDataVendor"
-  analyticsVendorParty <- getParty "AnalyticsVendor"
-  endUserParty <- getParty "EndUser"
+marketSetupScript : Script ()
+marketSetupScript = script do
+  operator <- allocateParty "Operator"
+  marketDataProvider1Party <- allocateParty "MarketDataProvider1"
+  marketDataProvider2Party <- allocateParty "MarketDataProvider2"
+  marketDataVendorParty <- allocateParty "MarketDataVendor"
+  analyticsVendorParty <- allocateParty "AnalyticsVendor"
+  endUserParty <- allocateParty "EndUser"
   let starting = addRelTime appStartTime (hours 1)
       ending = addRelTime appStartTime (days 10)
       staleHours = 3
@@ -37,39 +39,39 @@ marketSetupScenario = scenario do
 
   debug "Creating current time"
   currentTimeCid <- submit operator do
-    create CurrentTime with
+    createCmd CurrentTime with
       operator = operator
       currentTime = appStartTime
       observers = [marketDataProvider1Party, marketDataProvider2Party, marketDataVendorParty, analyticsVendorParty, endUserParty]
 
   debug "Creating time configuration"
   timeConfigurationCid <- submit operator do
-    create TimeConfiguration with
+    createCmd TimeConfiguration with
       operator = operator
       isRunning = False
       modelPeriodTime = hours 2
 
   debug "Creating time manager"
   timeManagerCid <- submit operator do
-    create TimeManager with
+    createCmd TimeManager with
             operator = operator
 
   debug "Creating operator role"
-  operatorRole <- submit operator $ create (OperatorRole with operator = operator)
+  operatorRole <- submit operator $ createCmd (OperatorRole with operator = operator)
 
   debug "Loading CSV data sources"
-  providerRoleInvitation <- operator `submit` exercise operatorRole
+  providerRoleInvitation <- operator `submit` exerciseCmd operatorRole
     InviteMarketDataProvider with marketDataProvider = marketDataProvider1Party
-  mdp1ProviderRole <- marketDataProvider1Party `submit` exercise providerRoleInvitation MarketDataProviderInvitation_Accept
-  marketDataProvider1Party `submit` exercise mdp1ProviderRole
+  mdp1ProviderRole <- marketDataProvider1Party `submit` exerciseCmd providerRoleInvitation MarketDataProviderInvitation_Accept
+  marketDataProvider1Party `submit` exerciseCmd mdp1ProviderRole
     LoadCsvDataFromPath with
       reference = reference1
       path = "default-1.csv"
 
-  providerRoleInvitation <- operator `submit` exercise operatorRole
+  providerRoleInvitation <- operator `submit` exerciseCmd operatorRole
     InviteMarketDataProvider with marketDataProvider = marketDataProvider2Party
-  mdp2ProviderRole <- marketDataProvider2Party `submit` exercise providerRoleInvitation MarketDataProviderInvitation_Accept
-  marketDataProvider2Party `submit` exercise mdp2ProviderRole
+  mdp2ProviderRole <- marketDataProvider2Party `submit` exerciseCmd providerRoleInvitation MarketDataProviderInvitation_Accept
+  marketDataProvider2Party `submit` exerciseCmd mdp2ProviderRole
     LoadCsvDataFromPath with
         reference = reference2
         path = "default-1000.csv"
@@ -91,27 +93,27 @@ marketSetupScenario = scenario do
 
 createDataStream : Party -> Party -> (ContractId PublisherConsumerRelationship, ContractId PublisherRole) ->
                    ObservationReference -> Time -> Time -> Int ->
-                   Scenario (ContractId DataLicense)
+                   Script (ContractId DataLicense)
 createDataStream publisher consumer (relationship, pubRole) reference starting ending staleHours = do
   let price = SubscriptionFee 10.000
   debug ("Creating data stream: publisher=" <> (show publisher) <> ", consumer=" <> (show consumer))
-  request <- consumer `submit` exercise relationship RequestStream
+  request <- consumer `submit` exerciseCmd relationship RequestStream
     with reference, starting, ending, staleHours
-  proposal <- publisher `submit` exercise request DataStreamRequest_Propose with price
-  license <- consumer `submit` exercise proposal DataLicenseProposal_Accept
-  stream <- publisher `submit` exercise pubRole RegisterLicense with licenseId = license
+  proposal <- publisher `submit` exerciseCmd request DataStreamRequest_Propose with price
+  license <- consumer `submit` exerciseCmd proposal DataLicenseProposal_Accept
+  stream <- publisher `submit` exerciseCmd pubRole RegisterLicense with licenseId = license
   debug "Created data stream."
   pure license
 
 createRelationship : Party -> ContractId OperatorRole -> Party -> Party
-                    -> Scenario (ContractId PublisherConsumerRelationship, ContractId PublisherRole)
+                    -> Script (ContractId PublisherConsumerRelationship, ContractId PublisherRole)
 createRelationship operator operatorRole publisher consumer = do
   let p = Publisher with party = publisher
       c = Consumer with party = consumer
   debug ("Creating relationship: publisher=" <> (show publisher) <> ", consumer=" <> (show consumer))
-  (relationRequest, roleRequest) <- operator `submit` exercise operatorRole InvitePublisherConsumer with publisher = p, consumer = c
-  publisherAccept <- publisher `submit` exercise relationRequest PublisherInvitation_Accept
-  publisherRole <- publisher `submit` exercise roleRequest PublisherRoleInvitation_Accept
-  relationship <- consumer `submit` exercise publisherAccept ConsumerInvitation_Accept
+  (relationRequest, roleRequest) <- operator `submit` exerciseCmd operatorRole InvitePublisherConsumer with publisher = p, consumer = c
+  publisherAccept <- publisher `submit` exerciseCmd relationRequest PublisherInvitation_Accept
+  publisherRole <- publisher `submit` exerciseCmd roleRequest PublisherRoleInvitation_Accept
+  relationship <- consumer `submit` exerciseCmd publisherAccept ConsumerInvitation_Accept
   debug "Created relationship."
   pure (relationship, publisherRole)
