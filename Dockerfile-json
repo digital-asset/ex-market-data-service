@@ -6,6 +6,12 @@ ARG sdk_vsn=1.5.0
 
 FROM digitalasset/daml-sdk:${sdk_vsn}
 
+
+USER root
+RUN apt-get update || apt-get update
+RUN apt-get -y install netcat-openbsd
+USER daml
+
 WORKDIR /home/daml
 
 COPY --chown=daml scripts/ /home/daml/scripts/
@@ -19,4 +25,5 @@ ENTRYPOINT ~/scripts/waitForSandbox.sh ${SANDBOX_HOST} ${SANDBOX_PORT} && \
             --ledger-host ${SANDBOX_HOST} \
             --ledger-port ${SANDBOX_PORT} \
             --http-port 7575 \
-            --address 0.0.0.0
+            --address 0.0.0.0 \
+            --allow-insecure-tokens
