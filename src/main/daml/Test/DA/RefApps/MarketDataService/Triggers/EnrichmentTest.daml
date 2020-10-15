@@ -20,7 +20,6 @@ import DA.RefApps.MarketDataService.Triggers.Enrichment
 import DA.RefApps.MarketDataService.MarketDataTypes
 import DA.RefApps.MarketDataService.Roles
 import Test.DA.RefApps.MarketDataService.MarketSetupTest
-import Test.DA.RefApps.MarketDataService.Utils (queryContractKey)
 
 coupons : [Date]
 coupons = [date 2019 Feb 20, date 2020 Feb 20]

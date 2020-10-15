@@ -32,8 +32,3 @@ createDataStream publisher consumer (relationship, pubRole) reference starting e
   license <- consumer `submit` exerciseCmd proposal DataLicenseProposal_Accept
   publisher `submit` exerciseCmd pubRole RegisterLicense with licenseId = license
 
--- Might move into daml-stdlib
-queryContractKey : forall t k. (TemplateKey t k, Eq k) => Party -> k -> Script (Optional (ContractId t, t))
-queryContractKey p k =
-  find (\(_, t) -> key t == k) <$>
-  query @t p

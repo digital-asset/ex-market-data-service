@@ -18,7 +18,6 @@ import DA.RefApps.MarketDataService.MarketDataTypes
 import DA.RefApps.MarketDataService.Publication
 
 import Test.DA.RefApps.MarketDataService.RolesTest
-import Test.DA.RefApps.MarketDataService.Utils
 
 testConsumerCanClaimNonPerformance : Script ()
 testConsumerCanClaimNonPerformance = script do
