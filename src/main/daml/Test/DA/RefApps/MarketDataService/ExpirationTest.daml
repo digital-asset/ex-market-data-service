@@ -3,7 +3,6 @@
 -- SPDX-License-Identifier: Apache-2.0
 --
 
-daml 1.2
 module Test.DA.RefApps.MarketDataService.ExpirationTest where
 
 import DA.Assert
@@ -18,7 +17,6 @@ import DA.RefApps.MarketDataService.MarketDataTypes
 import DA.RefApps.MarketDataService.Publication
 
 import Test.DA.RefApps.MarketDataService.RolesTest
-import Test.DA.RefApps.MarketDataService.Utils
 
 testLicenseExpiryClosesNonFreshStream : Script ()
 testLicenseExpiryClosesNonFreshStream = script do
