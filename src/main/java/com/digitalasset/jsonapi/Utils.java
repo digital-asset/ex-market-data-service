@@ -38,7 +38,7 @@ public class Utils {
       HttpResponse response = Request.Options(uri).execute().returnResponse();
       return serverHasResponded(response);
     } catch (IOException e) {
-      log.info("Could not reach JSON API: {}", e.getMessage());
+      log.debug("Could not reach JSON API: {}", e.getMessage());
       return false;
     }
   }
