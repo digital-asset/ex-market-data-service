@@ -7,7 +7,6 @@
 module DA.RefApps.MarketDataService.Triggers.Enrichment where
 
 import Daml.Trigger
-import DA.Next.Map qualified as M
 import DA.Foldable
 import DA.Date
 import DA.List.Total
@@ -30,8 +29,8 @@ enrichCleanPriceWithAccrualTrigger =
 
 createPublishingTrigger : (Observation -> Observation) -> Trigger ()
 createPublishingTrigger transformObservation = Trigger
-  { initialize = const ()
-  , updateState = \_ _ _ -> ()
+  { initialize = pure ()
+  , updateState = \_ -> pure ()
   , rule = publicationRule transformObservation
   , registeredTemplates = RegisteredTemplates [
       registeredTemplate @Publication
@@ -42,18 +41,19 @@ createPublishingTrigger transformObservation = Trigger
   , heartbeat = None
   }
 
-publicationRule : (Observation -> Observation) -> Party -> ACS -> Time -> M.Map CommandId [Command] -> () -> TriggerA ()
-publicationRule transformObservation party activeContracts _ _ () = do
+publicationRule : (Observation -> Observation) -> Party -> TriggerA () ()
+publicationRule transformObservation party = do
   -- Get publications where 'party' gets data, i.e. consumer
-  let publications = getContracts @Publication activeContracts
-      ownPublications = filter (\(_, p) -> p.consumer.party == party) publications
+  publications <- query @Publication
+  let ownPublications = filter (\(_, p) -> p.consumer.party == party) publications
   -- Get data streams where 'party' provides data to, i.e. publisher
-      dataStreams = getContracts @DataStream activeContracts
-      ownDataStreams = filter (\(_, s) -> s.publisher.party == party) dataStreams
+  dataStreams <- query @DataStream
+  let ownDataStreams = filter (\(_, s) -> s.publisher.party == party) dataStreams
   -- Get empty streams to start them
-      emptyDataStreams = getContracts @EmptyDataStream activeContracts
-      ownEmptyDataStreams = filter (\(_, s) -> s.publisher.party == party) emptyDataStreams
-      mbCurrentTime = head $ getContracts @CurrentTime activeContracts
+  emptyDataStreams <- query @EmptyDataStream
+  let ownEmptyDataStreams = filter (\(_, s) -> s.publisher.party == party) emptyDataStreams
+  mbCurrentTimes <- query @CurrentTime
+  let mbCurrentTime = head mbCurrentTimes
 
   forA_ ownPublications (\(_, p) -> do
     debug ("Triggered by publication: " <> (show p))
