@@ -7,7 +7,6 @@ module Test.DA.RefApps.MarketDataService.Triggers.EnrichmentTest where
 
 import DA.Assert
 import DA.Date
-import DA.Next.Map
 import DA.Time as T
 import Daml.Script
 import Daml.Trigger.Assert
@@ -19,6 +18,7 @@ import DA.RefApps.MarketDataService.Triggers.Enrichment
 import DA.RefApps.MarketDataService.MarketDataTypes
 import DA.RefApps.MarketDataService.Roles
 import Test.DA.RefApps.MarketDataService.MarketSetupTest
+import Test.DA.RefApps.MarketDataService.Triggers.TriggerTestUtils
 
 coupons : [Date]
 coupons = [date 2019 Feb 20, date 2020 Feb 20]
@@ -182,16 +182,9 @@ publicationRuleEmitsOnlyOneExerciseCommandPerDataStream = script do
     exerciseCmd currentTimeCid (AdvanceByCurrentTime $ hours 1)
   let
     activeContracts = toACS currentTime <> toACS dataStreamUs <> toACS publicationEu <> toACS publicationUs
-    commandsInFlight = DA.Next.Map.empty
-  commands <- testRule
-                enrichCleanPriceWithAccrualTrigger
-                marketDataVendor
-                activeContracts
-                commandsInFlight
-                ()
-  let flatCommands = flattenCommands commands
+  flatCommands <- testTrigger enrichCleanPriceWithAccrualTrigger marketDataVendor activeContracts
 
-  length commands === length [dataStreamUs] -- 1 datastream results in at most 1 command
+  length flatCommands === length [dataStreamUs] -- 1 datastream results in at most 1 command
   assertExerciseCmd flatCommands $ \(cid, choiceArg) -> do
     assertEq cid dataStreamUs
     assertEq choiceArg (UpdateLicenses)
