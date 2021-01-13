@@ -16,7 +16,6 @@ Until the license expires, they can use live data streaming or report issues suc
 
 Be sure you have the following installed:
 - [DAML SDK](https://docs.daml.com/)
-- Docker
 - Java
 - Maven
 
@@ -32,18 +31,6 @@ mvn clean package
 
 **Note:** Make sure that you have built the application with Maven (see: [Build with Maven](#build-with-maven)).
 
-There are two options:
-
-#### Option 1: Start App with Docker
-
-1. Type:
-    ```shell
-    docker-compose up --build
-    ```
-2. Open UI with a browser at http://localhost:7500.
-
-#### Option 2: Start App in Standalone
-
 1. Start the DAML Sandbox and Navigator. Type:
     ```shell
     daml start --sandbox-option --address=localhost --sandbox-option --wall-clock-time --sandbox-option --ledgerid=market-data-service
@@ -57,10 +44,6 @@ There are two options:
 
 ### Stopping the App
 
-#### Stopping Dockerized Run
-1. Stop the Docker containers or bots by typing **Ctrl+C**. (Alternatively, you can also stop it by typing `docker-compose down`.)
-
-#### Stopping Standalone Run
 1. Stop the bots by typing **Ctrl+C**.
 1. Stop the Sandbox and the Navigator by typing **Ctrl+C** in the DAML assistant.
 
@@ -68,7 +51,7 @@ There are two options:
 
 Reset the application by following these steps:
 1.  Stop the app by following the steps in [Stopping the App](#stopping-the-app) section.
-2.  Start the app in [Docker](#using-docker) or [Standalone](#standalone-mode) by following the steps in the relevant section.
+2.  Start the app by following the steps in [Starting the App](#starting-the-app) section.
 
 ## User Guide
 
