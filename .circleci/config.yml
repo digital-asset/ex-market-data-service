@@ -10,9 +10,6 @@ orbs:
 
 executors:
   daml-executor:
-    parameters:
-      version:
-        type: string
     docker:
       - image: digitalasset/daml-sdk:<< parameters.version >>
   mvn-executor:
