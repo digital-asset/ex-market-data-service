@@ -54,11 +54,11 @@ jobs:
       - run:
           name: Build Daml
           command: |
-            make build-dars
+            daml build
       - run:
           name: Daml tests
           command: |
-            make test-dars
+            daml test --junit target/daml-test-reports/model.xml
       - save_cache:
           paths:
             - ~/.daml
