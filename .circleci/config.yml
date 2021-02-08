@@ -11,7 +11,7 @@ orbs:
 executors:
   daml-executor:
     docker:
-      - image: digitalasset/daml-sdk:<< parameters.version >>
+      - image: cimg/openjdk:11.0
   mvn-executor:
     docker:
       - image: cimg/openjdk:11.0
