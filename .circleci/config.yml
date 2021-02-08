@@ -9,6 +9,12 @@ orbs:
   slack: circleci/slack@3.4.2
 
 executors:
+  daml-executor:
+    parameters:
+      version:
+        type: string
+    docker:
+      - image: digitalasset/daml-sdk:<< parameters.version >>
   mvn-executor:
     docker:
       - image: cimg/openjdk:11.0
