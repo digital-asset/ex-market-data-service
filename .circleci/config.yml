@@ -10,8 +10,11 @@ orbs:
 
 executors:
   daml-executor:
+    parameters:
+      version:
+        type: string
     docker:
-      - image: cimg/openjdk:11.0-node
+      - image: digitalasset/daml-sdk:<< parameters.version >>
   mvn-executor:
     docker:
       - image: cimg/openjdk:11.0
@@ -44,6 +47,7 @@ jobs:
       daml_sdk_version:
         type: string
     executor: daml-executor
+      - version: << parameters.daml_sdk_version >>
     steps:
       - checkout
       - restore_cache:
