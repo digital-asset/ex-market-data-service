@@ -46,11 +46,6 @@ jobs:
       - image: digitalasset/daml-sdk:<< parameters.daml_sdk_version >>
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            - daml-{{ checksum "daml.yaml" }}
-      - install_sdk:
-          version: << parameters.daml_sdk_version >>
       - run:
           name: Build Daml
           command: |
@@ -59,10 +54,6 @@ jobs:
           name: Daml tests
           command: |
             daml test --junit target/daml-test-reports/model.xml
-      - save_cache:
-          paths:
-            - ~/.daml
-          key: daml-{{ checksum "daml.yaml" }}
       - store_test_results:
           path: target/daml-test-reports
       - store_artifacts:
