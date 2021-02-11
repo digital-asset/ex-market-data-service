@@ -145,7 +145,7 @@ jobs:
       - run:
           command: cp digitalasset_ex_market_data_service_master_Black_Duck_Notices_Report.txt NOTICE
       - persist_to_workspace:
-          root: target
+          root: .
           paths:
             - "NOTICE"
       - slack_notification
@@ -177,4 +177,6 @@ workflows:
           context: refapps
       - blackduck_check:
           daml_sdk_version: "1.9.0"
-          context: blackduck
+          context:
+            - blackduck
+            - refapps
