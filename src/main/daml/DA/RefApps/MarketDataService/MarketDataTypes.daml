@@ -5,7 +5,7 @@
 
 module DA.RefApps.MarketDataService.MarketDataTypes where
 
-import DA.Next.Map (Map(), fromList, lookup, MapKey)
+import DA.Map (Map(), fromList, lookup)
 import DA.Optional (fromOptional)
 import DA.List (last, sort)
 import DA.Date (date, Month(..))
@@ -14,7 +14,7 @@ import Prelude hiding (lookup)
 
 -- E.g. a ticker
 newtype InstrumentId = InstrumentId Text
-  deriving (Show, Eq, MapKey)
+  deriving (Show, Eq, Ord)
 
 data ObservationReference =
   ObservationReference
@@ -120,4 +120,3 @@ appStartTime : Time
 appStartTime = T.time appStartDate 12 30 0
 
 newtype SubscriptionFee = SubscriptionFee (Numeric 3) deriving (Eq, Show, Ord)
-
