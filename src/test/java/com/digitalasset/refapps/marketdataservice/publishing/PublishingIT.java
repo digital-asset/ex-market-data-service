@@ -7,12 +7,12 @@ package com.digitalasset.refapps.marketdataservice.publishing;
 import static com.digitalasset.refapps.marketdataservice.utils.AppParties.ALL_PARTIES;
 import static com.digitalasset.refapps.utils.EventuallyUtil.eventually;
 
+import com.daml.extensions.testing.junit4.Sandbox;
+import com.daml.extensions.testing.ledger.DefaultLedgerAdapter;
 import com.daml.ledger.javaapi.data.Party;
 import com.digitalasset.jsonapi.JsonApi;
 import com.digitalasset.refapps.marketdataservice.AppConfig;
 import com.digitalasset.refapps.marketdataservice.Main;
-import com.digitalasset.testing.junit4.Sandbox;
-import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
 import com.google.protobuf.InvalidProtocolBufferException;
 import da.refapps.marketdataservice.datalicense.LiveStreamLicense;
 import da.refapps.marketdataservice.marketdatatypes.InstrumentId;

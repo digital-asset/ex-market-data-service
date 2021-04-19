@@ -8,14 +8,14 @@ import static com.digitalasset.refapps.utils.EventuallyUtil.eventually;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
+import com.daml.extensions.testing.junit4.Sandbox;
+import com.daml.extensions.testing.ledger.DefaultLedgerAdapter;
+import com.daml.extensions.testing.utils.ContractWithId;
 import com.daml.ledger.javaapi.data.Party;
 import com.digitalasset.jsonapi.JsonApi;
 import com.digitalasset.jsonapi.LedgerClient;
 import com.digitalasset.refapps.marketdataservice.AppConfig;
 import com.digitalasset.refapps.marketdataservice.extensions.RelTime;
-import com.digitalasset.testing.junit4.Sandbox;
-import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
-import com.digitalasset.testing.utils.ContractWithId;
 import com.google.protobuf.InvalidProtocolBufferException;
 import da.timeservice.timeservice.CurrentTime;
 import da.timeservice.timeservice.TimeConfiguration;

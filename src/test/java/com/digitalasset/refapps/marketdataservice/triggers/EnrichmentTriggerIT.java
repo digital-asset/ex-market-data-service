@@ -7,12 +7,12 @@ package com.digitalasset.refapps.marketdataservice.triggers;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.daml.extensions.testing.junit4.Sandbox;
+import com.daml.extensions.testing.ledger.DefaultLedgerAdapter;
+import com.daml.extensions.testing.utils.ContractWithId;
 import com.daml.ledger.javaapi.data.ExerciseCommand;
 import com.daml.ledger.javaapi.data.Party;
 import com.digitalasset.refapps.utils.Trigger;
-import com.digitalasset.testing.junit4.Sandbox;
-import com.digitalasset.testing.ledger.DefaultLedgerAdapter;
-import com.digitalasset.testing.utils.ContractWithId;
 import com.google.protobuf.InvalidProtocolBufferException;
 import da.refapps.marketdataservice.datalicense.DataLicense;
 import da.refapps.marketdataservice.datastream.DataStream;
