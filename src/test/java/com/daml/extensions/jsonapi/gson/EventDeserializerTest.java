@@ -8,10 +8,10 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
-import com.daml.ledger.javaapi.data.Identifier;
 import com.daml.extensions.jsonapi.events.ArchivedEvent;
 import com.daml.extensions.jsonapi.events.CreatedEvent;
 import com.daml.extensions.jsonapi.events.Event;
+import com.daml.ledger.javaapi.data.Identifier;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import da.refapps.marketdataservice.roles.OperatorRole;

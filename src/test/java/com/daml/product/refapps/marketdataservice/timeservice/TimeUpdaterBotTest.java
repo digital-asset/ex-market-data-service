@@ -7,8 +7,8 @@ package com.daml.product.refapps.marketdataservice.timeservice;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.daml.ledger.javaapi.data.ExerciseCommand;
 import com.daml.extensions.jsonapi.events.CreatedEvent;
+import com.daml.ledger.javaapi.data.ExerciseCommand;
 import da.timeservice.timeservice.CurrentTime;
 import da.timeservice.timeservice.TimeManager;
 import org.junit.Test;

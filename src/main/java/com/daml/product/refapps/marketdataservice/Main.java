@@ -4,11 +4,11 @@
  */
 package com.daml.product.refapps.marketdataservice;
 
-import com.daml.ledger.javaapi.data.Command;
 import com.daml.extensions.jsonapi.ActiveContractSet;
 import com.daml.extensions.jsonapi.ContractQuery;
 import com.daml.extensions.jsonapi.LedgerClient;
 import com.daml.extensions.jsonapi.Utils;
+import com.daml.ledger.javaapi.data.Command;
 import com.daml.product.refapps.marketdataservice.publishing.CachingCsvDataProvider;
 import com.daml.product.refapps.marketdataservice.publishing.DataProviderBot;
 import com.daml.product.refapps.marketdataservice.publishing.PublishingDataProvider;

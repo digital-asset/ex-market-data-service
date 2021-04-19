@@ -11,8 +11,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.daml.ledger.javaapi.data.ExerciseCommand;
 import com.daml.extensions.jsonapi.events.CreatedEvent;
+import com.daml.ledger.javaapi.data.ExerciseCommand;
 import com.daml.product.refapps.utils.ManualExecutorService;
 import da.timeservice.timeservice.CurrentTime;
 import da.timeservice.timeservice.TimeManager;

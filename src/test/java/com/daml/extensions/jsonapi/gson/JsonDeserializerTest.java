@@ -7,8 +7,6 @@ package com.daml.extensions.jsonapi.gson;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-import com.daml.ledger.javaapi.data.Date;
-import com.daml.ledger.javaapi.data.Identifier;
 import com.daml.extensions.jsonapi.events.CreatedEvent;
 import com.daml.extensions.jsonapi.events.Event;
 import com.daml.extensions.jsonapi.http.CreatedEventHolder;
@@ -16,6 +14,8 @@ import com.daml.extensions.jsonapi.http.EventHolder;
 import com.daml.extensions.jsonapi.http.HttpResponse;
 import com.daml.extensions.jsonapi.http.HttpResponse.Result;
 import com.daml.extensions.jsonapi.http.HttpResponse.SearchResult;
+import com.daml.ledger.javaapi.data.Date;
+import com.daml.ledger.javaapi.data.Identifier;
 import com.google.common.collect.Iterables;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

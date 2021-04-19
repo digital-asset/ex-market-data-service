@@ -4,11 +4,11 @@
  */
 package com.daml.product.refapps.marketdataservice.timeservice;
 
-import com.daml.ledger.javaapi.data.Identifier;
 import com.daml.extensions.jsonapi.ActiveContractSet;
 import com.daml.extensions.jsonapi.ContractQuery;
 import com.daml.extensions.jsonapi.LedgerClient;
 import com.daml.extensions.jsonapi.events.CreatedEvent;
+import com.daml.ledger.javaapi.data.Identifier;
 import da.timeservice.timeservice.CurrentTime;
 import da.timeservice.timeservice.TimeManager;
 import java.time.Instant;

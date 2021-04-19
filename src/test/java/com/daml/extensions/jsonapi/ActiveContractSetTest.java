@@ -12,15 +12,15 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 
-import com.daml.ledger.javaapi.data.CreateCommand;
-import com.daml.ledger.javaapi.data.Identifier;
-import com.daml.ledger.javaapi.data.Template;
 import com.daml.extensions.jsonapi.events.ArchivedEvent;
 import com.daml.extensions.jsonapi.events.CreatedEvent;
 import com.daml.extensions.jsonapi.events.Event;
 import com.daml.extensions.jsonapi.http.ArchivedEventHolder;
 import com.daml.extensions.jsonapi.http.CreatedEventHolder;
 import com.daml.extensions.jsonapi.http.WebSocketResponse;
+import com.daml.ledger.javaapi.data.CreateCommand;
+import com.daml.ledger.javaapi.data.Identifier;
+import com.daml.ledger.javaapi.data.Template;
 import da.refapps.marketdataservice.roles.OperatorRole;
 import io.reactivex.Flowable;
 import java.util.Arrays;

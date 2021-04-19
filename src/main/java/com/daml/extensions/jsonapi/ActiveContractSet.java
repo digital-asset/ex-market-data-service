@@ -4,8 +4,8 @@
  */
 package com.daml.extensions.jsonapi;
 
-import com.daml.ledger.javaapi.data.Identifier;
 import com.daml.extensions.jsonapi.events.Event;
+import com.daml.ledger.javaapi.data.Identifier;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;

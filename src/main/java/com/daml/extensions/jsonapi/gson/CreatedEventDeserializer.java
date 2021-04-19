@@ -4,10 +4,10 @@
  */
 package com.daml.extensions.jsonapi.gson;
 
-import com.daml.ledger.javaapi.data.Identifier;
-import com.daml.ledger.javaapi.data.Template;
 import com.daml.extensions.jsonapi.ClassName;
 import com.daml.extensions.jsonapi.events.CreatedEvent;
+import com.daml.ledger.javaapi.data.Identifier;
+import com.daml.ledger.javaapi.data.Template;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;

@@ -7,10 +7,10 @@ package com.daml.product.refapps.marketdataservice.publishing;
 import static com.daml.product.refapps.marketdataservice.utils.AppParties.ALL_PARTIES;
 import static com.daml.product.refapps.utils.EventuallyUtil.eventually;
 
+import com.daml.extensions.jsonapi.JsonApi;
 import com.daml.extensions.testing.junit4.Sandbox;
 import com.daml.extensions.testing.ledger.DefaultLedgerAdapter;
 import com.daml.ledger.javaapi.data.Party;
-import com.daml.extensions.jsonapi.JsonApi;
 import com.daml.product.refapps.marketdataservice.AppConfig;
 import com.daml.product.refapps.marketdataservice.Main;
 import com.google.protobuf.InvalidProtocolBufferException;

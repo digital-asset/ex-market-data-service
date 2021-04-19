@@ -4,8 +4,6 @@
  */
 package com.daml.extensions.jsonapi;
 
-import com.daml.ledger.javaapi.data.CreateCommand;
-import com.daml.ledger.javaapi.data.ExerciseCommand;
 import com.daml.extensions.jsonapi.events.Event;
 import com.daml.extensions.jsonapi.http.Api;
 import com.daml.extensions.jsonapi.http.HttpClient;
@@ -13,6 +11,8 @@ import com.daml.extensions.jsonapi.http.HttpResponse;
 import com.daml.extensions.jsonapi.http.HttpResponse.SearchResult;
 import com.daml.extensions.jsonapi.http.WebSocketClient;
 import com.daml.extensions.jsonapi.http.WebSocketResponse;
+import com.daml.ledger.javaapi.data.CreateCommand;
+import com.daml.ledger.javaapi.data.ExerciseCommand;
 import io.reactivex.Flowable;
 import java.util.Collection;
 import java.util.Collections;

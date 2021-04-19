@@ -4,11 +4,11 @@
  */
 package com.daml.product.refapps.marketdataservice.publishing;
 
+import com.daml.extensions.jsonapi.ActiveContract;
+import com.daml.extensions.jsonapi.ActiveContractSet;
 import com.daml.ledger.javaapi.data.Command;
 import com.daml.ledger.javaapi.data.ExerciseCommand;
 import com.daml.ledger.javaapi.data.Identifier;
-import com.daml.extensions.jsonapi.ActiveContract;
-import com.daml.extensions.jsonapi.ActiveContractSet;
 import com.google.common.collect.Sets;
 import da.refapps.marketdataservice.datastream.DataStream;
 import da.refapps.marketdataservice.datastream.EmptyDataStream;

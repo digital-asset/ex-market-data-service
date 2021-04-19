@@ -4,10 +4,10 @@
  */
 package com.daml.extensions.jsonapi.events;
 
-import com.daml.ledger.javaapi.data.Identifier;
-import com.daml.ledger.javaapi.data.Template;
 import com.daml.extensions.jsonapi.ActiveContract;
 import com.daml.extensions.jsonapi.ActiveContractSet;
+import com.daml.ledger.javaapi.data.Identifier;
+import com.daml.ledger.javaapi.data.Template;
 import java.util.Objects;
 
 public class CreatedEvent implements Event {

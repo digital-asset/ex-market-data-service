@@ -4,6 +4,7 @@
  */
 package com.daml.extensions.jsonapi.gson;
 
+import com.daml.extensions.jsonapi.json.JsonSerializer;
 import com.daml.ledger.javaapi.data.CreateCommand;
 import com.daml.ledger.javaapi.data.DamlList;
 import com.daml.ledger.javaapi.data.Date;
@@ -15,7 +16,6 @@ import com.daml.ledger.javaapi.data.Record;
 import com.daml.ledger.javaapi.data.Text;
 import com.daml.ledger.javaapi.data.Timestamp;
 import com.daml.ledger.javaapi.data.Variant;
-import com.daml.extensions.jsonapi.json.JsonSerializer;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.time.Instant;

@@ -8,12 +8,12 @@ import static com.daml.product.refapps.utils.EventuallyUtil.eventually;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
+import com.daml.extensions.jsonapi.JsonApi;
+import com.daml.extensions.jsonapi.LedgerClient;
 import com.daml.extensions.testing.junit4.Sandbox;
 import com.daml.extensions.testing.ledger.DefaultLedgerAdapter;
 import com.daml.extensions.testing.utils.ContractWithId;
 import com.daml.ledger.javaapi.data.Party;
-import com.daml.extensions.jsonapi.JsonApi;
-import com.daml.extensions.jsonapi.LedgerClient;
 import com.daml.product.refapps.marketdataservice.AppConfig;
 import com.daml.product.refapps.marketdataservice.extensions.RelTime;
 import com.google.protobuf.InvalidProtocolBufferException;

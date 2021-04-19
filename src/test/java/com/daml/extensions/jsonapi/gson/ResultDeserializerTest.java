@@ -10,7 +10,6 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.daml.ledger.javaapi.data.Identifier;
 import com.daml.extensions.jsonapi.events.CreatedEvent;
 import com.daml.extensions.jsonapi.http.ArchivedEventHolder;
 import com.daml.extensions.jsonapi.http.CreatedEventHolder;
@@ -18,6 +17,7 @@ import com.daml.extensions.jsonapi.http.EventHolder;
 import com.daml.extensions.jsonapi.http.HttpResponse;
 import com.daml.extensions.jsonapi.http.HttpResponse.CreateResult;
 import com.daml.extensions.jsonapi.http.HttpResponse.Result;
+import com.daml.ledger.javaapi.data.Identifier;
 import com.google.gson.Gson;
 import com.google.gson.JsonDeserializer;
 import da.refapps.marketdataservice.roles.OperatorRole;

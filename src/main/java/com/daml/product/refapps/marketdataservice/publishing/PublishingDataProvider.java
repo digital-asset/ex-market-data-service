@@ -4,8 +4,8 @@
  */
 package com.daml.product.refapps.marketdataservice.publishing;
 
-import com.daml.ledger.javaapi.data.Identifier;
 import com.daml.extensions.jsonapi.ActiveContractSet;
+import com.daml.ledger.javaapi.data.Identifier;
 import da.refapps.marketdataservice.marketdatatypes.ObservationReference;
 import da.refapps.marketdataservice.marketdatatypes.ObservationValue;
 import java.time.Instant;
