@@ -31,9 +31,9 @@ Be sure you have the following installed:
 2. Use **separate terminals** to launch the individual components:
 
     ```shell
-    launchers/sandbox+navigator+populate
-    launchers/automation-bots
-    launchers/automation-triggers
+    launchers/sandbox+navigator+jsonapi
+    launchers/populate+automationTriggers
+    launchers/automationBots
     ```
 
     The navigator will automatically open in new browser tab at http://localhost:7500.

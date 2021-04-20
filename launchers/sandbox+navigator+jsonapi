@@ -5,7 +5,6 @@
 #
 
 daml start --start-navigator true \
-  --json-api-port none \
   --sandbox-option --address=localhost \
   --sandbox-option --wall-clock-time \
   --sandbox-option --ledgerid=market-data-service
