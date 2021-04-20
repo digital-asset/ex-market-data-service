@@ -25,6 +25,8 @@ SANDBOX_HOST="${1}"
 SANDBOX_PORT="${2}"
 DAR_FILE="${3:-/home/daml/market-data-service.dar}"
 
+scripts/waitForSandbox.sh "$SANDBOX_HOST" "$SANDBOX_PORT"
+
 daml script \
     --wall-clock-time \
     --dar "${DAR_FILE}" \
