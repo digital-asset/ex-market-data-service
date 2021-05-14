@@ -65,6 +65,8 @@ public class PublishingIT {
       Sandbox.builder()
           .dar(RELATIVE_DAR_PATH)
           .parties(OPERATOR_PARTY.getValue())
+          .moduleAndScript(
+              "DA.RefApps.MarketDataService.MarketSetupScript", "setupMarketForSandbox")
           .useWallclockTime()
           .build();
 
@@ -96,11 +98,8 @@ public class PublishingIT {
     File errLog = new File("integration-marketSetupAndTriggers.err.log");
     marketSetupAndTriggers =
         new ProcessBuilder()
-            .command(
-                "scripts/startTriggersNoRegister.sh",
-                "localhost",
-                Integer.toString(sandbox.getSandboxPort()),
-                RELATIVE_DAR_PATH.toString())
+            // need to call Python directly for proper subprocess cleanup (not sure why though)
+            .command("scripts/startTriggers.py", Integer.toString(sandbox.getSandboxPort()))
             .redirectError(ProcessBuilder.Redirect.appendTo(errLog))
             .redirectOutput(ProcessBuilder.Redirect.appendTo(log))
             .start();
@@ -109,7 +108,7 @@ public class PublishingIT {
 
   @After
   public void tearDown() {
-    marketSetupAndTriggers.destroyForcibly();
+    marketSetupAndTriggers.destroy();
     Main.terminateTimeUpdaterBot();
   }
 
