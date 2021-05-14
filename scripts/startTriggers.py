@@ -6,11 +6,10 @@
 
 import argparse
 import logging
-import sys
 import time
 
 from damlassistant import get_package_id, start_trigger_service_in_background, kill_process, \
-    add_trigger_to_service, wait_for_port, catch_signals, DEFAULT_TRIGGER_SERVICE_PORT, DEFAULT_SANDBOX_PORT
+    add_trigger_to_service, wait_for_port, catch_signals, DEFAULT_TRIGGER_SERVICE_PORT
 
 
 dar = 'target/market-data-service.dar'
@@ -18,8 +17,10 @@ dar = 'target/market-data-service.dar'
 triggers_with_parties = [
     ("MarketDataVendor", "DA.RefApps.MarketDataService.Triggers.Enrichment:republishObservationTrigger"),
     ("AnalyticsVendor", "DA.RefApps.MarketDataService.Triggers.Enrichment:enrichCleanPriceWithAccrualTrigger"),
-    ("MarketDataProvider1", "DA.RefApps.MarketDataService.Triggers.AutoRegisterLicense:automaticLicenseRegistrarTrigger"),
-    ("MarketDataProvider2", "DA.RefApps.MarketDataService.Triggers.AutoRegisterLicense:automaticLicenseRegistrarTrigger"),
+    ("MarketDataProvider1",
+        "DA.RefApps.MarketDataService.Triggers.AutoRegisterLicense:automaticLicenseRegistrarTrigger"),
+    ("MarketDataProvider2",
+        "DA.RefApps.MarketDataService.Triggers.AutoRegisterLicense:automaticLicenseRegistrarTrigger"),
     ("MarketDataVendor", "DA.RefApps.MarketDataService.Triggers.AutoRegisterLicense:automaticLicenseRegistrarTrigger"),
     ("AnalyticsVendor", "DA.RefApps.MarketDataService.Triggers.AutoRegisterLicense:automaticLicenseRegistrarTrigger"),
 ]
@@ -32,7 +33,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 wait_for_port(port=args.ledger_port, timeout=30)
 
-service = start_trigger_service_in_background(dar = dar, ledger_port = args.ledger_port)
+service = start_trigger_service_in_background(dar=dar, ledger_port=args.ledger_port)
 try:
     catch_signals()
     package_id = get_package_id(dar)
