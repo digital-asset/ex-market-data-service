@@ -65,7 +65,8 @@ public class PublishingIT {
       Sandbox.builder()
           .dar(RELATIVE_DAR_PATH)
           .parties(OPERATOR_PARTY.getValue())
-          .moduleAndScript("DA.RefApps.MarketDataService.MarketSetupScript", "setupMarketForSandbox")
+          .moduleAndScript(
+              "DA.RefApps.MarketDataService.MarketSetupScript", "setupMarketForSandbox")
           .useWallclockTime()
           .build();
 
