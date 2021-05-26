@@ -188,7 +188,7 @@ workflows:
           daml_sdk_version: "1.13.1"
           context: refapps
       - blackduck_check:
-          daml_sdk_version: "1.13.0"
+          daml_sdk_version: "1.13.1"
           filters:
             branches:
               only:
