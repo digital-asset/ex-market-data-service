@@ -10,7 +10,7 @@ import logging
 from damlassistant import run_script, wait_for_port
 
 
-dar = 'target/know-your-customer.dar'
+dar = 'target/market-data-service.dar'
 script_name = 'DA.RefApps.KnowYourCustomer.MarketSetupScript:setupMarketForSandbox'
 
 parser = argparse.ArgumentParser()
