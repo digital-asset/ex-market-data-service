@@ -96,7 +96,6 @@ public class PublishingIT {
     File errLog = new File("integration-marketSetupAndTriggers.err.log");
     marketSetupAndTriggers =
         new ProcessBuilder()
-            // need to call Python directly for proper subprocess cleanup (not sure why though)
             .command(
                 "launchers/populate+automationTriggers", Integer.toString(sandbox.getSandboxPort()))
             .redirectError(ProcessBuilder.Redirect.appendTo(errLog))
