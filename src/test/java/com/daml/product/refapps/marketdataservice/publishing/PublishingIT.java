@@ -65,8 +65,6 @@ public class PublishingIT {
       Sandbox.builder()
           .dar(RELATIVE_DAR_PATH)
           .parties(OPERATOR_PARTY.getValue())
-          .moduleAndScript(
-              "DA.RefApps.MarketDataService.MarketSetupScript", "setupMarketForSandbox")
           .useWallclockTime()
           .build();
 
@@ -99,7 +97,7 @@ public class PublishingIT {
     marketSetupAndTriggers =
         new ProcessBuilder()
             // need to call Python directly for proper subprocess cleanup (not sure why though)
-            .command("scripts/startTriggers.py", Integer.toString(sandbox.getSandboxPort()))
+            .command("launchers/populate+automationTriggers", Integer.toString(sandbox.getSandboxPort()))
             .redirectError(ProcessBuilder.Redirect.appendTo(errLog))
             .redirectOutput(ProcessBuilder.Redirect.appendTo(log))
             .start();
