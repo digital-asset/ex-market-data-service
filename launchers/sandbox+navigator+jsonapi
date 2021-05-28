@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-daml start --start-navigator true \
+exec daml start --start-navigator true \
   --sandbox-option --address=localhost \
   --sandbox-option --wall-clock-time \
   --sandbox-option --ledgerid=market-data-service
