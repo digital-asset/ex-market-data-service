@@ -25,6 +25,7 @@ public class JsonLedgerClient implements LedgerClient {
 
   private void throwIfStatusIsNot200(HttpResponse httpResponse) throws RuntimeException {
     if (httpResponse.getStatus() != 200) {
+      System.out.println("YYZ HTTP STATUS " + httpResponse.getStatus());
       String errors = String.join(";", httpResponse.getErrors());
       throw new RuntimeException(errors);
     }
@@ -56,12 +57,16 @@ public class JsonLedgerClient implements LedgerClient {
 
   @Override
   public void create(CreateCommand command) {
+    System.out.println("YYZ posting a CreateCommand to http endpoint " + api.createContract());
+    System.out.println("YYZ CreateCommand is " + command);
     HttpResponse httpResponse = httpClient.post(api.createContract(), command);
     throwIfStatusIsNot200(httpResponse);
   }
 
   @Override
   public void exerciseChoice(ExerciseCommand command) {
+    System.out.println("YYZ posting a ExerciseCommand to http endpoint " + api.createContract());
+    System.out.println("YYZ ExerciseCommand is " + command);
     HttpResponse httpResponse = httpClient.post(api.exercise(), command);
     throwIfStatusIsNot200(httpResponse);
   }
