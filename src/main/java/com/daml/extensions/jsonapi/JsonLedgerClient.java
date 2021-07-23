@@ -59,15 +59,15 @@ public class JsonLedgerClient implements LedgerClient {
   public void create(CreateCommand command) {
     System.out.println("YYZ posting a CreateCommand to http endpoint " + api.createContract());
     System.out.println("YYZ CreateCommand is " + command);
-    HttpResponse httpResponse = httpClient.post(api.createContract(), command);
+    HttpResponse httpResponse = httpClient.post(api.createContract(), command.toProto());
     throwIfStatusIsNot200(httpResponse);
   }
 
   @Override
   public void exerciseChoice(ExerciseCommand command) {
-    System.out.println("YYZ posting a ExerciseCommand to http endpoint " + api.createContract());
+    System.out.println("YYZ posting a ExerciseCommand to http endpoint " + api.exercise());
     System.out.println("YYZ ExerciseCommand is " + command);
-    HttpResponse httpResponse = httpClient.post(api.exercise(), command);
+    HttpResponse httpResponse = httpClient.post(api.exercise(), command.toProto());
     throwIfStatusIsNot200(httpResponse);
   }
 
