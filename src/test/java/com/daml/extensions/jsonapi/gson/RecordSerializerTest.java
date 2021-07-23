@@ -6,20 +6,20 @@ package com.daml.extensions.jsonapi.gson;
 
 import static org.junit.Assert.assertEquals;
 
+import com.daml.ledger.javaapi.data.DamlRecord;
+import com.daml.ledger.javaapi.data.DamlRecord.Field;
 import com.daml.ledger.javaapi.data.Identifier;
 import com.daml.ledger.javaapi.data.Numeric;
-import com.daml.ledger.javaapi.data.Record;
-import com.daml.ledger.javaapi.data.Record.Field;
 import com.google.gson.Gson;
 import com.google.gson.JsonSerializer;
 import java.math.BigDecimal;
 import org.junit.Test;
 
-public class RecordSerializerTest extends SerializerBaseTest<Record> {
+public class RecordSerializerTest extends SerializerBaseTest<DamlRecord> {
 
   @Test
   public void emptyRecordIsSerializedToEmptyObject() {
-    Record record = new Record();
+    DamlRecord record = new DamlRecord();
 
     Gson serializer = createSerializer();
 
@@ -28,7 +28,7 @@ public class RecordSerializerTest extends SerializerBaseTest<Record> {
 
   @Test
   public void identifierIsLeftOut() {
-    Record record = new Record(new Identifier("p", "m", "e"));
+    DamlRecord record = new DamlRecord(new Identifier("p", "m", "e"));
 
     Gson serializer = createSerializer();
 
@@ -37,7 +37,7 @@ public class RecordSerializerTest extends SerializerBaseTest<Record> {
 
   @Test
   public void fieldWithLabelIsSerialized() {
-    Record record = new Record(new Field("apple", new Numeric(BigDecimal.ONE)));
+    DamlRecord record = new DamlRecord(new Field("apple", new Numeric(BigDecimal.ONE)));
     registerSerializer(Numeric.class, new NumericSerializer());
 
     Gson serializer = createSerializer();
@@ -47,7 +47,7 @@ public class RecordSerializerTest extends SerializerBaseTest<Record> {
 
   @Test
   public void fieldWithoutLabelIsNotSerialized() {
-    Record record = new Record(new Field(new Numeric(BigDecimal.ONE)));
+    DamlRecord record = new DamlRecord(new Field(new Numeric(BigDecimal.ONE)));
 
     Gson serializer = createSerializer();
 
@@ -55,12 +55,12 @@ public class RecordSerializerTest extends SerializerBaseTest<Record> {
   }
 
   @Override
-  protected Class<Record> getSerializedClass() {
-    return Record.class;
+  protected Class<DamlRecord> getSerializedClass() {
+    return DamlRecord.class;
   }
 
   @Override
-  protected JsonSerializer<Record> getClassSerializer() {
+  protected JsonSerializer<DamlRecord> getClassSerializer() {
     return new RecordSerializer();
   }
 }

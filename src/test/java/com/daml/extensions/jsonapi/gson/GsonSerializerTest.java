@@ -6,11 +6,11 @@ package com.daml.extensions.jsonapi.gson;
 
 import static org.hamcrest.CoreMatchers.containsString;
 
+import com.daml.ledger.javaapi.data.DamlRecord;
 import com.daml.ledger.javaapi.data.Date;
 import com.daml.ledger.javaapi.data.ExerciseCommand;
 import com.daml.ledger.javaapi.data.Numeric;
 import com.daml.ledger.javaapi.data.Party;
-import com.daml.ledger.javaapi.data.Record;
 import com.daml.ledger.javaapi.data.Text;
 import com.daml.ledger.javaapi.data.Timestamp;
 import com.daml.ledger.javaapi.data.Variant;
@@ -40,7 +40,7 @@ public class GsonSerializerTest {
     ExerciseCommand exerciseCommand = contractId.exerciseAdvanceCurrentTime();
     String expected =
         String.format(
-            "{\"templateId\":\"%s:%s:%s\",\"contractId\":\"cid1\",\"choice\":\"AdvanceCurrentTime\",\"argument\":{}}",
+            "{\"templateId\":\"%s:%s:%s\",\"contractId\":\"cid1\",\"choice\":\"AdvanceCurrentTime\",\"argument\":{\"recordId\":{},\"fieldsMap\":{},\"fields\":[]}}",
             TimeManager.TEMPLATE_ID.getPackageId(),
             TimeManager.TEMPLATE_ID.getModuleName(),
             TimeManager.TEMPLATE_ID.getEntityName());
@@ -68,12 +68,13 @@ public class GsonSerializerTest {
     //            "tag":"EnrichedCleanDirtyPrice",
     //            "value":{"rate":"0.02","couponDate":"2020-02-11","dirty":"1.0150136986",
     //                        "clean":"1.0","accrual":"0.0150136986"}}}}
+
     String result = gsonSerializer.apply(exerciseCommand);
     String templateIdPattern =
         ".*\"templateId\":\"[a-zA-Z0-9]{64}:DA\\.RefApps\\.MarketDataService\\.DataStream:EmptyDataStream\".*";
     Assert.assertTrue(result.matches(templateIdPattern));
     String expected =
-        "\"contractId\":\"cid1\",\"choice\":\"StartDataStream\",\"argument\":{\"newObservation\":{\"label\":{\"market\":\"Market\",\"instrumentId\":{\"unpack\":\"ISIN 123 XYZ\"},\"maturityDate\":\"2019-05-10\"},\"time\":\"2019-05-03T09:15:30Z\",\"value\":{\"tag\":\"CleanPrice\",\"value\":{\"clean\":\"1.2\"}}}}";
+        "\"contractId\":\"cid1\",\"choice\":\"StartDataStream\",\"argument\":{\"recordId\":{},\"fieldsMap\":{\"newObservation\":{\"recordId\":{},\"fieldsMap\":{\"value\":{\"tag\":\"CleanPrice\",\"value\":{\"recordId\":{},\"fieldsMap\":{\"clean\":\"1.2\"},\"fields\":[{\"label\":{\"value\":\"clean\"},\"value\":\"1.2\"}]}},\"label\":{\"recordId\":{},\"fieldsMap\":{\"market\":\"Market\",\"instrumentId\":{\"recordId\":{},\"fieldsMap\":{\"unpack\":\"ISIN 123 XYZ\"},\"fields\":[{\"label\":{\"value\":\"unpack\"},\"value\":\"ISIN 123 XYZ\"}]},\"maturityDate\":\"2019-05-10\"},\"fields\":[{\"label\":{\"value\":\"market\"},\"value\":\"Market\"},{\"label\":{\"value\":\"instrumentId\"},\"value\":{\"recordId\":{},\"fieldsMap\":{\"unpack\":\"ISIN 123 XYZ\"},\"fields\":[{\"label\":{\"value\":\"unpack\"},\"value\":\"ISIN 123 XYZ\"}]}},{\"label\":{\"value\":\"maturityDate\"},\"value\":\"2019-05-10\"}]},\"time\":\"2019-05-03T09:15:30Z\"},\"fields\":[{\"label\":{\"value\":\"label\"},\"value\":{\"recordId\":{},\"fieldsMap\":{\"market\":\"Market\",\"instrumentId\":{\"recordId\":{},\"fieldsMap\":{\"unpack\":\"ISIN 123 XYZ\"},\"fields\":[{\"label\":{\"value\":\"unpack\"},\"value\":\"ISIN 123 XYZ\"}]},\"maturityDate\":\"2019-05-10\"},\"fields\":[{\"label\":{\"value\":\"market\"},\"value\":\"Market\"},{\"label\":{\"value\":\"instrumentId\"},\"value\":{\"recordId\":{},\"fieldsMap\":{\"unpack\":\"ISIN 123 XYZ\"},\"fields\":[{\"label\":{\"value\":\"unpack\"},\"value\":\"ISIN 123 XYZ\"}]}},{\"label\":{\"value\":\"maturityDate\"},\"value\":\"2019-05-10\"}]}},{\"label\":{\"value\":\"time\"},\"value\":\"2019-05-03T09:15:30Z\"},{\"label\":{\"value\":\"value\"},\"value\":{\"tag\":\"CleanPrice\",\"value\":{\"recordId\":{},\"fieldsMap\":{\"clean\":\"1.2\"},\"fields\":[{\"label\":{\"value\":\"clean\"},\"value\":\"1.2\"}]}}}]}},\"fields\":[{\"label\":{\"value\":\"newObservation\"},\"value\":{\"recordId\":{},\"fieldsMap\":{\"value\":{\"tag\":\"CleanPrice\",\"value\":{\"recordId\":{},\"fieldsMap\":{\"clean\":\"1.2\"},\"fields\":[{\"label\":{\"value\":\"clean\"},\"value\":\"1.2\"}]}},\"label\":{\"recordId\":{},\"fieldsMap\":{\"market\":\"Market\",\"instrumentId\":{\"recordId\":{},\"fieldsMap\":{\"unpack\":\"ISIN 123 XYZ\"},\"fields\":[{\"label\":{\"value\":\"unpack\"},\"value\":\"ISIN 123 XYZ\"}]},\"maturityDate\":\"2019-05-10\"},\"fields\":[{\"label\":{\"value\":\"market\"},\"value\":\"Market\"},{\"label\":{\"value\":\"instrumentId\"},\"value\":{\"recordId\":{},\"fieldsMap\":{\"unpack\":\"ISIN 123 XYZ\"},\"fields\":[{\"label\":{\"value\":\"unpack\"},\"value\":\"ISIN 123 XYZ\"}]}},{\"label\":{\"value\":\"maturityDate\"},\"value\":\"2019-05-10\"}]},\"time\":\"2019-05-03T09:15:30Z\"},\"fields\":[{\"label\":{\"value\":\"label\"},\"value\":{\"recordId\":{},\"fieldsMap\":{\"market\":\"Market\",\"instrumentId\":{\"recordId\":{},\"fieldsMap\":{\"unpack\":\"ISIN 123 XYZ\"},\"fields\":[{\"label\":{\"value\":\"unpack\"},\"value\":\"ISIN 123 XYZ\"}]},\"maturityDate\":\"2019-05-10\"},\"fields\":[{\"label\":{\"value\":\"market\"},\"value\":\"Market\"},{\"label\":{\"value\":\"instrumentId\"},\"value\":{\"recordId\":{},\"fieldsMap\":{\"unpack\":\"ISIN 123 XYZ\"},\"fields\":[{\"label\":{\"value\":\"unpack\"},\"value\":\"ISIN 123 XYZ\"}]}},{\"label\":{\"value\":\"maturityDate\"},\"value\":\"2019-05-10\"}]}},{\"label\":{\"value\":\"time\"},\"value\":\"2019-05-03T09:15:30Z\"},{\"label\":{\"value\":\"value\"},\"value\":{\"tag\":\"CleanPrice\",\"value\":{\"recordId\":{},\"fieldsMap\":{\"clean\":\"1.2\"},\"fields\":[{\"label\":{\"value\":\"clean\"},\"value\":\"1.2\"}]}}}]}}]}}";
     Assert.assertThat(result, containsString(expected));
   }
 
@@ -115,8 +116,10 @@ public class GsonSerializerTest {
 
   @Test
   public void serializeRecord() {
-    Record record = new Record(new Record.Field("newObserver", new Party("John Doe")));
-    Assert.assertEquals("{\"newObserver\":\"John Doe\"}", gsonSerializer.apply(record));
+    DamlRecord record = new DamlRecord(new DamlRecord.Field("newObserver", new Party("John Doe")));
+    Assert.assertEquals(
+        "{\"recordId\":{},\"fieldsMap\":{\"newObserver\":\"John Doe\"},\"fields\":[{\"label\":{\"value\":\"newObserver\"},\"value\":\"John Doe\"}]}",
+        gsonSerializer.apply(record));
   }
 
   @Test

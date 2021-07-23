@@ -11,9 +11,9 @@ import static org.junit.Assert.assertTrue;
 
 import com.daml.ledger.javaapi.data.CreateCommand;
 import com.daml.ledger.javaapi.data.DamlList;
+import com.daml.ledger.javaapi.data.DamlRecord;
 import com.daml.ledger.javaapi.data.Identifier;
 import com.daml.ledger.javaapi.data.Party;
-import com.daml.ledger.javaapi.data.Record;
 import com.daml.ledger.javaapi.data.Timestamp;
 import com.google.gson.Gson;
 import com.google.gson.JsonSerializer;
@@ -33,7 +33,7 @@ public class CreateCommandSerializerTest extends SerializerBaseTest<CreateComman
     registerSerializer(Party.class, new PartySerializer());
     registerSerializer(Timestamp.class, new TimestampSerializer());
     registerSerializer(Identifier.class, new IdentifierSerializer());
-    registerSerializer(Record.class, new RecordSerializer());
+    registerSerializer(DamlRecord.class, new RecordSerializer());
     registerSerializer(DamlList.class, new DamlListSerializer());
 
     Gson serializer = createSerializer();
