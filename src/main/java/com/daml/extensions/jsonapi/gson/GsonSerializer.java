@@ -7,12 +7,12 @@ package com.daml.extensions.jsonapi.gson;
 import com.daml.extensions.jsonapi.json.JsonSerializer;
 import com.daml.ledger.javaapi.data.CreateCommand;
 import com.daml.ledger.javaapi.data.DamlList;
+import com.daml.ledger.javaapi.data.DamlRecord;
 import com.daml.ledger.javaapi.data.Date;
 import com.daml.ledger.javaapi.data.ExerciseCommand;
 import com.daml.ledger.javaapi.data.Identifier;
 import com.daml.ledger.javaapi.data.Numeric;
 import com.daml.ledger.javaapi.data.Party;
-import com.daml.ledger.javaapi.data.Record;
 import com.daml.ledger.javaapi.data.Text;
 import com.daml.ledger.javaapi.data.Timestamp;
 import com.daml.ledger.javaapi.data.Variant;
@@ -26,7 +26,7 @@ public class GsonSerializer implements JsonSerializer {
       new GsonBuilder()
           .registerTypeAdapter(Identifier.class, new IdentifierSerializer())
           .registerTypeAdapter(Instant.class, new InstantSerializer())
-          .registerTypeAdapter(Record.class, new RecordSerializer())
+          .registerTypeAdapter(DamlRecord.class, new RecordSerializer())
           .registerTypeAdapter(Party.class, new PartySerializer())
           .registerTypeAdapter(Text.class, new TextSerializer())
           .registerTypeAdapter(Date.class, new DateSerializer())
