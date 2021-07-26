@@ -68,7 +68,6 @@ public class GsonSerializerTest {
     //            "tag":"EnrichedCleanDirtyPrice",
     //            "value":{"rate":"0.02","couponDate":"2020-02-11","dirty":"1.0150136986",
     //                        "clean":"1.0","accrual":"0.0150136986"}}}}
-
     String result = gsonSerializer.apply(exerciseCommand);
     String templateIdPattern =
         ".*\"templateId\":\"[a-zA-Z0-9]{64}:DA\\.RefApps\\.MarketDataService\\.DataStream:EmptyDataStream\".*";
