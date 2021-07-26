@@ -6,11 +6,11 @@ package com.daml.extensions.jsonapi.gson;
 
 import static org.hamcrest.CoreMatchers.containsString;
 
+import com.daml.ledger.javaapi.data.DamlRecord;
 import com.daml.ledger.javaapi.data.Date;
 import com.daml.ledger.javaapi.data.ExerciseCommand;
 import com.daml.ledger.javaapi.data.Numeric;
 import com.daml.ledger.javaapi.data.Party;
-import com.daml.ledger.javaapi.data.Record;
 import com.daml.ledger.javaapi.data.Text;
 import com.daml.ledger.javaapi.data.Timestamp;
 import com.daml.ledger.javaapi.data.Variant;
@@ -115,7 +115,7 @@ public class GsonSerializerTest {
 
   @Test
   public void serializeRecord() {
-    Record record = new Record(new Record.Field("newObserver", new Party("John Doe")));
+    DamlRecord record = new DamlRecord(new DamlRecord.Field("newObserver", new Party("John Doe")));
     Assert.assertEquals("{\"newObserver\":\"John Doe\"}", gsonSerializer.apply(record));
   }
 
